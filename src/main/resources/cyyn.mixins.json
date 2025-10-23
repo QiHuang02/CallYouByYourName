@@ -1,0 +1,18 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "cn.qihuang02.cyyn.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "refmap": "atatyou.refmap.json",
+  "mixins": [
+  ],
+  "client": [
+    "ChatScreenMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "overwrites": {
+    "requireAnnotations": true
+  }
+}
