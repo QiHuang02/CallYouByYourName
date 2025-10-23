@@ -1,18 +1,40 @@
 package cn.qihuang02.cyyn;
 
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.config.ModConfigEvent;
+import org.jetbrains.annotations.NotNull;
 
 @Mod.EventBusSubscriber(modid = CallYouByYourName.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class Config {
     private static final ForgeConfigSpec.Builder BUILDER = new ForgeConfigSpec.Builder();
+    public static final ResourceLocation MENTION_SOUND_ID =
+            ResourceLocation.fromNamespaceAndPath("minecraft", "block.note_block.bell");
+
+    private static final ForgeConfigSpec.LongValue MENTION_COOLDOWN_MS = BUILDER
+            .comment("Cooldown (in milliseconds) between mention notifications sent by the same player.")
+            .defineInRange("mentionCooldownMs", 5000L, 0L, Long.MAX_VALUE);
+    private static final ForgeConfigSpec.BooleanValue ENABLE_MENTION_SOUND = BUILDER
+            .comment("Whether to play a sound for mentioned players.")
+            .define("enableMentionSound", true);
 
     static final ForgeConfigSpec SPEC = BUILDER.build();
 
-    @SubscribeEvent
-    static void onLoad(final ModConfigEvent event) {
+    public static long mentionCooldownMs;
+    public static boolean enableMentionSound;
 
+    @SubscribeEvent
+    static void onLoad(final ModConfigEvent.@NotNull Loading event) {
+        mentionCooldownMs = MENTION_COOLDOWN_MS.get();
+        enableMentionSound = ENABLE_MENTION_SOUND.get();
+    }
+
+    @SubscribeEvent
+    static void onReload(final ModConfigEvent.@NotNull Reloading event) {
+        mentionCooldownMs = MENTION_COOLDOWN_MS.get();
+        enableMentionSound = ENABLE_MENTION_SOUND.get();
     }
 }

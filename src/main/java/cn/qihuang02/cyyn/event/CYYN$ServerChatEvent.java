@@ -1,6 +1,7 @@
 package cn.qihuang02.cyyn.event;
 
 import cn.qihuang02.cyyn.CallYouByYourName;
+import cn.qihuang02.cyyn.Config;
 import cn.qihuang02.cyyn.network.CYYN$Messages;
 import cn.qihuang02.cyyn.network.ClientboundPlayAtSoundPacket;
 import net.minecraft.ChatFormatting;
@@ -18,7 +19,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Mod.EventBusSubscriber(modid = CallYouByYourName.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class CYYN$ServerChatEvent {
-    private static final long AT_COOLDOWN_MS = 5000;
     private static final Map<UUID, Long> PLAYER_COOLDOWN_MAP = new ConcurrentHashMap<>();
 
     @SubscribeEvent
@@ -40,8 +40,9 @@ public class CYYN$ServerChatEvent {
         long currentTime = System.currentTimeMillis();
 
         long lastAtTime = PLAYER_COOLDOWN_MAP.getOrDefault(senderId, 0L);
-        if (currentTime - lastAtTime < AT_COOLDOWN_MS) {
-            long timeLeft = (AT_COOLDOWN_MS - (currentTime - lastAtTime)) / 1000L;
+        long cooldownMs = Config.mentionCooldownMs;
+        if (currentTime - lastAtTime < cooldownMs) {
+            long timeLeft = (cooldownMs - (currentTime - lastAtTime)) / 1000L;
             sender.sendSystemMessage(
                     Component.translatable("message.atatyou.cooldown", (timeLeft + 1))
                             .withStyle(ChatFormatting.RED)
@@ -57,10 +58,12 @@ public class CYYN$ServerChatEvent {
                     .withStyle(ChatFormatting.GOLD);
             targetPlayer.sendSystemMessage(atMessage, false);
 
-            CYYN$Messages.getChannel().send(
-                    PacketDistributor.PLAYER.with(() -> targetPlayer),
-                    new ClientboundPlayAtSoundPacket()
-            );
+            if (Config.enableMentionSound) {
+                CYYN$Messages.getChannel().send(
+                        PacketDistributor.PLAYER.with(() -> targetPlayer),
+                        new ClientboundPlayAtSoundPacket(Config.MENTION_SOUND_ID)
+                );
+            }
         }
 
         PLAYER_COOLDOWN_MAP.put(senderId, currentTime);

@@ -13,7 +13,7 @@ public class CYYN$Messages {
         return packetId++;
     }
 
-    private static final String PROTOCOL_VERSION = "1.0";
+    private static final String PROTOCOL_VERSION = "1.1";
 
     public static void register() {
         SimpleChannel net = NetworkRegistry.newSimpleChannel(
