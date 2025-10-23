@@ -3,7 +3,7 @@
   "minVersion": "0.8",
   "package": "cn.qihuang02.cyyn.mixin",
   "compatibilityLevel": "JAVA_8",
-  "refmap": "atatyou.refmap.json",
+  "refmap": "cyyn.refmap.json",
   "mixins": [
   ],
   "client": [
