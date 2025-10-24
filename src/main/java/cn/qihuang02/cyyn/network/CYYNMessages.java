@@ -5,15 +5,13 @@ import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.simple.SimpleChannel;
 
 public class CYYNMessages {
+    private static final String PROTOCOL_VERSION = "1.2";
     private static SimpleChannel INSTANCE;
-
     private static int packetId = 0;
 
     private static int id() {
         return packetId++;
     }
-
-    private static final String PROTOCOL_VERSION = "1.1";
 
     public static void register() {
         SimpleChannel net = NetworkRegistry.newSimpleChannel(
@@ -31,6 +29,14 @@ public class CYYNMessages {
                 ClientboundPlayAtSoundPacket::encode,
                 ClientboundPlayAtSoundPacket::decode,
                 ClientboundPlayAtSoundPacket::handle
+        );
+
+        net.registerMessage(
+                id(),
+                ClientboundSyncMentionGroupsPacket.class,
+                ClientboundSyncMentionGroupsPacket::encode,
+                ClientboundSyncMentionGroupsPacket::decode,
+                ClientboundSyncMentionGroupsPacket::handle
         );
     }
 

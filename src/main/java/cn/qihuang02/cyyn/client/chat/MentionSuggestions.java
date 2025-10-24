@@ -275,38 +275,39 @@ public final class MentionSuggestions {
     @Contract("_ -> new")
     private @NotNull Suggestions buildSuggestions(String typed) {
         ClientPacketListener connection = this.minecraft.getConnection();
-        if (connection == null) {
-            return new Suggestions(StringRange.between(this.replaceStart, this.replaceEnd), Collections.emptyList());
-        }
 
         LocalPlayer player = this.minecraft.player;
-        List<String> players = new ArrayList<>();
-        connection.getOnlinePlayers().stream()
-                .map(PlayerInfo::getProfile)
-                .filter(Objects::nonNull)
-                .filter(profile -> player == null || !profile.getId().equals(player.getUUID()))
-                .map(profile -> profile.getName() == null ? "" : profile.getName())
-                .filter(name -> !name.isEmpty())
-                .forEach(players::add);
 
-        List<String> candidates = new ArrayList<>(players);
-        if (!players.isEmpty()) {
-            candidates.add("near");
-            candidates.add("hear");
+        TreeSet<String> merged = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+        merged.addAll(ClientMentionGroupTokens.getTokens());
+        merged.add("here");
+        merged.add("near");
+
+        if (connection != null) {
+            connection.getOnlinePlayers().stream()
+                    .map(PlayerInfo::getProfile)
+                    .filter(Objects::nonNull)
+                    .filter(profile -> player == null || !profile.getId().equals(player.getUUID()))
+                    .map(profile -> profile.getName() == null ? "" : profile.getName())
+                    .filter(name -> !name.isEmpty())
+                    .forEach(merged::add);
         }
 
-        candidates.sort(Comparator.comparing(s -> s.toLowerCase(Locale.ROOT)));
+        StringRange range = StringRange.between(this.replaceStart, this.replaceEnd);
+        if (merged.isEmpty()) {
+            return new Suggestions(range, Collections.emptyList());
+        }
 
         String lowerTyped = typed.toLowerCase(Locale.ROOT);
         List<Suggestion> list = new ArrayList<>();
-        for (String candidate : candidates) {
+        for (String candidate : merged) {
             if (lowerTyped.isEmpty() || candidate.toLowerCase(Locale.ROOT).startsWith(lowerTyped)) {
-                list.add(new Suggestion(StringRange.between(this.replaceStart, this.replaceEnd), candidate));
+                list.add(new Suggestion(range, candidate));
             }
         }
         if (list.isEmpty()) {
-            return new Suggestions(StringRange.between(this.replaceStart, this.replaceEnd), Collections.emptyList());
+            return new Suggestions(range, Collections.emptyList());
         }
-        return new Suggestions(StringRange.between(this.replaceStart, this.replaceEnd), list);
+        return new Suggestions(range, list);
     }
 }
