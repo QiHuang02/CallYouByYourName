@@ -2,23 +2,26 @@ package cn.qihuang02.cyyn.event;
 
 import cn.qihuang02.cyyn.CallYouByYourName;
 import cn.qihuang02.cyyn.Config;
-import cn.qihuang02.cyyn.network.CYYN$Messages;
+import cn.qihuang02.cyyn.network.CYYNMessages;
 import cn.qihuang02.cyyn.network.ClientboundPlayAtSoundPacket;
+import cn.qihuang02.cyyn.util.MentionParseResult;
+import cn.qihuang02.cyyn.util.MentionParser;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.server.players.PlayerList;
 import net.minecraftforge.event.ServerChatEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.network.PacketDistributor;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Mod.EventBusSubscriber(modid = CallYouByYourName.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
-public class CYYN$ServerChatEvent {
+public class CYYNServerChatEvent {
     private static final Map<UUID, Long> PLAYER_COOLDOWN_MAP = new ConcurrentHashMap<>();
 
     @SubscribeEvent
@@ -31,7 +34,15 @@ public class CYYN$ServerChatEvent {
             return;
         }
 
-        List<ServerPlayer> mentionedPlayers = getValidMentionedPlayers(message, sender);
+        MentionParseResult mentionParseResult = MentionParser.parse(message, sender);
+        if (mentionParseResult.deniedGroupMention()) {
+            sender.sendSystemMessage(
+                    Component.translatable("message.cyyn.group.denied")
+                            .withStyle(ChatFormatting.RED)
+            );
+        }
+
+        List<ServerPlayer> mentionedPlayers = mentionParseResult.players();
 
         if (mentionedPlayers.isEmpty()) {
             return;
@@ -44,7 +55,7 @@ public class CYYN$ServerChatEvent {
         if (currentTime - lastAtTime < cooldownMs) {
             long timeLeft = (cooldownMs - (currentTime - lastAtTime)) / 1000L;
             sender.sendSystemMessage(
-                    Component.translatable("message.atatyou.cooldown", (timeLeft + 1))
+                    Component.translatable("message.cyyn.cooldown", (timeLeft + 1))
                             .withStyle(ChatFormatting.RED)
             );
 
@@ -54,12 +65,12 @@ public class CYYN$ServerChatEvent {
 
         for (ServerPlayer targetPlayer : mentionedPlayers) {
             Component senderNameComponent = sender.getDisplayName().copy().withStyle(ChatFormatting.YELLOW);
-            Component atMessage = Component.translatable("message.atatyou.notified", senderNameComponent)
+            Component atMessage = Component.translatable("message.cyyn.notified", senderNameComponent)
                     .withStyle(ChatFormatting.GOLD);
             targetPlayer.sendSystemMessage(atMessage, false);
 
             if (Config.enableMentionSound) {
-                CYYN$Messages.getChannel().send(
+                CYYNMessages.getChannel().send(
                         PacketDistributor.PLAYER.with(() -> targetPlayer),
                         new ClientboundPlayAtSoundPacket(Config.MENTION_SOUND_ID)
                 );
@@ -67,23 +78,5 @@ public class CYYN$ServerChatEvent {
         }
 
         PLAYER_COOLDOWN_MAP.put(senderId, currentTime);
-    }
-
-    private static @NotNull List<ServerPlayer> getValidMentionedPlayers(@NotNull String message, @NotNull ServerPlayer sender) {
-        List<ServerPlayer> mentionedPlayers = new ArrayList<>();
-        Set<UUID> alreadyMentioned = new HashSet<>();
-        PlayerList playerList = Objects.requireNonNull(sender.getServer()).getPlayerList();
-
-        for (String word : message.split(" ")) {
-            if (word.startsWith("@") && word.length() > 1) {
-                String playerName = word.substring(1);
-                ServerPlayer targetPlayer = playerList.getPlayerByName(playerName);
-
-                if (targetPlayer != null && !targetPlayer.equals(sender) && alreadyMentioned.add(targetPlayer.getUUID())) {
-                    mentionedPlayers.add(targetPlayer);
-                }
-            }
-        }
-        return mentionedPlayers;
     }
 }

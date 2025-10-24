@@ -39,6 +39,10 @@ public final class MentionSuggestions {
         this.area = new Rect2i(0, 0, 0, 0);
     }
 
+    private static boolean isMentionChar(char ch) {
+        return Character.isLetterOrDigit(ch) || ch == '_';
+    }
+
     public void attach(EditBox input) {
         this.input = input;
     }
@@ -280,9 +284,5 @@ public final class MentionSuggestions {
             return new Suggestions(StringRange.between(this.replaceStart, this.replaceEnd), Collections.emptyList());
         }
         return new Suggestions(StringRange.between(this.replaceStart, this.replaceEnd), list);
-    }
-
-    private static boolean isMentionChar(char ch) {
-        return Character.isLetterOrDigit(ch) || ch == '_';
     }
 }
