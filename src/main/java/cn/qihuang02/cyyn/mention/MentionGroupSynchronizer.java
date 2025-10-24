@@ -1,7 +1,7 @@
 package cn.qihuang02.cyyn.mention;
 
 import cn.qihuang02.cyyn.network.CYYNMessages;
-import cn.qihuang02.cyyn.network.ClientboundSyncMentionGroupsPacket;
+import cn.qihuang02.cyyn.network.SyncMentionGroupsPacket;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.player.PlayerEvent;
@@ -21,13 +21,13 @@ public class MentionGroupSynchronizer {
         if (ServerLifecycleHooks.getCurrentServer() == null) {
             return;
         }
-        CYYNMessages.getChannel().send(PacketDistributor.ALL.noArg(), new ClientboundSyncMentionGroupsPacket(tokens));
+        CYYNMessages.getChannel().send(PacketDistributor.ALL.noArg(), new SyncMentionGroupsPacket(tokens));
     }
 
     private static void handlePlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
         if (!(event.getEntity() instanceof ServerPlayer serverPlayer)) {
             return;
         }
-        CYYNMessages.getChannel().send(PacketDistributor.PLAYER.with(() -> serverPlayer), new ClientboundSyncMentionGroupsPacket(MentionGroupRegistry.tokens()));
+        CYYNMessages.getChannel().send(PacketDistributor.PLAYER.with(() -> serverPlayer), new SyncMentionGroupsPacket(MentionGroupRegistry.tokens()));
     }
 }

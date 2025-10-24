@@ -47,6 +47,19 @@ public final class MentionSuggestions {
         return Character.isLetterOrDigit(ch) || ch == '_';
     }
 
+    private static int brighten(int color) {
+        int alpha = color & 0xFF000000;
+        int red = (color >> 16) & 0xFF;
+        int green = (color >> 8) & 0xFF;
+        int blue = color & 0xFF;
+
+        red = red + (255 - red) / 3;
+        green = green + (255 - green) / 3;
+        blue = blue + (255 - blue) / 3;
+
+        return alpha | (red << 16) | (green << 8) | blue;
+    }
+
     public void attach(EditBox input) {
         this.input = input;
     }
@@ -175,9 +188,11 @@ public final class MentionSuggestions {
         int visibleEnd = Math.min(list.size(), this.displayOffset + maxVisible);
         this.visibleEntries = visibleEnd - this.displayOffset;
 
+        Set<String> groupTokens = new HashSet<>(ClientMentionGroupTokens.getTokens());
+
         int width = 0;
         for (int i = this.displayOffset; i < visibleEnd; i++) {
-            width = Math.max(width, this.font.width(list.get(i).getText()));
+            width = Math.max(width, this.font.width("@" + list.get(i).getText()));
         }
         width += 8;
 
@@ -193,10 +208,19 @@ public final class MentionSuggestions {
 
         for (int idx = 0; idx < this.visibleEntries; idx++) {
             int suggestionIndex = this.displayOffset + idx;
+            boolean highlighted = suggestionIndex == this.selection;
             int y = startY + idx * this.entryHeight;
-            int background = suggestionIndex == this.selection ? 0xFF2F2F2F : 0xFF000000;
+            int background = highlighted ? 0xFF2F3136 : 0xFF000000;
             guiGraphics.fill(startX, y, startX + width, y + this.entryHeight, background);
-            guiGraphics.drawString(this.font, list.get(suggestionIndex).getText(), startX + 4, y + 2, suggestionIndex == this.selection ? 0xFFFFFF : 0xFFAAAAAA, false);
+            String candidate = list.get(suggestionIndex).getText();
+            boolean group = groupTokens.contains(candidate);
+            int baseColor = group ? 0xFFFED766 : 0xFF55FFFF;
+            int textColor = highlighted ? brighten(baseColor) : baseColor;
+
+            int textX = startX + 4;
+            guiGraphics.drawString(this.font, "@", textX, y + 2, textColor, false);
+            textX += this.font.width("@");
+            guiGraphics.drawString(this.font, candidate, textX, y + 2, textColor, false);
         }
     }
 

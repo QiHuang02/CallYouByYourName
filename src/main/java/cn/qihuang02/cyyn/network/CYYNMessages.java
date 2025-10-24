@@ -25,18 +25,18 @@ public class CYYNMessages {
 
         net.registerMessage(
                 id(),
-                ClientboundPlayAtSoundPacket.class,
-                ClientboundPlayAtSoundPacket::encode,
-                ClientboundPlayAtSoundPacket::decode,
-                ClientboundPlayAtSoundPacket::handle
+                PlayAtSoundPacket.class,
+                PlayAtSoundPacket::encode,
+                PlayAtSoundPacket::decode,
+                PlayAtSoundPacket::handle
         );
 
         net.registerMessage(
                 id(),
-                ClientboundSyncMentionGroupsPacket.class,
-                ClientboundSyncMentionGroupsPacket::encode,
-                ClientboundSyncMentionGroupsPacket::decode,
-                ClientboundSyncMentionGroupsPacket::handle
+                SyncMentionGroupsPacket.class,
+                SyncMentionGroupsPacket::encode,
+                SyncMentionGroupsPacket::decode,
+                SyncMentionGroupsPacket::handle
         );
     }
 

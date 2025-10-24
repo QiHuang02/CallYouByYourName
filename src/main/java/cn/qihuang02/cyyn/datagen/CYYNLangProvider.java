@@ -12,7 +12,8 @@ public class CYYNLangProvider extends LanguageProvider {
     @Override
     protected void addTranslations() {
         add("message.cyyn.cooldown", "Please wait %s seconds before mentioning again.");
-        add("message.cyyn.notified", "%s mentioned you.");
+        add("message.cyyn.notified", "%s mentioned you: %s");
+        add("message.cyyn.notified.reply_tooltip", "Click to reply to the mention");
         add("message.cyyn.group.denied", "You do not have permission to use group mentions.");
     }
 }

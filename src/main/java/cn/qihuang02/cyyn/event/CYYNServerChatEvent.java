@@ -3,11 +3,13 @@ package cn.qihuang02.cyyn.event;
 import cn.qihuang02.cyyn.CallYouByYourName;
 import cn.qihuang02.cyyn.Config;
 import cn.qihuang02.cyyn.network.CYYNMessages;
-import cn.qihuang02.cyyn.network.ClientboundPlayAtSoundPacket;
+import cn.qihuang02.cyyn.network.PlayAtSoundPacket;
 import cn.qihuang02.cyyn.util.MentionParseResult;
 import cn.qihuang02.cyyn.util.MentionParser;
 import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.event.ServerChatEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -65,14 +67,19 @@ public class CYYNServerChatEvent {
 
         for (ServerPlayer targetPlayer : mentionedPlayers) {
             Component senderNameComponent = sender.getDisplayName().copy().withStyle(ChatFormatting.YELLOW);
-            Component atMessage = Component.translatable("message.cyyn.notified", senderNameComponent)
+            Component replyComponent = event.getMessage().copy()
+                    .withStyle(style -> style
+                            .withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "@" + sender.getGameProfile().getName() + " "))
+                            .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.translatable("message.cyyn.notified.reply_tooltip")))
+                            .withColor(ChatFormatting.YELLOW));
+            Component atMessage = Component.translatable("message.cyyn.notified", senderNameComponent, replyComponent)
                     .withStyle(ChatFormatting.GOLD);
             targetPlayer.sendSystemMessage(atMessage, false);
 
             if (Config.enableMentionSound) {
                 CYYNMessages.getChannel().send(
                         PacketDistributor.PLAYER.with(() -> targetPlayer),
-                        new ClientboundPlayAtSoundPacket(Config.MENTION_SOUND_ID)
+                        new PlayAtSoundPacket(Config.MENTION_SOUND_ID)
                 );
             }
         }

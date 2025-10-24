@@ -12,18 +12,18 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Supplier;
 
-public record ClientboundPlayAtSoundPacket(ResourceLocation soundLocation) {
+public record PlayAtSoundPacket(ResourceLocation soundLocation) {
 
-    public static @NotNull ClientboundPlayAtSoundPacket decode(@NotNull FriendlyByteBuf buf) {
+    public static @NotNull PlayAtSoundPacket decode(@NotNull FriendlyByteBuf buf) {
         ResourceLocation soundLocation = buf.readResourceLocation();
-        return new ClientboundPlayAtSoundPacket(soundLocation);
+        return new PlayAtSoundPacket(soundLocation);
     }
 
-    public static void encode(@NotNull ClientboundPlayAtSoundPacket packet, @NotNull FriendlyByteBuf buf) {
+    public static void encode(@NotNull PlayAtSoundPacket packet, @NotNull FriendlyByteBuf buf) {
         buf.writeResourceLocation(packet.soundLocation());
     }
 
-    public static boolean handle(ClientboundPlayAtSoundPacket packet, @NotNull Supplier<NetworkEvent.Context> supplier) {
+    public static boolean handle(PlayAtSoundPacket packet, @NotNull Supplier<NetworkEvent.Context> supplier) {
         NetworkEvent.Context context = supplier.get();
 
         context.enqueueWork(() -> {
