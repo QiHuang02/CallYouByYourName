@@ -280,16 +280,20 @@ public final class MentionSuggestions {
         }
 
         LocalPlayer player = this.minecraft.player;
-        List<String> candidates = new ArrayList<>();
-        candidates.add("near");
-        candidates.add("hear");
+        List<String> players = new ArrayList<>();
         connection.getOnlinePlayers().stream()
                 .map(PlayerInfo::getProfile)
                 .filter(Objects::nonNull)
                 .filter(profile -> player == null || !profile.getId().equals(player.getUUID()))
                 .map(profile -> profile.getName() == null ? "" : profile.getName())
                 .filter(name -> !name.isEmpty())
-                .forEach(candidates::add);
+                .forEach(players::add);
+
+        List<String> candidates = new ArrayList<>(players);
+        if (!players.isEmpty()) {
+            candidates.add("near");
+            candidates.add("hear");
+        }
 
         candidates.sort(Comparator.comparing(s -> s.toLowerCase(Locale.ROOT)));
 
