@@ -12,6 +12,8 @@ import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.util.Mth;
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.*;
@@ -28,15 +30,17 @@ public final class MentionSuggestions {
     private int replaceStart;
     private int replaceEnd;
     private Rect2i area;
+    private int mentionTokenStart;
     private int entryHeight;
     private int displayOffset;
     private int visibleEntries;
 
-    public MentionSuggestions(Minecraft minecraft) {
+    public MentionSuggestions(@NotNull Minecraft minecraft) {
         this.minecraft = minecraft;
         this.font = minecraft.font;
         this.suggestions = new Suggestions(StringRange.at(0), Collections.emptyList());
         this.area = new Rect2i(0, 0, 0, 0);
+        this.mentionTokenStart = -1;
     }
 
     private static boolean isMentionChar(char ch) {
@@ -54,6 +58,7 @@ public final class MentionSuggestions {
         this.displayOffset = 0;
         this.visibleEntries = 0;
         this.entryHeight = 0;
+        this.mentionTokenStart = -1;
     }
 
     public void refresh() {
@@ -63,13 +68,13 @@ public final class MentionSuggestions {
         }
 
         String value = this.input.getValue();
-        int cursor = this.input.getCursorPosition();
-        if (cursor < 0 || cursor > value.length()) {
+        int typedCursor = this.input.getCursorPosition();
+        if (typedCursor < 0 || typedCursor > value.length()) {
             hide();
             return;
         }
 
-        int tokenStart = findMentionStart(value, cursor);
+        int tokenStart = findMentionStart(value, typedCursor);
         if (tokenStart == -1) {
             hide();
             return;
@@ -78,13 +83,13 @@ public final class MentionSuggestions {
         int tokenEnd = findMentionEnd(value, tokenStart + 1);
         this.replaceStart = tokenStart + 1;
         this.replaceEnd = tokenEnd;
+        this.mentionTokenStart = tokenStart;
 
-        if (cursor <= tokenStart || cursor > tokenEnd) {
+        if (typedCursor <= tokenStart || typedCursor > tokenEnd) {
             hide();
             return;
         }
 
-        int typedCursor = Math.min(cursor, tokenEnd);
         String typed = value.substring(this.replaceStart, typedCursor);
         Suggestions newSuggestions = buildSuggestions(typed);
         if (newSuggestions.getList().isEmpty()) {
@@ -176,7 +181,7 @@ public final class MentionSuggestions {
         }
         width += 8;
 
-        int startX = input.getX();
+        int startX = calculateAnchorX(input);
         int startY = input.getY() - 2 - this.visibleEntries * this.entryHeight;
         if (startY < 0) {
             startY = input.getY() + input.getHeight() + 2;
@@ -193,6 +198,22 @@ public final class MentionSuggestions {
             guiGraphics.fill(startX, y, startX + width, y + this.entryHeight, background);
             guiGraphics.drawString(this.font, list.get(suggestionIndex).getText(), startX + 4, y + 2, suggestionIndex == this.selection ? 0xFFFFFF : 0xFFAAAAAA, false);
         }
+    }
+
+    private int calculateAnchorX(@NotNull EditBox input) {
+        int anchorX = input.getX();
+        if (this.mentionTokenStart < 0 || this.mentionTokenStart > input.getValue().length()) {
+            return anchorX;
+        }
+
+        int candidate = input.getScreenX(this.mentionTokenStart);
+        int minX = 0;
+        int maxX = this.minecraft.getWindow().getGuiScaledWidth();
+        if (candidate < minX || candidate > maxX) {
+            return anchorX;
+        }
+
+        return candidate;
     }
 
     private boolean isActive() {
@@ -229,7 +250,7 @@ public final class MentionSuggestions {
         hide();
     }
 
-    private int findMentionStart(String value, int cursor) {
+    private int findMentionStart(@NotNull String value, int cursor) {
         int index = Math.min(cursor, value.length());
         while (index > 0 && !Character.isWhitespace(value.charAt(index - 1))) {
             index--;
@@ -243,7 +264,7 @@ public final class MentionSuggestions {
         return -1;
     }
 
-    private int findMentionEnd(String value, int index) {
+    private int findMentionEnd(@NotNull String value, int index) {
         int end = index;
         while (end < value.length() && isMentionChar(value.charAt(end))) {
             end++;
@@ -251,33 +272,32 @@ public final class MentionSuggestions {
         return end;
     }
 
-    private Suggestions buildSuggestions(String typed) {
+    @Contract("_ -> new")
+    private @NotNull Suggestions buildSuggestions(String typed) {
         ClientPacketListener connection = this.minecraft.getConnection();
         if (connection == null) {
             return new Suggestions(StringRange.between(this.replaceStart, this.replaceEnd), Collections.emptyList());
         }
 
         LocalPlayer player = this.minecraft.player;
-        List<String> names = new ArrayList<>();
+        List<String> candidates = new ArrayList<>();
+        candidates.add("near");
+        candidates.add("hear");
         connection.getOnlinePlayers().stream()
                 .map(PlayerInfo::getProfile)
                 .filter(Objects::nonNull)
                 .filter(profile -> player == null || !profile.getId().equals(player.getUUID()))
                 .map(profile -> profile.getName() == null ? "" : profile.getName())
                 .filter(name -> !name.isEmpty())
-                .forEach(names::add);
+                .forEach(candidates::add);
 
-        if (names.isEmpty()) {
-            return new Suggestions(StringRange.between(this.replaceStart, this.replaceEnd), Collections.emptyList());
-        }
-
-        names.sort(Comparator.comparing(s -> s.toLowerCase(Locale.ROOT)));
+        candidates.sort(Comparator.comparing(s -> s.toLowerCase(Locale.ROOT)));
 
         String lowerTyped = typed.toLowerCase(Locale.ROOT);
         List<Suggestion> list = new ArrayList<>();
-        for (String name : names) {
-            if (lowerTyped.isEmpty() || name.toLowerCase(Locale.ROOT).startsWith(lowerTyped)) {
-                list.add(new Suggestion(StringRange.between(this.replaceStart, this.replaceEnd), name));
+        for (String candidate : candidates) {
+            if (lowerTyped.isEmpty() || candidate.toLowerCase(Locale.ROOT).startsWith(lowerTyped)) {
+                list.add(new Suggestion(StringRange.between(this.replaceStart, this.replaceEnd), candidate));
             }
         }
         if (list.isEmpty()) {

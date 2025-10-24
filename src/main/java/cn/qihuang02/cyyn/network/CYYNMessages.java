@@ -5,13 +5,15 @@ import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.simple.SimpleChannel;
 
 public class CYYNMessages {
-    private static final String PROTOCOL_VERSION = "1.1";
     private static SimpleChannel INSTANCE;
+
     private static int packetId = 0;
 
     private static int id() {
         return packetId++;
     }
+
+    private static final String PROTOCOL_VERSION = "1.1";
 
     public static void register() {
         SimpleChannel net = NetworkRegistry.newSimpleChannel(

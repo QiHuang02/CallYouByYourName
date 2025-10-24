@@ -16,15 +16,15 @@ public class CallYouByYourName {
     public static final String MODID = "cyyn";
     public static final Logger LOGGER = LogUtils.getLogger();
 
+    @Contract("_ -> new")
+    public static @NotNull ResourceLocation getRl(String path) {
+        return ResourceLocation.fromNamespaceAndPath(MODID, path);
+    }
+
     public CallYouByYourName(@NotNull FMLJavaModLoadingContext context) {
         IEventBus modEventBus = context.getModEventBus();
         context.registerConfig(ModConfig.Type.COMMON, Config.SPEC, "CallYouByYourName" + "-common.toml");
 
         CYYNMessages.register();
-    }
-
-    @Contract("_ -> new")
-    public static @NotNull ResourceLocation getRl(String path) {
-        return ResourceLocation.fromNamespaceAndPath(MODID, path);
     }
 }

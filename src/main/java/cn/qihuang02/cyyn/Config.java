@@ -9,16 +9,19 @@ import org.jetbrains.annotations.NotNull;
 
 @Mod.EventBusSubscriber(modid = CallYouByYourName.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class Config {
+    private static final ForgeConfigSpec.Builder BUILDER = new ForgeConfigSpec.Builder();
     public static final ResourceLocation MENTION_SOUND_ID =
             ResourceLocation.fromNamespaceAndPath("minecraft", "block.note_block.bell");
-    private static final ForgeConfigSpec.Builder BUILDER = new ForgeConfigSpec.Builder();
-    static final ForgeConfigSpec SPEC = BUILDER.build();
+
     private static final ForgeConfigSpec.LongValue MENTION_COOLDOWN_MS = BUILDER
             .comment("Cooldown (in milliseconds) between mention notifications sent by the same player.")
             .defineInRange("mentionCooldownMs", 5000L, 0L, Long.MAX_VALUE);
     private static final ForgeConfigSpec.BooleanValue ENABLE_MENTION_SOUND = BUILDER
             .comment("Whether to play a sound for mentioned players.")
             .define("enableMentionSound", true);
+
+    static final ForgeConfigSpec SPEC = BUILDER.build();
+
     public static long mentionCooldownMs;
     public static boolean enableMentionSound;
 
