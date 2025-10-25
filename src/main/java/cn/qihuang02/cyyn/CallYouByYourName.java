@@ -1,6 +1,7 @@
 package cn.qihuang02.cyyn;
 
 import cn.qihuang02.cyyn.mention.MentionGroupBootstrap;
+import cn.qihuang02.cyyn.mention.MentionGroupSynchronizer;
 import cn.qihuang02.cyyn.network.CYYNMessages;
 import com.mojang.logging.LogUtils;
 import net.minecraft.resources.ResourceLocation;
@@ -31,7 +32,8 @@ public class CallYouByYourName {
         return ResourceLocation.fromNamespaceAndPath(MODID, path);
     }
 
-    private void onCommonSetup(final FMLCommonSetupEvent event) {
+    private void onCommonSetup(final @NotNull FMLCommonSetupEvent event) {
         MentionGroupBootstrap.bootstrap();
+        event.enqueueWork(MentionGroupSynchronizer::init);
     }
 }

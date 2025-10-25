@@ -1,5 +1,6 @@
 package cn.qihuang02.cyyn.client.chat;
 
+import cn.qihuang02.cyyn.CallYouByYourName;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.UnmodifiableView;
 
@@ -21,6 +22,7 @@ public final class ClientMentionGroupTokens {
                 }
             }
             REVISION++;
+            CallYouByYourName.LOGGER.info("Client mention group tokens updated: {}", TOKENS);
         }
     }
 
