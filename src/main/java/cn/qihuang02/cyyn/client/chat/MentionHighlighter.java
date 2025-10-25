@@ -21,6 +21,7 @@ import java.util.Set;
 public class MentionHighlighter {
     private static final Style PLAYER_STYLE = Style.EMPTY.withColor(ChatFormatting.AQUA);
     private static final Style GROUP_STYLE = Style.EMPTY.withColor(ChatFormatting.LIGHT_PURPLE);
+    private static final Style ITEM_STYLE = Style.EMPTY.withColor(ChatFormatting.GOLD);
 
     private final Minecraft minecraft;
 
@@ -39,6 +40,9 @@ public class MentionHighlighter {
 
     private static Style resolveStyle(@NotNull String token, @NotNull Set<String> groupTokens, Set<String> playerTokens) {
         String lowered = token.toLowerCase(Locale.ROOT);
+        if ("item".equals(lowered)) {
+            return ITEM_STYLE;
+        }
         if (groupTokens.contains(lowered)) {
             return GROUP_STYLE;
         }

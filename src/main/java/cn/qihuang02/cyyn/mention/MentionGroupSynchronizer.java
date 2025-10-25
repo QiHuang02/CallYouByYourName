@@ -1,7 +1,7 @@
 package cn.qihuang02.cyyn.mention;
 
 import cn.qihuang02.cyyn.network.CYYNMessages;
-import cn.qihuang02.cyyn.network.SyncMentionGroupsPacket;
+import cn.qihuang02.cyyn.network.packet.SyncMentionGroupsPacket;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.player.PlayerEvent;

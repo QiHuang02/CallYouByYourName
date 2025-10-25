@@ -1,4 +1,4 @@
-package cn.qihuang02.cyyn.network;
+package cn.qihuang02.cyyn.network.packet;
 
 import cn.qihuang02.cyyn.Config;
 import net.minecraft.client.Minecraft;

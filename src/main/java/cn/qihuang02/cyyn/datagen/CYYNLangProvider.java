@@ -15,5 +15,6 @@ public class CYYNLangProvider extends LanguageProvider {
         add("message.cyyn.notified", "%s mentioned you: %s");
         add("message.cyyn.notified.reply_tooltip", "Click to reply to the mention");
         add("message.cyyn.group.denied", "You do not have permission to use group mentions.");
+        add("message.cyyn.item.empty", "You must hold an item to share it in chat.");
     }
 }

@@ -1,6 +1,8 @@
 package cn.qihuang02.cyyn.network;
 
 import cn.qihuang02.cyyn.CallYouByYourName;
+import cn.qihuang02.cyyn.network.packet.PlayAtSoundPacket;
+import cn.qihuang02.cyyn.network.packet.SyncMentionGroupsPacket;
 import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.simple.SimpleChannel;
 

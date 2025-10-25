@@ -1,4 +1,4 @@
-package cn.qihuang02.cyyn.network;
+package cn.qihuang02.cyyn.network.packet;
 
 import cn.qihuang02.cyyn.client.chat.ClientMentionGroupTokens;
 import net.minecraft.network.FriendlyByteBuf;

@@ -49,8 +49,8 @@ public abstract class ChatScreenMixin {
 
     @Inject(method = "init", at = @At("TAIL"))
     private void cyyn$init(CallbackInfo ci) {
-        this.cyyn$mentionSuggestions = new MentionSuggestions(Minecraft.getInstance());
-        this.cyyn$mentionSuggestions.attach(this.input);
+        Minecraft minecraft = Minecraft.getInstance();
+        this.cyyn$mentionSuggestions = new MentionSuggestions(minecraft, (ChatScreen) (Object) this, this.input);
         this.cyyn$mentionSuggestions.refresh();
 
         this.cyyn$mentionHighlighter = new MentionHighlighter(Minecraft.getInstance());
@@ -61,15 +61,18 @@ public abstract class ChatScreenMixin {
 
     @Inject(method = "resize", at = @At("HEAD"))
     private void cyyn$resizeHead(Minecraft minecraft, int width, int height, CallbackInfo ci) {
+        if (this.cyyn$mentionSuggestions != null) {
+            this.cyyn$mentionSuggestions.hide();
+            this.cyyn$mentionSuggestions = null;
+        }
         cyyn$resetFormatter();
     }
 
     @Inject(method = "resize", at = @At("TAIL"))
     private void cyyn$resize(Minecraft minecraft, int width, int height, CallbackInfo ci) {
-        if (this.cyyn$mentionSuggestions != null) {
-            this.cyyn$mentionSuggestions.attach(this.input);
-            this.cyyn$mentionSuggestions.refresh();
-        }
+        Minecraft client = Minecraft.getInstance();
+        this.cyyn$mentionSuggestions = new MentionSuggestions(client, (ChatScreen) (Object) this, this.input);
+        this.cyyn$mentionSuggestions.refresh();
         if (this.cyyn$mentionHighlighter != null && this.cyyn$mentionFormatter != null) {
             this.input.setFormatter(this.cyyn$mentionFormatter);
             this.cyyn$mentionHighlighter.invalidate();
