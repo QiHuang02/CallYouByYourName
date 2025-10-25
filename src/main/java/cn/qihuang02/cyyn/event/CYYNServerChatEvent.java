@@ -35,6 +35,12 @@ public class CYYNServerChatEvent {
             return;
         }
 
+        if (!handleItemMentions(event, sender)) {
+            return;
+        }
+
+        message = event.getMessage().getString();
+
         MentionParseResult mentionParseResult = MentionParser.parse(message, sender);
         if (mentionParseResult.deniedGroupMention()) {
             sender.sendSystemMessage(
@@ -42,8 +48,6 @@ public class CYYNServerChatEvent {
                             .withStyle(ChatFormatting.RED)
             );
         }
-
-        handleItemMentions(event, sender);
 
         List<ServerPlayer> mentionedPlayers = mentionParseResult.players();
 
@@ -88,11 +92,11 @@ public class CYYNServerChatEvent {
         PLAYER_COOLDOWN_MAP.put(senderId, currentTime);
     }
 
-    private static void handleItemMentions(@NotNull ServerChatEvent event, @NotNull ServerPlayer sender) {
+    private static boolean handleItemMentions(@NotNull ServerChatEvent event, @NotNull ServerPlayer sender) {
         Component originalComponent = event.getMessage();
         String rawMessage = originalComponent.getString();
         if (rawMessage.isEmpty()) {
-            return;
+            return true;
         }
 
         Style baseStyle = originalComponent.getStyle();
@@ -103,7 +107,6 @@ public class CYYNServerChatEvent {
         }
 
         boolean replacedAny = false;
-        boolean warnedEmpty = false;
         int index = 0;
 
         while (index < rawMessage.length()) {
@@ -140,13 +143,11 @@ public class CYYNServerChatEvent {
             String token = rawMessage.substring(atIndex + 1, tokenEnd);
             if ("item".equalsIgnoreCase(token)) {
                 if (mainHandItem.isEmpty()) {
-                    appendStyledLiteral(rebuilt, rawMessage.substring(atIndex, tokenEnd), baseStyle);
-                    if (!warnedEmpty) {
-                        sender.sendSystemMessage(
-                                Component.translatable("message.cyyn.item.empty").withStyle(ChatFormatting.RED)
-                        );
-                        warnedEmpty = true;
-                    }
+                    sender.sendSystemMessage(
+                            Component.translatable("message.cyyn.item.empty").withStyle(ChatFormatting.RED)
+                    );
+                    event.setCanceled(true);
+                    return false;
                 } else {
                     MutableComponent itemComponent = createItemComponent(mainHandItem);
                     rebuilt.append(itemComponent);
@@ -164,12 +165,24 @@ public class CYYNServerChatEvent {
         }
 
         if (replacedAny) {
-            event.setMessage(rebuilt);
+            event.setCanceled(true);
+            broadcastCustomChat(sender, rebuilt);
         }
+
+        return true;
     }
 
     private static boolean isMentionChar(char ch) {
         return Character.isLetterOrDigit(ch) || ch == '_';
+    }
+
+    private static void broadcastCustomChat(@NotNull ServerPlayer sender, @NotNull Component message) {
+        MutableComponent chatLine = Component.translatable("chat.type.text", sender.getDisplayName(), message);
+        if (sender.getServer() != null) {
+            sender.getServer().getPlayerList().broadcastSystemMessage(chatLine, false);
+        } else {
+            sender.sendSystemMessage(chatLine);
+        }
     }
 
     @NotNull

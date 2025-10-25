@@ -1,5 +1,6 @@
 package cn.qihuang02.cyyn.client.chat;
 
+import com.mojang.authlib.GameProfile;
 import com.mojang.brigadier.context.StringRange;
 import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.suggestion.Suggestions;
@@ -32,10 +33,97 @@ public final class MentionSuggestions extends CommandSuggestions {
         this.input = input;
     }
 
+    private static boolean isMentionChar(char ch) {
+        return Character.isLetterOrDigit(ch) || ch == '_';
+    }
+
+    private static void addMatchingCandidates(@NotNull List<String> candidates, @NotNull String lowerTyped,
+                                              @NotNull StringRange range, @NotNull List<Suggestion> output,
+                                              @NotNull Set<String> seen) {
+        for (String candidate : candidates) {
+            String loweredCandidate = candidate.toLowerCase(Locale.ROOT);
+            if (!lowerTyped.isEmpty() && !loweredCandidate.startsWith(lowerTyped)) {
+                continue;
+            }
+            if (!seen.add(loweredCandidate)) {
+                continue;
+            }
+            output.add(new Suggestion(range, candidate));
+        }
+    }
+
+    private static @NotNull List<String> collectGroupCandidates(LocalPlayer player) {
+        List<String> candidates = new ArrayList<>();
+        for (String token : ClientMentionGroupTokens.getTokens()) {
+            if (token != null && !token.isEmpty()) {
+                candidates.add(token);
+            }
+        }
+        candidates.add("here");
+        candidates.add("near");
+        if (player != null && !player.getMainHandItem().isEmpty()) {
+            candidates.add("item");
+        }
+
+        return sortAndDeduplicate(candidates);
+    }
+
+    private static @NotNull List<String> collectPlayerCandidates(ClientPacketListener connection, LocalPlayer localPlayer) {
+        if (connection == null) {
+            return Collections.emptyList();
+        }
+
+        List<String> names = new ArrayList<>();
+        for (PlayerInfo info : connection.getOnlinePlayers()) {
+            GameProfile profile = info.getProfile();
+            if (profile == null) {
+                continue;
+            }
+
+            if (localPlayer != null && profile.getId() != null && profile.getId().equals(localPlayer.getUUID())) {
+                continue;
+            }
+
+            String name = profile.getName();
+            if (name != null && !name.isEmpty()) {
+                names.add(name);
+            }
+        }
+
+        return sortAndDeduplicate(names);
+    }
+
+    private static @NotNull List<String> sortAndDeduplicate(@NotNull List<String> values) {
+        if (values.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        Map<String, String> deduplicated = new LinkedHashMap<>();
+        for (String value : values) {
+            if (value == null) {
+                continue;
+            }
+            String trimmed = value.trim();
+            if (trimmed.isEmpty()) {
+                continue;
+            }
+            deduplicated.putIfAbsent(trimmed.toLowerCase(Locale.ROOT), trimmed);
+        }
+
+        List<String> sorted = new ArrayList<>(deduplicated.values());
+        sorted.sort(String.CASE_INSENSITIVE_ORDER);
+        return sorted;
+    }
+
     public void refresh() {
         String value = this.input.getValue();
         int cursor = this.input.getCursorPosition();
         if (cursor < 0 || cursor > value.length()) {
+            return;
+        }
+
+        if (isCommandInput(value)) {
+            hide();
             return;
         }
 
@@ -72,6 +160,9 @@ public final class MentionSuggestions extends CommandSuggestions {
     }
 
     public boolean handleKeyPressed(int keyCode) {
+        if (isCommandInput(this.input.getValue())) {
+            return false;
+        }
         return super.keyPressed(keyCode, 0, 0);
     }
 
@@ -91,8 +182,8 @@ public final class MentionSuggestions extends CommandSuggestions {
         super.render(guiGraphics, mouseX, mouseY);
     }
 
-    private static boolean isMentionChar(char ch) {
-        return Character.isLetterOrDigit(ch) || ch == '_';
+    private static boolean isCommandInput(@NotNull String value) {
+        return !value.isEmpty() && value.charAt(0) == '/';
     }
 
     private int findMentionStart(@NotNull String value, int cursor) {
@@ -118,39 +209,25 @@ public final class MentionSuggestions extends CommandSuggestions {
     }
 
     @Contract("_ -> new")
-    private @NotNull Suggestions buildSuggestions(String typed) {
+    private @NotNull Suggestions buildSuggestions(@NotNull String typed) {
         ClientPacketListener connection = this.minecraft.getConnection();
 
         LocalPlayer player = this.minecraft.player;
 
-        TreeSet<String> merged = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
-        merged.addAll(ClientMentionGroupTokens.getTokens());
-        merged.add("here");
-        merged.add("near");
-        merged.add("item");
-
-        if (connection != null) {
-            connection.getOnlinePlayers().stream()
-                    .map(PlayerInfo::getProfile)
-                    .filter(Objects::nonNull)
-                    .filter(profile -> player == null || !profile.getId().equals(player.getUUID()))
-                    .map(profile -> profile.getName() == null ? "" : profile.getName())
-                    .filter(name -> !name.isEmpty())
-                    .forEach(merged::add);
-        }
-
         StringRange range = StringRange.between(this.replaceStart, this.replaceEnd);
-        if (merged.isEmpty()) {
+        String lowerTyped = typed.toLowerCase(Locale.ROOT);
+        List<String> groupCandidates = collectGroupCandidates(player);
+        List<String> playerCandidates = collectPlayerCandidates(connection, player);
+        if (groupCandidates.isEmpty() && playerCandidates.isEmpty()) {
             return new Suggestions(range, Collections.emptyList());
         }
 
-        String lowerTyped = typed.toLowerCase(Locale.ROOT);
         List<Suggestion> list = new ArrayList<>();
-        for (String candidate : merged) {
-            if (lowerTyped.isEmpty() || candidate.toLowerCase(Locale.ROOT).startsWith(lowerTyped)) {
-                list.add(new Suggestion(range, candidate));
-            }
-        }
+        Set<String> seen = new HashSet<>();
+
+        addMatchingCandidates(groupCandidates, lowerTyped, range, list, seen);
+        addMatchingCandidates(playerCandidates, lowerTyped, range, list, seen);
+
         if (list.isEmpty()) {
             return new Suggestions(range, Collections.emptyList());
         }
