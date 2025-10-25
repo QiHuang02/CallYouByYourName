@@ -1,5 +1,6 @@
 package cn.qihuang02.cyyn.mention;
 
+import cn.qihuang02.cyyn.util.MentionTextUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 
@@ -62,6 +63,7 @@ public final class MentionGroupRegistry {
     }
 
     private static @NotNull String normalizeToken(@NotNull String token) {
-        return Objects.requireNonNull(token, "token").toLowerCase(Locale.ROOT);
+        String normalized = MentionTextUtils.normalizeToken(Objects.requireNonNull(token, "token"));
+        return normalized.toLowerCase(Locale.ROOT);
     }
 }

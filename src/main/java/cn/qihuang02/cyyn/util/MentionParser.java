@@ -20,7 +20,7 @@ public final class MentionParser {
                 continue;
             }
 
-            String token = normalizeMentionToken(word.substring(1));
+            String token = MentionTextUtils.normalizeToken(word.substring(1));
             if (token.isEmpty()) {
                 continue;
             }
@@ -46,17 +46,5 @@ public final class MentionParser {
         }
 
         return new MentionParseResult(new ArrayList<>(mentionedPlayers.values()), deniedGroupMention);
-    }
-
-    private static @NotNull String normalizeMentionToken(@NotNull String rawToken) {
-        int end = rawToken.length();
-        while (end > 0) {
-            char c = rawToken.charAt(end - 1);
-            if (Character.isLetterOrDigit(c) || c == '_' || c == '-') {
-                break;
-            }
-            end--;
-        }
-        return rawToken.substring(0, end);
     }
 }

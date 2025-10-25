@@ -1,11 +1,14 @@
 package cn.qihuang02.cyyn.event.chat;
 
+import cn.qihuang02.cyyn.util.MentionTextUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.*;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.Optional;
 
 public class ItemMentionFormatter {
     public record FormatResult(@Nullable Component component, boolean canceled) {
@@ -28,37 +31,15 @@ public class ItemMentionFormatter {
         boolean replacedAny = false;
         int index = 0;
         while (index < rawMessage.length()) {
-            int atIndex = rawMessage.indexOf('@', index);
-            if (atIndex == -1) {
+            Optional<MentionTextUtils.MentionTokenRange> rangeOptional = MentionTextUtils.findTokenRange(rawMessage, index);
+            if (rangeOptional.isEmpty()) {
                 break;
             }
 
-            appendStyledLiteral(rebuilt, rawMessage.substring(index, atIndex), baseStyle);
+            MentionTextUtils.MentionTokenRange range = rangeOptional.get();
+            appendStyledLiteral(rebuilt, rawMessage.substring(index, range.mentionStart()), baseStyle);
 
-            if (atIndex + 1 >= rawMessage.length()) {
-                appendStyledLiteral(rebuilt, "@", baseStyle);
-                index = atIndex + 1;
-                continue;
-            }
-
-            if (atIndex > 0 && isMentionChar(rawMessage.charAt(atIndex - 1))) {
-                appendStyledLiteral(rebuilt, "@", baseStyle);
-                index = atIndex + 1;
-                continue;
-            }
-
-            int tokenEnd = atIndex + 1;
-            while (tokenEnd < rawMessage.length() && isMentionChar(rawMessage.charAt(tokenEnd))) {
-                tokenEnd++;
-            }
-
-            if (tokenEnd == atIndex + 1) {
-                appendStyledLiteral(rebuilt, "@", baseStyle);
-                index = tokenEnd;
-                continue;
-            }
-
-            String token = rawMessage.substring(atIndex + 1, tokenEnd);
+            String token = range.tokenIn(rawMessage);
             if ("item".equalsIgnoreCase(token)) {
                 if (mainHandItem.isEmpty()) {
                     sender.sendSystemMessage(
@@ -70,10 +51,10 @@ public class ItemMentionFormatter {
                 rebuilt.append(createItemComponent(mainHandItem));
                 replacedAny = true;
             } else {
-                appendStyledLiteral(rebuilt, rawMessage.substring(atIndex, tokenEnd), baseStyle);
+                appendStyledLiteral(rebuilt, range.mentionIn(rawMessage), baseStyle);
             }
 
-            index = tokenEnd;
+            index = range.tokenEnd();
         }
 
         if (index < rawMessage.length()) {
@@ -85,10 +66,6 @@ public class ItemMentionFormatter {
         }
 
         return new FormatResult(rebuilt, true);
-    }
-
-    private boolean isMentionChar(char ch) {
-        return Character.isLetterOrDigit(ch) || ch == '_';
     }
 
     @NotNull

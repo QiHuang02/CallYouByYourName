@@ -1,5 +1,6 @@
 package cn.qihuang02.cyyn.client.chat;
 
+import cn.qihuang02.cyyn.util.MentionTextUtils;
 import com.mojang.authlib.GameProfile;
 import com.mojang.brigadier.context.StringRange;
 import com.mojang.brigadier.suggestion.Suggestion;
@@ -31,10 +32,6 @@ public final class MentionSuggestions extends CommandSuggestions {
         super(minecraft, screen, input, minecraft.font, false, false, 0, MAX_VISIBLE, true, BACKGROUND_COLOR);
         this.minecraft = minecraft;
         this.input = input;
-    }
-
-    private static boolean isMentionChar(char ch) {
-        return Character.isLetterOrDigit(ch) || ch == '_';
     }
 
     private static void addMatchingCandidates(@NotNull List<String> candidates, @NotNull String lowerTyped,
@@ -127,20 +124,20 @@ public final class MentionSuggestions extends CommandSuggestions {
             return;
         }
 
-        int tokenStart = findMentionStart(value, cursor);
-        if (tokenStart == -1) {
+        Optional<MentionTextUtils.MentionTokenRange> rangeOptional = findMentionRangeAtCursor(value, cursor);
+        if (rangeOptional.isEmpty()) {
             hide();
             return;
         }
 
-        int tokenEnd = findMentionEnd(value, tokenStart + 1);
-        if (cursor <= tokenStart || cursor > tokenEnd) {
+        MentionTextUtils.MentionTokenRange range = rangeOptional.get();
+        if (cursor <= range.mentionStart() || cursor > range.tokenEnd()) {
             hide();
             return;
         }
 
-        this.replaceStart = tokenStart + 1;
-        this.replaceEnd = tokenEnd;
+        this.replaceStart = range.tokenStart();
+        this.replaceEnd = range.tokenEnd();
 
         String typed = value.substring(this.replaceStart, cursor);
         Suggestions suggestions = buildSuggestions(typed);
@@ -186,26 +183,25 @@ public final class MentionSuggestions extends CommandSuggestions {
         return !value.isEmpty() && value.charAt(0) == '/';
     }
 
-    private int findMentionStart(@NotNull String value, int cursor) {
-        int index = Math.min(cursor, value.length());
-        while (index > 0 && !Character.isWhitespace(value.charAt(index - 1))) {
-            index--;
-        }
-        if (index < value.length() && value.charAt(index) == '@') {
-            if (index > 0 && isMentionChar(value.charAt(index - 1))) {
-                return -1;
+    private @NotNull Optional<MentionTextUtils.MentionTokenRange> findMentionRangeAtCursor(@NotNull String value, int cursor) {
+        // Iterate through detected mentions until we find the one that contains the cursor.
+        int searchIndex = 0;
+        int boundedCursor = Math.max(0, Math.min(cursor, value.length()));
+        while (searchIndex < value.length()) {
+            Optional<MentionTextUtils.MentionTokenRange> optional = MentionTextUtils.findTokenRange(value, searchIndex);
+            if (optional.isEmpty()) {
+                return Optional.empty();
             }
-            return index;
+            MentionTextUtils.MentionTokenRange range = optional.get();
+            if (boundedCursor <= range.mentionStart()) {
+                return Optional.empty();
+            }
+            if (boundedCursor <= range.tokenEnd()) {
+                return optional;
+            }
+            searchIndex = range.tokenEnd();
         }
-        return -1;
-    }
-
-    private int findMentionEnd(@NotNull String value, int index) {
-        int end = index;
-        while (end < value.length() && isMentionChar(value.charAt(end))) {
-            end++;
-        }
-        return end;
+        return Optional.empty();
     }
 
     @Contract("_ -> new")

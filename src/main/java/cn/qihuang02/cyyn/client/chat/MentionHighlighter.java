@@ -1,5 +1,6 @@
 package cn.qihuang02.cyyn.client.chat;
 
+import cn.qihuang02.cyyn.util.MentionTextUtils;
 import com.mojang.authlib.GameProfile;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -12,11 +13,7 @@ import net.minecraft.network.chat.Style;
 import net.minecraft.util.FormattedCharSequence;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Set;
-
+import java.util.*;
 
 public class MentionHighlighter {
     private static final Style PLAYER_STYLE = Style.EMPTY.withColor(ChatFormatting.AQUA);
@@ -52,10 +49,6 @@ public class MentionHighlighter {
         return Style.EMPTY;
     }
 
-    private static boolean isMentionChar(char ch) {
-        return Character.isLetterOrDigit(ch) || ch == '_';
-    }
-
     public void invalidate() {
         this.dirty = true;
     }
@@ -88,42 +81,27 @@ public class MentionHighlighter {
         int index = 0;
 
         while (index < value.length()) {
-            int atIndex = value.indexOf('@', index);
-            if (atIndex == -1) {
+            Optional<MentionTextUtils.MentionTokenRange> rangeOptional = MentionTextUtils.findTokenRange(value, index);
+            if (rangeOptional.isEmpty()) {
                 break;
             }
 
-            if (atIndex > index) {
-                builder.append(Component.literal(value.substring(index, atIndex)));
+            MentionTextUtils.MentionTokenRange range = rangeOptional.get();
+            if (range.mentionStart() > index) {
+                builder.append(Component.literal(value.substring(index, range.mentionStart())));
             }
 
-            int tokenEnd = atIndex + 1;
-            while (tokenEnd < value.length() && isMentionChar(value.charAt(tokenEnd))) {
-                tokenEnd++;
-            }
-
-            if (tokenEnd == atIndex + 1) {
-                builder.append(Component.literal("@"));
-                index = tokenEnd;
-                continue;
-            }
-
-            if (atIndex > 0 && isMentionChar(value.charAt(atIndex - 1))) {
-                builder.append(Component.literal(value.substring(atIndex, tokenEnd)));
-                index = tokenEnd;
-                continue;
-            }
-
-            String token = value.substring(atIndex + 1, tokenEnd);
+            String token = range.tokenIn(value);
             Style style = resolveStyle(token, groupTokens, playerTokens);
+            String mentionText = range.mentionIn(value);
             if (style.isEmpty()) {
-                builder.append(Component.literal(value.substring(atIndex, tokenEnd)));
+                builder.append(Component.literal(mentionText));
             } else {
-                builder.append(Component.literal(value.substring(atIndex, tokenEnd)).withStyle(style));
+                builder.append(Component.literal(mentionText).withStyle(style));
                 changed = true;
             }
 
-            index = tokenEnd;
+            index = range.tokenEnd();
         }
 
         if (index < value.length()) {
