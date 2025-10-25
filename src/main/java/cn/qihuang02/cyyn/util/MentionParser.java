@@ -1,5 +1,6 @@
 package cn.qihuang02.cyyn.util;
 
+import cn.qihuang02.cyyn.mention.MentionAccessPolicy;
 import cn.qihuang02.cyyn.mention.MentionGroup;
 import cn.qihuang02.cyyn.mention.MentionGroupRegistry;
 import net.minecraft.server.level.ServerPlayer;
@@ -13,7 +14,6 @@ public final class MentionParser {
         Map<UUID, ServerPlayer> mentionedPlayers = new LinkedHashMap<>();
         PlayerList playerList = Objects.requireNonNull(sender.getServer()).getPlayerList();
         boolean deniedGroupMention = false;
-        boolean hasGroupMentionPermission = sender.hasPermissions(2);
 
         for (String word : message.split("\\s+")) {
             if (!word.startsWith("@") || word.length() <= 1) {
@@ -28,12 +28,14 @@ public final class MentionParser {
             Optional<MentionGroup> mentionGroup = MentionGroupRegistry.find(token);
             if (mentionGroup.isPresent()) {
                 MentionGroup group = mentionGroup.get();
-                if (group.requiresPermission() && !hasGroupMentionPermission) {
+                MentionAccessPolicy accessPolicy = group.accessPolicy();
+                if (accessPolicy.isDenied(sender)) {
                     deniedGroupMention = true;
-                } else {
-                    group.resolveTargets(sender, playerList)
-                            .forEach(player -> mentionedPlayers.putIfAbsent(player.getUUID(), player));
+                    continue;
                 }
+                group.resolveTargets(sender, playerList)
+                        .forEach(player -> mentionedPlayers.putIfAbsent(player.getUUID(), player));
+
                 continue;
             }
 

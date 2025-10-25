@@ -17,14 +17,15 @@ public interface MentionGroup {
     String token();
 
     /**
-     * @return {@code true} if the sender must have elevated permissions to use this group.
+     * @return the access policy that determines whether the sender may invoke this group.
      */
-    default boolean requiresPermission() {
-        return true;
+    default @NotNull MentionAccessPolicy accessPolicy() {
+        return MentionAccessPolicy.requiresPermissionLevel(2);
     }
 
     /**
-     * Resolves the target players for this group mention.
+     * Resolves the target players for this group mention. Third-party groups can override
+     * {@link #accessPolicy()} to expose custom permission checks while reusing the parser logic.
      *
      * @param sender     the player who triggered the mention
      * @param playerList the server player list to search

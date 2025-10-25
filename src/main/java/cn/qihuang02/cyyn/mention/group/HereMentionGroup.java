@@ -1,5 +1,6 @@
 package cn.qihuang02.cyyn.mention.group;
 
+import cn.qihuang02.cyyn.mention.MentionAccessPolicy;
 import cn.qihuang02.cyyn.mention.MentionGroup;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -16,6 +17,11 @@ public class HereMentionGroup implements MentionGroup {
     @Override
     public @NotNull String token() {
         return "here";
+    }
+
+    @Override
+    public @NotNull MentionAccessPolicy accessPolicy() {
+        return MentionAccessPolicy.alwaysAllow();
     }
 
     @Override

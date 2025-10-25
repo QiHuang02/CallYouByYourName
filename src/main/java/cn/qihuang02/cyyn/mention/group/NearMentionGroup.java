@@ -1,5 +1,6 @@
 package cn.qihuang02.cyyn.mention.group;
 
+import cn.qihuang02.cyyn.mention.MentionAccessPolicy;
 import cn.qihuang02.cyyn.mention.MentionGroup;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -18,6 +19,11 @@ public class NearMentionGroup implements MentionGroup {
     @Override
     public @NotNull String token() {
         return "near";
+    }
+
+    @Override
+    public @NotNull MentionAccessPolicy accessPolicy() {
+        return MentionAccessPolicy.alwaysAllow();
     }
 
     @Override
