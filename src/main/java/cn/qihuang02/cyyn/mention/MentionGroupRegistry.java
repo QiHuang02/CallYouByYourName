@@ -15,6 +15,15 @@ public final class MentionGroupRegistry {
     private static final ConcurrentMap<String, MentionGroup> GROUPS = new ConcurrentHashMap<>();
     private static final CopyOnWriteArrayList<Consumer<? super Collection<String>>> LISTENERS = new CopyOnWriteArrayList<>();
 
+    /**
+     * Registers a {@link MentionGroup} so it can be resolved by {@code @mention} tokens.
+     * <p>
+     * This entry point is loader-neutral; mods may call it during their own initialization on any supported
+     * loader (e.g. in a Forge {@code FMLCommonSetupEvent} handler or a Fabric mod initializer).
+     * </p>
+     *
+     * @param mentionGroup the mention group to register
+     */
     public static void register(@NotNull MentionGroup mentionGroup) {
         Objects.requireNonNull(mentionGroup, "mentionGroup");
         String token = Objects.requireNonNull(mentionGroup.token(), "mentionGroup token");

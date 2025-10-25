@@ -1,13 +1,9 @@
 package cn.qihuang02.cyyn;
 
-import cn.qihuang02.cyyn.event.RegisterMentionGroupsEvent;
-import cn.qihuang02.cyyn.mention.MentionGroupRegistry;
-import cn.qihuang02.cyyn.mention.group.HereMentionGroup;
-import cn.qihuang02.cyyn.mention.group.NearMentionGroup;
+import cn.qihuang02.cyyn.mention.MentionGroupBootstrap;
 import cn.qihuang02.cyyn.network.CYYNMessages;
 import com.mojang.logging.LogUtils;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
@@ -36,8 +32,6 @@ public class CallYouByYourName {
     }
 
     private void onCommonSetup(final FMLCommonSetupEvent event) {
-        MentionGroupRegistry.register(new HereMentionGroup());
-        MentionGroupRegistry.register(new NearMentionGroup());
-        MinecraftForge.EVENT_BUS.post(new RegisterMentionGroupsEvent());
+        MentionGroupBootstrap.bootstrap();
     }
 }
