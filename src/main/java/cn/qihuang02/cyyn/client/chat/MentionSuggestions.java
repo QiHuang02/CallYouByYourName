@@ -1,7 +1,7 @@
 package cn.qihuang02.cyyn.client.chat;
 
+import cn.qihuang02.cyyn.util.MentionCandidateProvider;
 import cn.qihuang02.cyyn.util.MentionTextUtils;
-import com.mojang.authlib.GameProfile;
 import com.mojang.brigadier.context.StringRange;
 import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.suggestion.Suggestions;
@@ -11,7 +11,6 @@ import net.minecraft.client.gui.components.CommandSuggestions;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.multiplayer.ClientPacketListener;
-import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.client.player.LocalPlayer;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -25,6 +24,7 @@ public final class MentionSuggestions extends CommandSuggestions {
 
     private final Minecraft minecraft;
     private final EditBox input;
+    private final MentionCandidateProvider candidateProvider;
     private int replaceStart;
     private int replaceEnd;
 
@@ -32,6 +32,7 @@ public final class MentionSuggestions extends CommandSuggestions {
         super(minecraft, screen, input, minecraft.font, false, false, 0, MAX_VISIBLE, true, BACKGROUND_COLOR);
         this.minecraft = minecraft;
         this.input = input;
+        this.candidateProvider = new MentionCandidateProvider(minecraft);
     }
 
     private static void addMatchingCandidates(@NotNull List<String> candidates, @NotNull String lowerTyped,
@@ -49,67 +50,8 @@ public final class MentionSuggestions extends CommandSuggestions {
         }
     }
 
-    private static @NotNull List<String> collectGroupCandidates(LocalPlayer player) {
-        List<String> candidates = new ArrayList<>();
-        for (String token : ClientMentionGroupTokens.getTokens()) {
-            if (token != null && !token.isEmpty()) {
-                candidates.add(token);
-            }
-        }
-        candidates.add("here");
-        candidates.add("near");
-        if (player != null && !player.getMainHandItem().isEmpty()) {
-            candidates.add("item");
-        }
-
-        return sortAndDeduplicate(candidates);
-    }
-
-    private static @NotNull List<String> collectPlayerCandidates(ClientPacketListener connection, LocalPlayer localPlayer) {
-        if (connection == null) {
-            return Collections.emptyList();
-        }
-
-        List<String> names = new ArrayList<>();
-        for (PlayerInfo info : connection.getOnlinePlayers()) {
-            GameProfile profile = info.getProfile();
-            if (profile == null) {
-                continue;
-            }
-
-            if (localPlayer != null && profile.getId() != null && profile.getId().equals(localPlayer.getUUID())) {
-                continue;
-            }
-
-            String name = profile.getName();
-            if (name != null && !name.isEmpty()) {
-                names.add(name);
-            }
-        }
-
-        return sortAndDeduplicate(names);
-    }
-
-    private static @NotNull List<String> sortAndDeduplicate(@NotNull List<String> values) {
-        if (values.isEmpty()) {
-            return Collections.emptyList();
-        }
-
-        Map<String, String> deduplicated = new LinkedHashMap<>();
-        for (String value : values) {
-            if (value == null) {
-                continue;
-            }
-            String trimmed = value.trim();
-            if (trimmed.isEmpty()) {
-                continue;
-            }
-            deduplicated.putIfAbsent(trimmed.toLowerCase(Locale.ROOT), trimmed);
-        }
-
-        List<String> sorted = new ArrayList<>(deduplicated.values());
-        sorted.sort(String.CASE_INSENSITIVE_ORDER);
-        return sorted;
+    private static boolean isCommandInput(@NotNull String value) {
+        return !value.isEmpty() && value.charAt(0) == '/';
     }
 
     public void refresh() {
@@ -179,12 +121,7 @@ public final class MentionSuggestions extends CommandSuggestions {
         super.render(guiGraphics, mouseX, mouseY);
     }
 
-    private static boolean isCommandInput(@NotNull String value) {
-        return !value.isEmpty() && value.charAt(0) == '/';
-    }
-
     private @NotNull Optional<MentionTextUtils.MentionTokenRange> findMentionRangeAtCursor(@NotNull String value, int cursor) {
-        // Iterate through detected mentions until we find the one that contains the cursor.
         int searchIndex = 0;
         int boundedCursor = Math.max(0, Math.min(cursor, value.length()));
         while (searchIndex < value.length()) {
@@ -212,8 +149,8 @@ public final class MentionSuggestions extends CommandSuggestions {
 
         StringRange range = StringRange.between(this.replaceStart, this.replaceEnd);
         String lowerTyped = typed.toLowerCase(Locale.ROOT);
-        List<String> groupCandidates = collectGroupCandidates(player);
-        List<String> playerCandidates = collectPlayerCandidates(connection, player);
+        List<String> groupCandidates = this.candidateProvider.getGroupCandidates(player);
+        List<String> playerCandidates = this.candidateProvider.getPlayerCandidates(connection, player);
         if (groupCandidates.isEmpty() && playerCandidates.isEmpty()) {
             return new Suggestions(range, Collections.emptyList());
         }

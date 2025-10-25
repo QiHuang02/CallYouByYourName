@@ -1,11 +1,10 @@
 package cn.qihuang02.cyyn.client.chat;
 
+import cn.qihuang02.cyyn.util.MentionCandidateProvider;
 import cn.qihuang02.cyyn.util.MentionTextUtils;
-import com.mojang.authlib.GameProfile;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientPacketListener;
-import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -13,7 +12,10 @@ import net.minecraft.network.chat.Style;
 import net.minecraft.util.FormattedCharSequence;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
+import java.util.List;
+import java.util.Locale;
+import java.util.Optional;
+import java.util.Set;
 
 public class MentionHighlighter {
     private static final Style PLAYER_STYLE = Style.EMPTY.withColor(ChatFormatting.AQUA);
@@ -21,6 +23,7 @@ public class MentionHighlighter {
     private static final Style ITEM_STYLE = Style.EMPTY.withColor(ChatFormatting.GOLD);
 
     private final Minecraft minecraft;
+    private final MentionCandidateProvider candidateProvider;
 
     private boolean dirty = true;
     private String cachedValue = "";
@@ -29,6 +32,7 @@ public class MentionHighlighter {
 
     public MentionHighlighter(@NotNull Minecraft minecraft) {
         this.minecraft = minecraft;
+        this.candidateProvider = new MentionCandidateProvider(minecraft);
     }
 
     public static @NotNull FormattedCharSequence vanillaFormatter(String value, int cursorPosition) {
@@ -73,8 +77,11 @@ public class MentionHighlighter {
             return Component.literal("").getVisualOrderText();
         }
 
-        Set<String> groupTokens = collectGroupTokens(groupTokenList);
-        Set<String> playerTokens = collectPlayerTokens();
+        LocalPlayer localPlayer = this.minecraft.player;
+        ClientPacketListener connection = this.minecraft.getConnection();
+
+        Set<String> groupTokens = this.candidateProvider.getGroupTokens(groupTokenList, localPlayer);
+        Set<String> playerTokens = this.candidateProvider.getPlayerTokens(connection, localPlayer);
 
         MutableComponent builder = Component.empty();
         boolean changed = false;
@@ -109,46 +116,5 @@ public class MentionHighlighter {
         }
 
         return changed ? builder.getVisualOrderText() : Component.literal(value).getVisualOrderText();
-    }
-
-    private @NotNull Set<String> collectGroupTokens(@NotNull List<String> tokens) {
-        Set<String> normalized = new HashSet<>();
-        for (String token : tokens) {
-            if (token == null || token.isEmpty()) {
-                continue;
-            }
-            normalized.add(token.toLowerCase(Locale.ROOT));
-        }
-        normalized.add("here");
-        normalized.add("near");
-        return normalized;
-    }
-
-    private @NotNull Set<String> collectPlayerTokens() {
-        ClientPacketListener connection = this.minecraft.getConnection();
-        if (connection == null) {
-            return Set.of();
-        }
-
-        LocalPlayer localPlayer = this.minecraft.player;
-        Set<String> names = new HashSet<>();
-
-        for (PlayerInfo info : connection.getOnlinePlayers()) {
-            GameProfile profile = info.getProfile();
-            if (profile == null) {
-                continue;
-            }
-
-            if (localPlayer != null && profile.getId() != null && profile.getId().equals(localPlayer.getUUID())) {
-                continue;
-            }
-
-            String name = profile.getName();
-            if (name != null && !name.isEmpty()) {
-                names.add(name.toLowerCase(Locale.ROOT));
-            }
-        }
-
-        return names;
     }
 }

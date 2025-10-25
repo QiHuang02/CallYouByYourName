@@ -9,9 +9,9 @@ import org.jetbrains.annotations.NotNull;
 
 @Mod.EventBusSubscriber(modid = CallYouByYourName.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class Config {
-    private static final ForgeConfigSpec.Builder BUILDER = new ForgeConfigSpec.Builder();
     public static final ResourceLocation MENTION_SOUND_ID =
             ResourceLocation.fromNamespaceAndPath("minecraft", "block.note_block.bell");
+    private static final ForgeConfigSpec.Builder BUILDER = new ForgeConfigSpec.Builder();
 
     private static final ForgeConfigSpec.LongValue MENTION_COOLDOWN_MS = BUILDER
             .comment("Cooldown (in milliseconds) between mention notifications sent by the same player.")

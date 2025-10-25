@@ -10,6 +10,9 @@ import java.util.Optional;
  * Helper methods for parsing and working with mentions in chat text.
  */
 public class MentionTextUtils {
+    private MentionTextUtils() {
+    }
+
     public static boolean isMentionChar(char ch) {
         return Character.isLetterOrDigit(ch) || ch == '_' || ch == '-';
     }

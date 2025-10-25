@@ -11,9 +11,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Optional;
 
 public class ItemMentionFormatter {
-    public record FormatResult(@Nullable Component component, boolean canceled) {
-    }
-
     @NotNull
     public FormatResult format(@NotNull ServerPlayer sender, @NotNull Component message) {
         String rawMessage = message.getString();
@@ -92,5 +89,8 @@ public class ItemMentionFormatter {
             literal.setStyle(baseStyle);
         }
         builder.append(literal);
+    }
+
+    public record FormatResult(@Nullable Component component, boolean canceled) {
     }
 }
