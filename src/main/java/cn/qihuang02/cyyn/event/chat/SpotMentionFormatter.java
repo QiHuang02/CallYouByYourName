@@ -3,19 +3,13 @@ package cn.qihuang02.cyyn.event.chat;
 import cn.qihuang02.cyyn.util.MentionTextUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.ComponentUtils;
-import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.network.chat.Style;
-import net.minecraft.resources.ResourceKey;
+import net.minecraft.network.chat.*;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Locale;
 import java.util.Optional;
 
-public class SpotMentionFormatter implements MentionFormatter{
+public class SpotMentionFormatter implements MentionFormatter {
     @Override
     public @NotNull Result format(@NotNull ServerPlayer sender, @NotNull Component message) {
         String rawMessage = message.getString();
@@ -41,8 +35,8 @@ public class SpotMentionFormatter implements MentionFormatter{
             appendStyledLiteral(rebuilt, rawMessage.substring(index, range.mentionStart()), baseStyle);
 
             String token = range.tokenIn(rawMessage);
-            if ("site".equalsIgnoreCase(token)) {
-                rebuilt.append(createSiteComponent(sender));
+            if ("spot".equalsIgnoreCase(token)) {
+                rebuilt.append(createSpotComponent(sender));
                 replacedAny = true;
             } else {
                 appendStyledLiteral(rebuilt, range.mentionIn(rawMessage), baseStyle);
@@ -62,15 +56,15 @@ public class SpotMentionFormatter implements MentionFormatter{
         return Result.replace(rebuilt);
     }
 
-    private @NotNull MutableComponent createSiteComponent(@NotNull ServerPlayer sender) {
+    private @NotNull MutableComponent createSpotComponent(@NotNull ServerPlayer sender) {
         BlockPos blockPos = sender.blockPosition();
-        ResourceKey<Level> dimension = sender.level().dimension();
-        MutableComponent dimensionName = Component.translatable(
-                String.format(Locale.ROOT, "dimension.%s.%s", dimension.location().getNamespace(), dimension.location().getPath())
-        );
-        MutableComponent coordinates = Component.literal(String.format(Locale.ROOT, "%d, %d, %d - ", blockPos.getX(), blockPos.getY(), blockPos.getZ()));
-        MutableComponent payload = coordinates.append(dimensionName);
-        return ComponentUtils.wrapInSquareBrackets(payload).withStyle(style -> style.withColor(ChatFormatting.GREEN));
+        MutableComponent location = Component.translatable("message.cyyn.spot", blockPos.getX(), blockPos.getY(), blockPos.getZ());
+        MutableComponent hoverText = Component.empty().append(location);
+
+        return ComponentUtils.wrapInSquareBrackets(Component.literal("Spot"))
+                .withStyle(style -> style
+                        .withColor(ChatFormatting.GREEN)
+                        .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, hoverText)));
     }
 
     private void appendStyledLiteral(@NotNull MutableComponent builder, @NotNull String text, @NotNull Style baseStyle) {
