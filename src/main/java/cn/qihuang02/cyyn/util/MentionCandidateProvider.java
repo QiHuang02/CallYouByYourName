@@ -51,6 +51,7 @@ public final class MentionCandidateProvider {
         }
         normalized.add("here");
         normalized.add("near");
+        normalized.add("spot");
         if (player != null && !player.getMainHandItem().isEmpty()) {
             normalized.add("item");
         }
@@ -97,6 +98,7 @@ public final class MentionCandidateProvider {
         List<String> candidates = new ArrayList<>(ClientMentionGroupTokens.getTokens());
         candidates.add("here");
         candidates.add("near");
+        candidates.add("spot");
         if (player != null && !player.getMainHandItem().isEmpty()) {
             candidates.add("item");
         }

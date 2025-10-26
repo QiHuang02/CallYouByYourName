@@ -18,12 +18,13 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-public record MentionChatProcessor(@NotNull ItemMentionFormatter itemMentionFormatter) {
-    private static final MentionChatProcessor INSTANCE = new MentionChatProcessor(new ItemMentionFormatter());
+public record MentionChatProcessor(@NotNull List<MentionFormatter> mentionFormatters) {
+    private static final MentionChatProcessor INSTANCE = new MentionChatProcessor(defaultFormatters());
     private static final Map<UUID, Long> PLAYER_COOLDOWN_MAP = new ConcurrentHashMap<>();
 
     public MentionChatProcessor {
-        Objects.requireNonNull(itemMentionFormatter, "itemMentionFormatter");
+        Objects.requireNonNull(mentionFormatters, "mentionFormatters");
+        mentionFormatters = List.copyOf(mentionFormatters);
     }
 
     @NotNull
@@ -31,22 +32,40 @@ public record MentionChatProcessor(@NotNull ItemMentionFormatter itemMentionForm
         return INSTANCE;
     }
 
+    private static @NotNull List<MentionFormatter> defaultFormatters() {
+        return List.of(
+                new ItemMentionFormatter(),
+                new SpotMentionFormatter()
+        );
+    }
+
     public boolean process(@NotNull ServerChatEvent event) {
         ServerPlayer sender = event.getPlayer();
         Component originalComponent = event.getMessage();
 
-        ItemMentionFormatter.FormatResult formatResult = itemMentionFormatter().format(sender, originalComponent);
-        Component processedComponent = formatResult.component() != null ? formatResult.component() : originalComponent;
+        Component processedComponent = originalComponent;
 
         boolean eventCanceled = false;
         boolean broadcastManually = false;
-        if (formatResult.canceled()) {
+        for (MentionFormatter formatter : mentionFormatters()) {
+            MentionFormatter.Result result = formatter.format(sender, processedComponent);
+            if (result.component() != null) {
+                processedComponent = result.component();
+                broadcastManually = true;
+            }
+
+            if (result.cancelEvent()) {
+                event.setCanceled(true);
+                eventCanceled = true;
+                if (result.component() == null) {
+                    return true;
+                }
+            }
+        }
+
+        if (broadcastManually) {
             event.setCanceled(true);
             eventCanceled = true;
-            if (formatResult.component() == null) {
-                return true;
-            }
-            broadcastManually = true;
         }
 
         String message = processedComponent.getString();

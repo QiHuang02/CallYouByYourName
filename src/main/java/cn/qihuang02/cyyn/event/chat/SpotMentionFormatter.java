@@ -2,15 +2,20 @@ package cn.qihuang02.cyyn.event.chat;
 
 import cn.qihuang02.cyyn.util.MentionTextUtils;
 import net.minecraft.ChatFormatting;
-import net.minecraft.network.chat.*;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.ComponentUtils;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Style;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
+import java.util.Locale;
 import java.util.Optional;
 
-public class ItemMentionFormatter implements MentionFormatter {
+public class SpotMentionFormatter implements MentionFormatter{
     @Override
     public @NotNull Result format(@NotNull ServerPlayer sender, @NotNull Component message) {
         String rawMessage = message.getString();
@@ -19,7 +24,6 @@ public class ItemMentionFormatter implements MentionFormatter {
         }
 
         Style baseStyle = message.getStyle();
-        ItemStack mainHandItem = sender.getMainHandItem();
         MutableComponent rebuilt = Component.empty();
         if (!baseStyle.isEmpty()) {
             rebuilt.setStyle(baseStyle);
@@ -37,15 +41,8 @@ public class ItemMentionFormatter implements MentionFormatter {
             appendStyledLiteral(rebuilt, rawMessage.substring(index, range.mentionStart()), baseStyle);
 
             String token = range.tokenIn(rawMessage);
-            if ("item".equalsIgnoreCase(token)) {
-                if (mainHandItem.isEmpty()) {
-                    sender.sendSystemMessage(
-                            Component.translatable("message.cyyn.item.empty").withStyle(ChatFormatting.RED)
-                    );
-                    return Result.cancel();
-                }
-
-                rebuilt.append(createItemComponent(mainHandItem));
+            if ("site".equalsIgnoreCase(token)) {
+                rebuilt.append(createSiteComponent(sender));
                 replacedAny = true;
             } else {
                 appendStyledLiteral(rebuilt, range.mentionIn(rawMessage), baseStyle);
@@ -65,19 +62,15 @@ public class ItemMentionFormatter implements MentionFormatter {
         return Result.replace(rebuilt);
     }
 
-    @NotNull
-    private MutableComponent createItemComponent(@NotNull ItemStack stack) {
-        MutableComponent itemName = ComponentUtils.wrapInSquareBrackets(stack.getHoverName().copy());
-        HoverEvent hoverEvent = new HoverEvent(
-                HoverEvent.Action.SHOW_ITEM,
-                new HoverEvent.ItemStackInfo(stack.copy())
+    private @NotNull MutableComponent createSiteComponent(@NotNull ServerPlayer sender) {
+        BlockPos blockPos = sender.blockPosition();
+        ResourceKey<Level> dimension = sender.level().dimension();
+        MutableComponent dimensionName = Component.translatable(
+                String.format(Locale.ROOT, "dimension.%s.%s", dimension.location().getNamespace(), dimension.location().getPath())
         );
-
-        return itemName.withStyle(style -> style
-                .withHoverEvent(hoverEvent)
-                .withColor(stack.getRarity().color)
-                .withInsertion(stack.getDescriptionId())
-        );
+        MutableComponent coordinates = Component.literal(String.format(Locale.ROOT, "%d, %d, %d - ", blockPos.getX(), blockPos.getY(), blockPos.getZ()));
+        MutableComponent payload = coordinates.append(dimensionName);
+        return ComponentUtils.wrapInSquareBrackets(payload).withStyle(style -> style.withColor(ChatFormatting.GREEN));
     }
 
     private void appendStyledLiteral(@NotNull MutableComponent builder, @NotNull String text, @NotNull Style baseStyle) {
