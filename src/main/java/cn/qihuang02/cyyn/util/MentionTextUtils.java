@@ -35,10 +35,7 @@ public class MentionTextUtils {
             while (tokenEnd < text.length() && isMentionChar(text.charAt(tokenEnd))) {
                 tokenEnd++;
             }
-            if (tokenEnd > atIndex + 1) {
-                return Optional.of(new MentionTokenRange(atIndex, tokenEnd));
-            }
-            searchIndex = atIndex + 1;
+            return Optional.of(new MentionTokenRange(atIndex, tokenEnd));
         }
         return Optional.empty();
     }

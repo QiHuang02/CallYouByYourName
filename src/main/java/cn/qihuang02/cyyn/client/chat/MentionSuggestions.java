@@ -106,6 +106,9 @@ public final class MentionSuggestions extends CommandSuggestions {
     }
 
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (this.pendingSuggestions == null) {
+            return false;
+        }
         return super.mouseClicked(mouseX, mouseY, button);
     }
 
