@@ -19,21 +19,27 @@ public class Config {
     private static final ForgeConfigSpec.BooleanValue ENABLE_MENTION_SOUND = BUILDER
             .comment("Whether to play a sound for mentioned players.")
             .define("enableMentionSound", true);
+    private static final ForgeConfigSpec.BooleanValue RENDER_ITEM_TEXTURES = BUILDER
+            .comment("Whether to render item textures inline with chat messages.")
+            .define("renderItemTextures", true);
 
     static final ForgeConfigSpec SPEC = BUILDER.build();
 
     public static long mentionCooldownMs;
     public static boolean enableMentionSound;
+    public static boolean renderItemTextures = true;
 
     @SubscribeEvent
     static void onLoad(final ModConfigEvent.@NotNull Loading event) {
         mentionCooldownMs = MENTION_COOLDOWN_MS.get();
         enableMentionSound = ENABLE_MENTION_SOUND.get();
+        renderItemTextures = RENDER_ITEM_TEXTURES.get();
     }
 
     @SubscribeEvent
     static void onReload(final ModConfigEvent.@NotNull Reloading event) {
         mentionCooldownMs = MENTION_COOLDOWN_MS.get();
         enableMentionSound = ENABLE_MENTION_SOUND.get();
+        renderItemTextures = RENDER_ITEM_TEXTURES.get();
     }
 }

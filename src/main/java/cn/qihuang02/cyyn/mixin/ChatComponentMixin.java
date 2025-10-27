@@ -1,5 +1,6 @@
 package cn.qihuang02.cyyn.mixin;
 
+import cn.qihuang02.cyyn.Config;
 import cn.qihuang02.cyyn.util.CyynItemHoverArea;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -42,7 +43,7 @@ public abstract class ChatComponentMixin {
 
     @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;drawString(Lnet/minecraft/client/gui/Font;Lnet/minecraft/util/FormattedCharSequence;III)I"))
     private int cyyn$renderItemMentions(GuiGraphics guiGraphics, Font font, FormattedCharSequence text, int x, int y, int color) {
-        if (!cyyn$containsItemHover(text)) {
+        if (!Config.renderItemTextures || !cyyn$containsItemHover(text)) {
             return guiGraphics.drawString(font, text, x, y, color);
         }
 
@@ -58,6 +59,10 @@ public abstract class ChatComponentMixin {
 
     @Unique
     private void cyyn$renderItemIcons(GuiGraphics guiGraphics, Font font, FormattedCharSequence text, int baseX, int baseY, int color) {
+        if (!Config.renderItemTextures) {
+            return;
+        }
+
         float alpha = (float) ((color >> 24) & 0xFF) / 255.0F;
         if (alpha <= 0.0F) {
             return;
@@ -184,6 +189,10 @@ public abstract class ChatComponentMixin {
 
     @Inject(method = "getClickedComponentStyleAt", at = @At("HEAD"), cancellable = true)
     private void cyyn$expandItemHoverArea(double mouseX, double mouseY, CallbackInfoReturnable<Style> cir) {
+        if (!Config.renderItemTextures) {
+            return;
+        }
+
         int x = Mth.floor(mouseX);
         int y = Mth.floor(mouseY);
         for (CyynItemHoverArea area : this.cyyn$itemHoverAreas) {
