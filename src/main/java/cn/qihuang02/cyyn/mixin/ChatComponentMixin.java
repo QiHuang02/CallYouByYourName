@@ -1,20 +1,25 @@
 package cn.qihuang02.cyyn.mixin;
 
+import cn.qihuang02.cyyn.util.CyynItemHoverArea;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.ChatComponent;
-import net.minecraft.network.chat.FormattedText;
-import net.minecraft.network.chat.HoverEvent;
-import net.minecraft.network.chat.Style;
+import net.minecraft.network.chat.*;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Mixin(ChatComponent.class)
 public abstract class ChatComponentMixin {
@@ -28,13 +33,16 @@ public abstract class ChatComponentMixin {
     private static final float cyyn$ITEM_ICON_TEXT_PADDING = 3.0F;
 
     @Unique
-    private static final float cyyn$ITEM_VERTICAL_OFFSET = 2.0F;
+    private static final float cyyn$ITEM_VERTICAL_OFFSET = 1.0F;
 
     @Unique
     private static int cyyn$itemPaddingSpaceCount = -1;
 
     @Unique
     private static float cyyn$itemPaddingWidth = 0.0F;
+
+    @Unique
+    private final List<CyynItemHoverArea> cyyn$itemHoverAreas = new ArrayList<>();
 
     @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;drawString(Lnet/minecraft/client/gui/Font;Lnet/minecraft/util/FormattedCharSequence;III)I"))
     private int cyyn$renderItemMentions(GuiGraphics guiGraphics, Font font, FormattedCharSequence text, int x, int y, int color) {
@@ -46,6 +54,11 @@ public abstract class ChatComponentMixin {
         int result = guiGraphics.drawString(font, paddedText, x, y, color);
         cyyn$renderItemIcons(guiGraphics, font, text, x, y, color);
         return result;
+    }
+
+    @Inject(method = "render", at = @At("HEAD"))
+    private void cyyn$prepareItemHoverAreas(GuiGraphics pGuiGraphics, int pTickCount, int pMouseX, int pMouseY, CallbackInfo ci) {
+        this.cyyn$itemHoverAreas.clear();
     }
 
     @Unique
@@ -66,6 +79,7 @@ public abstract class ChatComponentMixin {
                 if (!stack.isEmpty()) {
                     float iconLeft = cyyn$computeIconLeft(baseX, advance[0]);
                     cyyn$drawItemIcon(guiGraphics, stack, iconLeft, baseY, alpha);
+                    cyyn$recordItemHoverArea(font, effectiveStyle, stack, iconLeft, baseX, baseY, advance[0]);
                 }
                 advance[0] += cyyn$itemPaddingWidth;
             }
@@ -108,6 +122,27 @@ public abstract class ChatComponentMixin {
         RenderSystem.disableBlend();
 
         poseStack.popPose();
+    }
+
+    @Unique
+    private void cyyn$recordItemHoverArea(Font font, Style style, ItemStack stack, float iconLeft, int baseX, int baseY, float advanceWithoutPadding) {
+        if (style == null) {
+            return;
+        }
+
+        Component displayName = ComponentUtils.wrapInSquareBrackets(stack.getHoverName().copy()).withStyle(style);
+        float iconSize = 16.0F * cyyn$ITEM_ICON_SCALE;
+        float iconTop = baseY - cyyn$ITEM_VERTICAL_OFFSET;
+        float textStartX = baseX + advanceWithoutPadding + cyyn$itemPaddingWidth;
+        float textEndX = textStartX + font.width(displayName) + 1.0F;
+        float iconRight = iconLeft + iconSize;
+
+        float hoverLeft = Math.min(iconLeft, textStartX);
+        float hoverRight = Math.max(iconRight, textEndX);
+        float hoverTop = Math.min(iconTop, baseY);
+        float hoverBottom = Math.max(iconTop + iconSize, baseY + font.lineHeight);
+
+        cyyn$registerHoverArea(hoverLeft, hoverTop, hoverRight, hoverBottom, style);
     }
 
     @Unique
@@ -178,5 +213,31 @@ public abstract class ChatComponentMixin {
         float desiredSpacing = cyyn$ITEM_ICON_LEADING_PADDING + (16.0F * cyyn$ITEM_ICON_SCALE) + cyyn$ITEM_ICON_TEXT_PADDING;
         cyyn$itemPaddingSpaceCount = Math.max(1, Mth.ceil(desiredSpacing / (float) spaceWidth));
         cyyn$itemPaddingWidth = cyyn$itemPaddingSpaceCount * (float) spaceWidth;
+    }
+
+    @Unique
+    private void cyyn$registerHoverArea(float left, float top, float right, float bottom, Style style) {
+        int minX = Mth.floor(Math.min(left, right));
+        int minY = Mth.floor(Math.min(top, bottom));
+        int maxX = Mth.ceil(Math.max(left, right));
+        int maxY = Mth.ceil(Math.max(top, bottom));
+        if (maxX <= minX || maxY <= minY) {
+            return;
+        }
+
+        this.cyyn$itemHoverAreas.add(new CyynItemHoverArea(minX, minY, maxX - minX, maxY - minY, style));
+    }
+
+    @Inject(method = "getClickedComponentStyleAt", at = @At("HEAD"), cancellable = true)
+    private void cyyn$expandItemHoverArea(double mouseX, double mouseY, CallbackInfoReturnable<Style> cir) {
+        int x = Mth.floor(mouseX);
+        int y = Mth.floor(mouseY);
+        for (CyynItemHoverArea area : this.cyyn$itemHoverAreas) {
+            if (area.contains(x, y)) {
+                cir.setReturnValue(area.style());
+                cir.cancel();
+                return;
+            }
+        }
     }
 }
