@@ -66,17 +66,37 @@ public class ItemMentionFormatter implements MentionFormatter {
 
     @NotNull
     private MutableComponent createItemComponent(@NotNull ItemStack stack) {
-        MutableComponent itemName = ComponentUtils.wrapInSquareBrackets(stack.getHoverName().copy());
+        MutableComponent hoverName = stack.getHoverName().copy();
         HoverEvent hoverEvent = new HoverEvent(
                 HoverEvent.Action.SHOW_ITEM,
                 new HoverEvent.ItemStackInfo(stack.copy())
         );
 
-        return itemName.withStyle(style -> style
+        Style itemStyle = Style.EMPTY
+                .withHoverEvent(hoverEvent)
+                .withColor(stack.getRarity().color)
+                .withInsertion(stack.getDescriptionId());
+
+        MutableComponent padded = Component.literal("  ")
+                .withStyle(style -> style
+                        .withHoverEvent(null)
+                        .withClickEvent(null)
+                        .withInsertion(null)
+                );
+        MutableComponent styledName = hoverName.withStyle(existing -> existing
                 .withHoverEvent(hoverEvent)
                 .withColor(stack.getRarity().color)
                 .withInsertion(stack.getDescriptionId())
         );
+
+        MutableComponent wrapped = ComponentUtils.wrapInSquareBrackets(styledName)
+                .withStyle(existing -> existing
+                        .withHoverEvent(hoverEvent)
+                        .withColor(stack.getRarity().color)
+                        .withInsertion(stack.getDescriptionId())
+                );
+
+        return padded.append(wrapped);
     }
 
     private void appendStyledLiteral(@NotNull MutableComponent builder, @NotNull String text, @NotNull Style baseStyle) {
