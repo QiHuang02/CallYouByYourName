@@ -22,6 +22,14 @@ public record MentionChatProcessor(@NotNull List<MentionFormatter> mentionFormat
     private static final MentionChatProcessor INSTANCE = new MentionChatProcessor(defaultFormatters());
     private static final Map<UUID, Long> PLAYER_COOLDOWN_MAP = new ConcurrentHashMap<>();
 
+    public static void clearCooldown(@NotNull UUID playerId) {
+        PLAYER_COOLDOWN_MAP.remove(playerId);
+    }
+
+    public static void clearAllCooldowns() {
+        PLAYER_COOLDOWN_MAP.clear();
+    }
+
     public MentionChatProcessor {
         Objects.requireNonNull(mentionFormatters, "mentionFormatters");
         mentionFormatters = List.copyOf(mentionFormatters);
