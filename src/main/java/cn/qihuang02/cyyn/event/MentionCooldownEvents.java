@@ -2,6 +2,7 @@ package cn.qihuang02.cyyn.event;
 
 import cn.qihuang02.cyyn.CallYouByYourName;
 import cn.qihuang02.cyyn.event.chat.MentionChatProcessor;
+import cn.qihuang02.cyyn.event.chat.MentionCooldownTracker;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.server.ServerStoppingEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -12,11 +13,11 @@ import org.jetbrains.annotations.NotNull;
 public class MentionCooldownEvents {
     @SubscribeEvent
     public static void onPlayerLoggedOut(PlayerEvent.@NotNull PlayerLoggedOutEvent event) {
-        MentionChatProcessor.clearCooldown(event.getEntity().getUUID());
+        MentionCooldownTracker.getInstance().clearCooldown(event.getEntity().getUUID());
     }
 
     @SubscribeEvent
     public static void onServerStopping(ServerStoppingEvent event) {
-        MentionChatProcessor.clearAllCooldowns();
+        MentionCooldownTracker.getInstance().clearAllCooldowns();
     }
 }

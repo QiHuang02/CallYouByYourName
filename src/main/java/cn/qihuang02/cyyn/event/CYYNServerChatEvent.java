@@ -21,7 +21,7 @@ public class CYYNServerChatEvent {
     @NotNull
     private static MentionChatProcessor getProcessor() {
         if (processor == null) {
-            processor = MentionChatProcessor.getInstance();
+            processor = MentionChatProcessor.createDefault();
         }
         return processor;
     }

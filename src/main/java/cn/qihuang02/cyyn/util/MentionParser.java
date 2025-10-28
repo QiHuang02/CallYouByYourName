@@ -10,7 +10,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.*;
 
 public final class MentionParser {
-    public static @NotNull MentionParseResult parse(@NotNull String message, @NotNull ServerPlayer sender) {
+    public @NotNull MentionParseResult parse(@NotNull String message, @NotNull ServerPlayer sender) {
         Map<UUID, ServerPlayer> mentionedPlayers = new LinkedHashMap<>();
         PlayerList playerList = Objects.requireNonNull(sender.getServer()).getPlayerList();
         boolean deniedGroupMention = false;

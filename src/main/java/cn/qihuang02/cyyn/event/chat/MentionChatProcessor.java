@@ -1,46 +1,47 @@
 package cn.qihuang02.cyyn.event.chat;
 
 import cn.qihuang02.cyyn.Config;
-import cn.qihuang02.cyyn.network.CYYNMessages;
-import cn.qihuang02.cyyn.network.packet.PlayAtSoundPacket;
 import cn.qihuang02.cyyn.util.MentionParseResult;
 import cn.qihuang02.cyyn.util.MentionParser;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.*;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.event.ServerChatEvent;
-import net.minecraftforge.network.PacketDistributor;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
-public record MentionChatProcessor(@NotNull List<MentionFormatter> mentionFormatters) {
-    private static final MentionChatProcessor INSTANCE = new MentionChatProcessor(defaultFormatters());
-    private static final Map<UUID, Long> PLAYER_COOLDOWN_MAP = new ConcurrentHashMap<>();
+public class MentionChatProcessor {
+    private final List<MentionFormatter> mentionFormatters;
+    private final MentionCooldownTracker cooldownTracker;
+    private final MentionNotificationService notificationService;
+    private final MentionParser mentionParser;
 
-    public static void clearCooldown(@NotNull UUID playerId) {
-        PLAYER_COOLDOWN_MAP.remove(playerId);
+    public MentionChatProcessor(@NotNull List<MentionFormatter> mentionFormatters,
+                                @NotNull MentionCooldownTracker cooldownTracker,
+                                @NotNull MentionNotificationService notificationService,
+                                @NotNull MentionParser mentionParser) {
+        this.mentionFormatters = List.copyOf(Objects.requireNonNull(mentionFormatters, "mentionFormatters"));
+        this.cooldownTracker = Objects.requireNonNull(cooldownTracker, "cooldownTracker");
+        this.notificationService = Objects.requireNonNull(notificationService, "notificationService");
+        this.mentionParser = Objects.requireNonNull(mentionParser, "mentionParser");
     }
 
-    public static void clearAllCooldowns() {
-        PLAYER_COOLDOWN_MAP.clear();
+    public static @NotNull MentionChatProcessor createDefault() {
+        return new MentionChatProcessor(
+                defaultFormatters(),
+                MentionCooldownTracker.getInstance(),
+                new MentionNotificationService(),
+                new MentionParser()
+        );
     }
 
-    public MentionChatProcessor {
-        Objects.requireNonNull(mentionFormatters, "mentionFormatters");
-        mentionFormatters = List.copyOf(mentionFormatters);
-    }
-
-    @NotNull
-    public static MentionChatProcessor getInstance() {
-        return INSTANCE;
-    }
-
-    private static @NotNull List<MentionFormatter> defaultFormatters() {
+    @Contract(" -> new")
+    private static @NotNull @Unmodifiable List<MentionFormatter> defaultFormatters() {
         return List.of(
                 new ItemMentionFormatter(),
                 new SpotMentionFormatter()
@@ -55,7 +56,7 @@ public record MentionChatProcessor(@NotNull List<MentionFormatter> mentionFormat
 
         boolean eventCanceled = false;
         boolean broadcastManually = false;
-        for (MentionFormatter formatter : mentionFormatters()) {
+        for (MentionFormatter formatter : mentionFormatters) {
             MentionFormatter.Result result = formatter.format(sender, processedComponent);
             if (result.component() != null) {
                 processedComponent = result.component();
@@ -79,12 +80,12 @@ public record MentionChatProcessor(@NotNull List<MentionFormatter> mentionFormat
         String message = processedComponent.getString();
         if (!message.contains("@")) {
             if (broadcastManually) {
-                broadcastCustomChat(sender, processedComponent);
+                notificationService.broadcastCustomChat(sender, processedComponent);
             }
             return eventCanceled;
         }
 
-        MentionParseResult mentionParseResult = MentionParser.parse(message, sender);
+        MentionParseResult mentionParseResult = mentionParser.parse(message, sender);
         if (mentionParseResult.deniedGroupMention()) {
             sender.sendSystemMessage(
                     Component.translatable("message.cyyn.group.denied")
@@ -95,26 +96,25 @@ public record MentionChatProcessor(@NotNull List<MentionFormatter> mentionFormat
         List<ServerPlayer> mentionedPlayers = mentionParseResult.players();
         if (mentionedPlayers.isEmpty()) {
             if (broadcastManually) {
-                broadcastCustomChat(sender, processedComponent);
+                notificationService.broadcastCustomChat(sender, processedComponent);
             }
             return eventCanceled;
         }
 
-        MutableComponent replyReadyMessage = createReplyReadyMessage(processedComponent, sender);
+        MutableComponent replyReadyMessage = notificationService.createReplyReadyMessage(processedComponent, sender);
         processedComponent = replyReadyMessage;
 
         if (broadcastManually) {
-            broadcastCustomChat(sender, processedComponent);
+            notificationService.broadcastCustomChat(sender, processedComponent);
         } else {
             event.setMessage(processedComponent);
         }
 
         long currentTime = System.currentTimeMillis();
         UUID senderId = sender.getUUID();
-        long lastAtTime = PLAYER_COOLDOWN_MAP.getOrDefault(senderId, 0L);
         long cooldownMs = Config.mentionCooldownMs;
-        if (currentTime - lastAtTime < cooldownMs) {
-            long timeLeft = (cooldownMs - (currentTime - lastAtTime)) / 1000L;
+        if (cooldownTracker.isOnCooldown(senderId, cooldownMs, currentTime)) {
+            long timeLeft = cooldownTracker.getRemainingSeconds(senderId, cooldownMs, currentTime);
             sender.sendSystemMessage(
                     Component.translatable("message.cyyn.cooldown", (timeLeft + 1))
                             .withStyle(ChatFormatting.RED)
@@ -124,56 +124,10 @@ public record MentionChatProcessor(@NotNull List<MentionFormatter> mentionFormat
         }
 
         for (ServerPlayer targetPlayer : mentionedPlayers) {
-            notifyPlayer(sender, targetPlayer);
+            notificationService.notifyPlayer(sender, targetPlayer);
         }
 
-        PLAYER_COOLDOWN_MAP.put(senderId, currentTime);
+        cooldownTracker.updateCooldown(senderId, currentTime);
         return eventCanceled;
-    }
-
-    private void notifyPlayer(@NotNull ServerPlayer sender, @NotNull ServerPlayer targetPlayer) {
-        Component senderNameComponent = sender.getDisplayName().copy().withStyle(ChatFormatting.YELLOW);
-        MutableComponent header = Component.translatable("message.cyyn.notified", senderNameComponent)
-                .withStyle(ChatFormatting.GOLD);
-        targetPlayer.sendSystemMessage(header, false);
-
-        if (Config.enableMentionSound) {
-            CYYNMessages.getChannel().send(
-                    PacketDistributor.PLAYER.with(() -> targetPlayer),
-                    new PlayAtSoundPacket(Config.MENTION_SOUND_ID)
-            );
-        }
-    }
-
-    private @NotNull MutableComponent createReplyReadyMessage(@NotNull Component messageComponent, @NotNull ServerPlayer sender) {
-        MutableComponent copy = messageComponent.copy();
-        Style replyStyle = createReplyInteractionStyle(sender);
-        applyReplyStyle(copy, replyStyle);
-        return copy;
-    }
-
-    private void broadcastCustomChat(@NotNull ServerPlayer sender, @NotNull Component message) {
-        MutableComponent chatLine = Component.translatable("chat.type.text", sender.getDisplayName(), message);
-        if (sender.getServer() != null) {
-            sender.getServer().getPlayerList().broadcastSystemMessage(chatLine, false);
-        } else {
-            sender.sendSystemMessage(chatLine);
-        }
-    }
-
-    private @NotNull Style createReplyInteractionStyle(@NotNull ServerPlayer sender) {
-        return Style.EMPTY
-                .withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "@" + sender.getGameProfile().getName() + " "))
-                .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.translatable("message.cyyn.notified.reply_tooltip")));
-    }
-
-    private void applyReplyStyle(@NotNull MutableComponent component, @NotNull Style replyStyle) {
-        component.setStyle(replyStyle.applyTo(component.getStyle()));
-        for (int i = 0; i < component.getSiblings().size(); i++) {
-            Component sibling = component.getSiblings().get(i);
-            MutableComponent mutableSibling = sibling.copy();
-            applyReplyStyle(mutableSibling, replyStyle);
-            component.getSiblings().set(i, mutableSibling);
-        }
     }
 }
