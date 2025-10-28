@@ -1,4 +1,4 @@
-package cn.qihuang02.cyyn.event.chat;
+package cn.qihuang02.cyyn.mention.formatter;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;

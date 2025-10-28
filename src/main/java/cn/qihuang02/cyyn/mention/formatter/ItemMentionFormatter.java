@@ -1,4 +1,4 @@
-package cn.qihuang02.cyyn.event.chat;
+package cn.qihuang02.cyyn.mention.formatter;
 
 import cn.qihuang02.cyyn.util.MentionTextUtils;
 import net.minecraft.ChatFormatting;

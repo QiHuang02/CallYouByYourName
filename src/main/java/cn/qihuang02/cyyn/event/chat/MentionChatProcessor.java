@@ -1,6 +1,9 @@
 package cn.qihuang02.cyyn.event.chat;
 
 import cn.qihuang02.cyyn.Config;
+import cn.qihuang02.cyyn.mention.formatter.ItemMentionFormatter;
+import cn.qihuang02.cyyn.mention.formatter.MentionFormatter;
+import cn.qihuang02.cyyn.mention.formatter.SpotMentionFormatter;
 import cn.qihuang02.cyyn.util.MentionParseResult;
 import cn.qihuang02.cyyn.util.MentionParser;
 import net.minecraft.ChatFormatting;
