@@ -1,6 +1,6 @@
 package cn.qihuang02.cyyn.client.chat;
 
-import cn.qihuang02.cyyn.util.MentionTextUtils;
+import cn.qihuang02.cyyn.common.mention.MentionTextUtils;
 import com.mojang.brigadier.context.StringRange;
 import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.suggestion.Suggestions;

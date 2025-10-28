@@ -1,8 +1,9 @@
 package cn.qihuang02.cyyn;
 
-import cn.qihuang02.cyyn.mention.MentionGroupBootstrap;
-import cn.qihuang02.cyyn.mention.MentionGroupSynchronizer;
-import cn.qihuang02.cyyn.network.CYYNMessages;
+import cn.qihuang02.cyyn.common.config.Config;
+import cn.qihuang02.cyyn.common.network.CYYNMessages;
+import cn.qihuang02.cyyn.server.mention.MentionGroupBootstrap;
+import cn.qihuang02.cyyn.server.mention.MentionGroupSynchronizer;
 import com.mojang.logging.LogUtils;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.eventbus.api.IEventBus;
