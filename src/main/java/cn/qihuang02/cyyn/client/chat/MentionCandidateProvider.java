@@ -1,6 +1,5 @@
-package cn.qihuang02.cyyn.util;
+package cn.qihuang02.cyyn.client.chat;
 
-import cn.qihuang02.cyyn.client.chat.ClientMentionGroupTokens;
 import com.mojang.authlib.GameProfile;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientPacketListener;

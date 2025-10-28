@@ -1,6 +1,5 @@
 package cn.qihuang02.cyyn.client.chat;
 
-import cn.qihuang02.cyyn.util.MentionCandidateProvider;
 import cn.qihuang02.cyyn.util.MentionTextUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
