@@ -48,13 +48,14 @@ public final class MentionGroupRegistry {
         return GROUPS.values().stream()
                 .map(MentionGroup::token)
                 .filter(Objects::nonNull)
+                .sorted(String.CASE_INSENSITIVE_ORDER)
                 .toList();
     }
 
     public static void addListener(@NotNull Consumer<? super Collection<String>> listener) {
         Consumer<? super Collection<String>> consumer = Objects.requireNonNull(listener, "listener");
         LISTENERS.add(consumer);
-        consumer.accept(Collections.unmodifiableList(List.copyOf(tokens())));
+        consumer.accept(tokens());
     }
 
     public static void removeListener(@NotNull Consumer<? super Collection<String>> listener) {
@@ -65,7 +66,7 @@ public final class MentionGroupRegistry {
         if (LISTENERS.isEmpty()) {
             return;
         }
-        List<String> snapshot = List.copyOf(tokens());
+        List<String> snapshot = tokens();
         for (Consumer<? super Collection<String>> listener : LISTENERS) {
             listener.accept(snapshot);
         }
