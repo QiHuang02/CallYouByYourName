@@ -8,27 +8,27 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public final class ClientMentionGroupTokens {
+public final class ClientMentionGroupNames {
     private static final Object LOCK = new Object();
-    private static final List<String> TOKENS = new ArrayList<>();
+    private static final List<String> NAMES = new ArrayList<>();
     private static int REVISION;
 
-    public static void updateTokens(@NotNull Collection<String> tokens) {
+    public static void updateNames(@NotNull Collection<String> names) {
         synchronized (LOCK) {
-            TOKENS.clear();
-            for (String token : tokens) {
-                if (token != null && !token.isEmpty()) {
-                    TOKENS.add(token);
+            NAMES.clear();
+            for (String name : names) {
+                if (name != null && !name.isEmpty()) {
+                    NAMES.add(name);
                 }
             }
             REVISION++;
-            CallYouByYourName.LOGGER.info("Client mention group tokens updated: {}", TOKENS);
+            CallYouByYourName.LOGGER.info("Client mention group names updated: {}", NAMES);
         }
     }
 
-    public static @NotNull @UnmodifiableView List<String> getTokens() {
+    public static @NotNull @UnmodifiableView List<String> getNames() {
         synchronized (LOCK) {
-            return List.copyOf(TOKENS);
+            return List.copyOf(NAMES);
         }
     }
 

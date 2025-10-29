@@ -40,13 +40,13 @@ public final class MentionCandidateProvider {
         return sorted;
     }
 
-    public @NotNull Set<String> getGroupTokens(@NotNull Collection<String> tokens, @Nullable LocalPlayer player) {
+    public @NotNull Set<String> getGroupNames(@NotNull Collection<String> names, @Nullable LocalPlayer player) {
         Set<String> normalized = new LinkedHashSet<>();
-        for (String token : tokens) {
-            if (token == null || token.isEmpty()) {
+        for (String name : names) {
+            if (name == null || name.isEmpty()) {
                 continue;
             }
-            normalized.add(token.toLowerCase(Locale.ROOT));
+            normalized.add(name.toLowerCase(Locale.ROOT));
         }
         normalized.add("here");
         normalized.add("near");
@@ -57,15 +57,15 @@ public final class MentionCandidateProvider {
         return normalized;
     }
 
-    public @NotNull Set<String> getGroupTokens(@Nullable LocalPlayer player) {
-        return getGroupTokens(ClientMentionGroupTokens.getTokens(), player);
+    public @NotNull Set<String> getGroupNames(@Nullable LocalPlayer player) {
+        return getGroupNames(ClientMentionGroupNames.getNames(), player);
     }
 
-    public @NotNull Set<String> getGroupTokens() {
-        return getGroupTokens(this.minecraft.player);
+    public @NotNull Set<String> getGroupNames() {
+        return getGroupNames(this.minecraft.player);
     }
 
-    public @NotNull Set<String> getPlayerTokens(@Nullable ClientPacketListener connection, @Nullable LocalPlayer localPlayer) {
+    public @NotNull Set<String> getPlayerNames(@Nullable ClientPacketListener connection, @Nullable LocalPlayer localPlayer) {
         if (connection == null) {
             return Collections.emptySet();
         }
@@ -89,12 +89,12 @@ public final class MentionCandidateProvider {
         return names;
     }
 
-    public @NotNull Set<String> getPlayerTokens() {
-        return getPlayerTokens(this.minecraft.getConnection(), this.minecraft.player);
+    public @NotNull Set<String> getPlayerNames() {
+        return getPlayerNames(this.minecraft.getConnection(), this.minecraft.player);
     }
 
     public @NotNull List<String> getGroupCandidates(@Nullable LocalPlayer player) {
-        List<String> candidates = new ArrayList<>(ClientMentionGroupTokens.getTokens());
+        List<String> candidates = new ArrayList<>(ClientMentionGroupNames.getNames());
         candidates.add("here");
         candidates.add("near");
         candidates.add("spot");

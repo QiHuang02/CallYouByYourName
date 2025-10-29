@@ -40,9 +40,9 @@
 
 ## Client Experience 🌈
 - Mention colors adapt to players, groups, shared items, and spot markers so you can scan conversations at a glance.
-- Autocomplete surfaces group tokens, custom registry entries, and online players, but hides automatically while you type commands that start with `/`.
+- Autocomplete surfaces group names, custom registry entries, and online players, but hides automatically while you type commands that start with `/`.
 - Item mentions can render a scaled version of the item icon inline with the chat line while preserving hover hitboxes for easy inspection.
-- Mention tokens from servers (or other mods) are synchronized automatically when you join, keeping everyone in step without a restart.
+- Mention names from servers (or other mods) are synchronized automatically when you join, keeping everyone in step without a restart.
 
 ## Configuration ⚙️
 The first launch creates `config/CallYouByYourName-common.toml`. Tweak the following options:
@@ -53,7 +53,7 @@ The first launch creates `config/CallYouByYourName-common.toml`. Tweak the follo
 Reload the config or restart Minecraft to apply changes.
 
 ## Extending the Mod 🧩
-Developers can add custom tokens by implementing `MentionGroupProvider` and registering via Java's `ServiceLoader`, instantly syncing those tokens to connected clients.
+Developers can add custom names or mention functions by implementing `MentionProvider` and passing it to `MentionRegistryBootstrap.registerProvider`, instantly syncing those names to connected clients.
 
 ## Troubleshooting 🧰
 - **"I can't use a group mention"** – Some third-party groups may require extra permissions; you'll receive a red warning if access is denied.

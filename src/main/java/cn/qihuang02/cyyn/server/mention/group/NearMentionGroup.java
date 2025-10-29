@@ -1,6 +1,5 @@
 package cn.qihuang02.cyyn.server.mention.group;
 
-import cn.qihuang02.cyyn.api.mention.MentionAccessPolicy;
 import cn.qihuang02.cyyn.api.mention.MentionGroup;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -17,13 +16,13 @@ public class NearMentionGroup implements MentionGroup {
     private static final double NEAR_MENTION_RANGE_SQ = 32D * 32D;
 
     @Override
-    public @NotNull String token() {
+    public @NotNull String name() {
         return "near";
     }
 
     @Override
-    public @NotNull MentionAccessPolicy accessPolicy() {
-        return MentionAccessPolicy.alwaysAllow();
+    public int permissionLevel() {
+        return 0;
     }
 
     @Override

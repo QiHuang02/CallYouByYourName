@@ -1,35 +1,34 @@
 package cn.qihuang02.cyyn.server.chat;
 
-import cn.qihuang02.cyyn.api.mention.MentionFormatter;
+import cn.qihuang02.cyyn.api.mention.MentionFunction;
+import cn.qihuang02.cyyn.api.mention.MentionRegistry;
 import cn.qihuang02.cyyn.common.config.Config;
 import cn.qihuang02.cyyn.common.mention.MentionParseResult;
 import cn.qihuang02.cyyn.common.mention.MentionParser;
 import cn.qihuang02.cyyn.server.mention.MentionCooldownTracker;
-import cn.qihuang02.cyyn.server.mention.formatter.ItemMentionFormatter;
-import cn.qihuang02.cyyn.server.mention.formatter.SpotMentionFormatter;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.*;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.event.ServerChatEvent;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.function.Supplier;
 
 public class MentionChatProcessor {
-    private final List<MentionFormatter> mentionFormatters;
+    private final Supplier<List<MentionFunction>> mentionFunctionsSupplier;
     private final MentionCooldownTracker cooldownTracker;
     private final MentionNotificationService notificationService;
     private final MentionParser mentionParser;
 
-    public MentionChatProcessor(@NotNull List<MentionFormatter> mentionFormatters,
+    public MentionChatProcessor(@NotNull Supplier<List<MentionFunction>> mentionFunctionsSupplier,
                                 @NotNull MentionCooldownTracker cooldownTracker,
                                 @NotNull MentionNotificationService notificationService,
                                 @NotNull MentionParser mentionParser) {
-        this.mentionFormatters = List.copyOf(Objects.requireNonNull(mentionFormatters, "mentionFormatters"));
+        this.mentionFunctionsSupplier = Objects.requireNonNull(mentionFunctionsSupplier, "mentionFunctionsSupplier");
         this.cooldownTracker = Objects.requireNonNull(cooldownTracker, "cooldownTracker");
         this.notificationService = Objects.requireNonNull(notificationService, "notificationService");
         this.mentionParser = Objects.requireNonNull(mentionParser, "mentionParser");
@@ -37,7 +36,7 @@ public class MentionChatProcessor {
 
     public static @NotNull MentionChatProcessor createDefault() {
         return new MentionChatProcessor(
-                defaultFormatters(),
+                MentionChatProcessor::registeredFunctions,
                 MentionCooldownTracker.getInstance(),
                 new MentionNotificationService(),
                 new MentionParser()
@@ -45,11 +44,8 @@ public class MentionChatProcessor {
     }
 
     @Contract(" -> new")
-    private static @NotNull @Unmodifiable List<MentionFormatter> defaultFormatters() {
-        return List.of(
-                new ItemMentionFormatter(),
-                new SpotMentionFormatter()
-        );
+    private static @NotNull List<MentionFunction> registeredFunctions() {
+        return MentionRegistry.streamFunctions().toList();
     }
 
     public boolean process(@NotNull ServerChatEvent event) {
@@ -60,8 +56,9 @@ public class MentionChatProcessor {
 
         boolean eventCanceled = false;
         boolean broadcastManually = false;
-        for (MentionFormatter formatter : mentionFormatters) {
-            MentionFormatter.Result result = formatter.format(sender, processedComponent);
+        List<MentionFunction> mentionFunctions = Objects.requireNonNullElseGet(mentionFunctionsSupplier.get(), List::of);
+        for (MentionFunction function : mentionFunctions) {
+            MentionFunction.Result result = function.format(sender, processedComponent);
             if (result.component() != null) {
                 processedComponent = result.component();
                 broadcastManually = true;
