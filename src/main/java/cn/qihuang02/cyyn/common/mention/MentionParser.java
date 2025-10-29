@@ -2,6 +2,7 @@ package cn.qihuang02.cyyn.common.mention;
 
 import cn.qihuang02.cyyn.api.mention.MentionGroup;
 import cn.qihuang02.cyyn.api.mention.MentionRegistry;
+import cn.qihuang02.cyyn.util.mention.MentionTextUtils;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.players.PlayerList;
 import org.jetbrains.annotations.NotNull;

@@ -1,6 +1,6 @@
 package cn.qihuang02.cyyn.server.mention.function;
 
-import cn.qihuang02.cyyn.common.mention.MentionTextUtils;
+import cn.qihuang02.cyyn.util.mention.MentionTextUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.*;
 import net.minecraft.server.level.ServerPlayer;

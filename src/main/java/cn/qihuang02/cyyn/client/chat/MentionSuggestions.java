@@ -1,6 +1,6 @@
 package cn.qihuang02.cyyn.client.chat;
 
-import cn.qihuang02.cyyn.common.mention.MentionTextUtils;
+import cn.qihuang02.cyyn.util.mention.MentionTextUtils;
 import com.mojang.brigadier.context.StringRange;
 import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.suggestion.Suggestions;
@@ -124,21 +124,14 @@ public final class MentionSuggestions extends CommandSuggestions {
     }
 
     private @NotNull Optional<MentionTextUtils.MentionTokenRange> findMentionRangeAtCursor(@NotNull String value, int cursor) {
-        int searchIndex = 0;
         int boundedCursor = Math.max(0, Math.min(cursor, value.length()));
-        while (searchIndex < value.length()) {
-            Optional<MentionTextUtils.MentionTokenRange> optional = MentionTextUtils.findTokenRange(value, searchIndex);
-            if (optional.isEmpty()) {
-                return Optional.empty();
-            }
-            MentionTextUtils.MentionTokenRange range = optional.get();
+        for (MentionTextUtils.MentionTokenRange range : MentionTextUtils.scanMentions(value)) {
             if (boundedCursor <= range.mentionStart()) {
-                return Optional.empty();
+                break;
             }
             if (boundedCursor <= range.tokenEnd()) {
-                return optional;
+                return Optional.of(range);
             }
-            searchIndex = range.tokenEnd();
         }
         return Optional.empty();
     }

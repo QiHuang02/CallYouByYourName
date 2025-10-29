@@ -1,6 +1,6 @@
 package cn.qihuang02.cyyn.api.mention;
 
-import cn.qihuang02.cyyn.common.mention.MentionTextUtils;
+import cn.qihuang02.cyyn.util.mention.MentionTextUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 

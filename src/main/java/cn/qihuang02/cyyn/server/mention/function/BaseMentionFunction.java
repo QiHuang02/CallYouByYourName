@@ -1,7 +1,7 @@
 package cn.qihuang02.cyyn.server.mention.function;
 
 import cn.qihuang02.cyyn.api.mention.MentionFunction;
-import cn.qihuang02.cyyn.common.mention.MentionTextUtils;
+import cn.qihuang02.cyyn.util.mention.MentionTextUtils;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
@@ -50,13 +50,7 @@ public abstract class BaseMentionFunction implements MentionFunction {
 
         boolean replacedAny = false;
         int index = 0;
-        while (index < rawMessage.length()) {
-            Optional<MentionTextUtils.MentionTokenRange> rangeOptional = MentionTextUtils.findTokenRange(rawMessage, index);
-            if (rangeOptional.isEmpty()) {
-                break;
-            }
-
-            MentionTextUtils.MentionTokenRange range = rangeOptional.get();
+        for (MentionTextUtils.MentionTokenRange range : MentionTextUtils.scanMentions(rawMessage)) {
             appendStyledLiteral(rebuilt, rawMessage.substring(index, range.mentionStart()), baseStyle);
 
             String resolvedName = range.tokenIn(rawMessage);

@@ -1,6 +1,6 @@
 package cn.qihuang02.cyyn.client.chat;
 
-import cn.qihuang02.cyyn.common.mention.MentionTextUtils;
+import cn.qihuang02.cyyn.util.mention.MentionTextUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientPacketListener;
@@ -98,13 +98,7 @@ public class MentionHighlighter {
         boolean changed = false;
         int index = 0;
 
-        while (index < value.length()) {
-            Optional<MentionTextUtils.MentionTokenRange> rangeOptional = MentionTextUtils.findTokenRange(value, index);
-            if (rangeOptional.isEmpty()) {
-                break;
-            }
-
-            MentionTextUtils.MentionTokenRange range = rangeOptional.get();
+        for (MentionTextUtils.MentionTokenRange range : MentionTextUtils.scanMentions(value)) {
             if (range.mentionStart() > index) {
                 builder.append(Component.literal(value.substring(index, range.mentionStart())));
             }
