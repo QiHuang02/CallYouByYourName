@@ -1,18 +1,11 @@
 package cn.qihuang02.cyyn.server.mention.group;
 
-import cn.qihuang02.cyyn.api.mention.MentionGroup;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.server.players.PlayerList;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.Collection;
-import java.util.stream.Collectors;
 
 /**
  * Resolves the {@code @here} mention to all online players in the sender's dimension.
  */
-public class HereMentionGroup implements MentionGroup {
+public class HereMentionGroup extends BaseMentionGroup {
     @Override
     public @NotNull String name() {
         return "here";
@@ -21,14 +14,5 @@ public class HereMentionGroup implements MentionGroup {
     @Override
     public int permissionLevel() {
         return 0;
-    }
-
-    @Override
-    public @NotNull Collection<ServerPlayer> resolveTargets(@NotNull ServerPlayer sender, @NotNull PlayerList playerList) {
-        ServerLevel senderLevel = sender.serverLevel();
-        return playerList.getPlayers().stream()
-                .filter(player -> !player.equals(sender))
-                .filter(player -> player.serverLevel().dimension().equals(senderLevel.dimension()))
-                .collect(Collectors.toList());
     }
 }

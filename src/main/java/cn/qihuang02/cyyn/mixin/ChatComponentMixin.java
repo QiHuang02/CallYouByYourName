@@ -1,13 +1,15 @@
 package cn.qihuang02.cyyn.mixin;
 
 import cn.qihuang02.cyyn.common.config.Config;
-import cn.qihuang02.cyyn.util.CyynItemHoverArea;
+import cn.qihuang02.cyyn.util.ItemHoverArea;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.ChatComponent;
-import net.minecraft.network.chat.*;
+import net.minecraft.network.chat.FormattedText;
+import net.minecraft.network.chat.HoverEvent;
+import net.minecraft.network.chat.Style;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
@@ -39,7 +41,7 @@ public abstract class ChatComponentMixin {
     private static final float cyyn$ITEM_VERTICAL_OFFSET = 1.0F;
 
     @Unique
-    private final List<CyynItemHoverArea> cyyn$itemHoverAreas = new ArrayList<>();
+    private final List<ItemHoverArea> cyyn$itemHoverAreas = new ArrayList<>();
 
     @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;drawString(Lnet/minecraft/client/gui/Font;Lnet/minecraft/util/FormattedCharSequence;III)I"))
     private int cyyn$renderItemMentions(GuiGraphics guiGraphics, Font font, FormattedCharSequence text, int x, int y, int color) {
@@ -184,7 +186,7 @@ public abstract class ChatComponentMixin {
             return;
         }
 
-        this.cyyn$itemHoverAreas.add(new CyynItemHoverArea(minX, minY, maxX - minX, maxY - minY, style));
+        this.cyyn$itemHoverAreas.add(new ItemHoverArea(minX, minY, maxX - minX, maxY - minY, style));
     }
 
     @Inject(method = "getClickedComponentStyleAt", at = @At("HEAD"), cancellable = true)
@@ -195,7 +197,7 @@ public abstract class ChatComponentMixin {
 
         int x = Mth.floor(mouseX);
         int y = Mth.floor(mouseY);
-        for (CyynItemHoverArea area : this.cyyn$itemHoverAreas) {
+        for (ItemHoverArea area : this.cyyn$itemHoverAreas) {
             if (area.contains(x, y)) {
                 cir.setReturnValue(area.style());
                 cir.cancel();

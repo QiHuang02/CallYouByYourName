@@ -1,7 +1,6 @@
 package cn.qihuang02.cyyn.common.config;
 
 import cn.qihuang02.cyyn.CallYouByYourName;
-
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.eventbus.api.SubscribeEvent;

@@ -1,7 +1,5 @@
 package cn.qihuang02.cyyn.client.chat;
 
-import cn.qihuang02.cyyn.api.mention.MentionFunction;
-import cn.qihuang02.cyyn.api.mention.MentionGroup;
 import cn.qihuang02.cyyn.api.mention.MentionRegistry;
 import cn.qihuang02.cyyn.common.mention.MentionTextUtils;
 import net.minecraft.ChatFormatting;
@@ -14,32 +12,24 @@ import net.minecraft.network.chat.Style;
 import net.minecraft.util.FormattedCharSequence;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 public class MentionHighlighter {
     private static final Style PLAYER_STYLE = styleFor(ChatFormatting.AQUA);
     private static final Style DEFAULT_GROUP_STYLE = styleFor(ChatFormatting.LIGHT_PURPLE);
-
-    private static @NotNull Style styleFor(@NotNull ChatFormatting color) {
-        return Style.EMPTY.withColor(color);
-    }
-
     private final Minecraft minecraft;
     private final MentionCandidateProvider candidateProvider;
-
     private boolean dirty = true;
     private String cachedValue = "";
     private int cachedRevision = -1;
     private FormattedCharSequence cachedSequence = Component.literal("").getVisualOrderText();
-
     public MentionHighlighter(@NotNull Minecraft minecraft) {
         this.minecraft = minecraft;
         this.candidateProvider = new MentionCandidateProvider(minecraft);
+    }
+
+    private static @NotNull Style styleFor(@NotNull ChatFormatting color) {
+        return Style.EMPTY.withColor(color);
     }
 
     public static @NotNull FormattedCharSequence vanillaFormatter(String value, int cursorPosition) {
