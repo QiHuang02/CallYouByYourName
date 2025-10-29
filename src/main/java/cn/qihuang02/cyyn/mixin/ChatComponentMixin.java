@@ -1,6 +1,6 @@
 package cn.qihuang02.cyyn.mixin;
 
-import cn.qihuang02.cyyn.Config;
+import cn.qihuang02.cyyn.common.config.Config;
 import cn.qihuang02.cyyn.util.CyynItemHoverArea;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;

@@ -1,6 +1,6 @@
 package cn.qihuang02.cyyn.client.chat;
 
-import cn.qihuang02.cyyn.util.MentionTextUtils;
+import cn.qihuang02.cyyn.common.mention.MentionTextUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientPacketListener;
