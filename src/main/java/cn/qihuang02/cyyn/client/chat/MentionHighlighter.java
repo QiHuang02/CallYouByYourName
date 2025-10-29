@@ -1,5 +1,8 @@
 package cn.qihuang02.cyyn.client.chat;
 
+import cn.qihuang02.cyyn.api.mention.MentionFunction;
+import cn.qihuang02.cyyn.api.mention.MentionGroup;
+import cn.qihuang02.cyyn.api.mention.MentionRegistry;
 import cn.qihuang02.cyyn.common.mention.MentionTextUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -11,15 +14,20 @@ import net.minecraft.network.chat.Style;
 import net.minecraft.util.FormattedCharSequence;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
 public class MentionHighlighter {
-    private static final Style PLAYER_STYLE = Style.EMPTY.withColor(ChatFormatting.AQUA);
-    private static final Style GROUP_STYLE = Style.EMPTY.withColor(ChatFormatting.LIGHT_PURPLE);
-    private static final Style ITEM_STYLE = Style.EMPTY.withColor(ChatFormatting.GOLD);
+    private static final Style PLAYER_STYLE = styleFor(ChatFormatting.AQUA);
+    private static final Style DEFAULT_GROUP_STYLE = styleFor(ChatFormatting.LIGHT_PURPLE);
+
+    private static @NotNull Style styleFor(@NotNull ChatFormatting color) {
+        return Style.EMPTY.withColor(color);
+    }
 
     private final Minecraft minecraft;
     private final MentionCandidateProvider candidateProvider;
@@ -38,15 +46,24 @@ public class MentionHighlighter {
         return Component.literal(value == null ? "" : value).getVisualOrderText();
     }
 
-    private static Style resolveStyle(@NotNull String token, @NotNull Set<String> groupTokens, Set<String> playerTokens) {
-        String lowered = token.toLowerCase(Locale.ROOT);
-        if ("item".equals(lowered)) {
-            return ITEM_STYLE;
+    private static String normalize(@NotNull String name) {
+        return MentionTextUtils.normalizeToken(name).toLowerCase(Locale.ROOT);
+    }
+
+    private static Style resolveStyle(@NotNull String name,
+                                      @NotNull Set<String> groupNames,
+                                      Set<String> playerNames,
+                                      @NotNull Map<String, Style> groupStyles,
+                                      @NotNull Map<String, Style> functionStyles) {
+        String lowered = name.toLowerCase(Locale.ROOT);
+        Style functionStyle = functionStyles.get(lowered);
+        if (functionStyle != null) {
+            return functionStyle;
         }
-        if (groupTokens.contains(lowered)) {
-            return GROUP_STYLE;
+        if (groupNames.contains(lowered)) {
+            return groupStyles.getOrDefault(lowered, DEFAULT_GROUP_STYLE);
         }
-        if (playerTokens.contains(lowered)) {
+        if (playerNames.contains(lowered)) {
             return PLAYER_STYLE;
         }
         return Style.EMPTY;
@@ -58,12 +75,12 @@ public class MentionHighlighter {
 
     public @NotNull FormattedCharSequence format(String value, int cursorPosition) {
         String sanitized = value == null ? "" : value;
-        int revision = ClientMentionGroupTokens.getRevision();
+        int revision = ClientMentionGroupNames.getRevision();
         if (!this.dirty && this.cachedRevision == revision && sanitized.equals(this.cachedValue)) {
             return this.cachedSequence;
         }
 
-        FormattedCharSequence sequence = highlightMentions(sanitized, ClientMentionGroupTokens.getTokens());
+        FormattedCharSequence sequence = highlightMentions(sanitized, ClientMentionGroupNames.getNames());
         this.cachedValue = sanitized;
         this.cachedRevision = revision;
         this.cachedSequence = sequence;
@@ -71,7 +88,7 @@ public class MentionHighlighter {
         return sequence;
     }
 
-    private @NotNull FormattedCharSequence highlightMentions(@NotNull String value, List<String> groupTokenList) {
+    private @NotNull FormattedCharSequence highlightMentions(@NotNull String value, List<String> groupNameList) {
         if (value.isEmpty()) {
             return Component.literal("").getVisualOrderText();
         }
@@ -79,8 +96,26 @@ public class MentionHighlighter {
         LocalPlayer localPlayer = this.minecraft.player;
         ClientPacketListener connection = this.minecraft.getConnection();
 
-        Set<String> groupTokens = this.candidateProvider.getGroupTokens(groupTokenList, localPlayer);
-        Set<String> playerTokens = this.candidateProvider.getPlayerTokens(connection, localPlayer);
+        Set<String> groupNames = this.candidateProvider.getGroupNames(groupNameList, localPlayer);
+        Set<String> playerNames = this.candidateProvider.getPlayerNames(connection, localPlayer);
+
+        Map<String, Style> groupStyles = new HashMap<>();
+        MentionRegistry.streamGroups().forEach(group -> {
+            String groupName = group.name();
+            if (groupName == null || groupName.isEmpty()) {
+                return;
+            }
+            groupStyles.put(normalize(groupName), styleFor(group.pointColor()));
+        });
+
+        Map<String, Style> functionStyles = new HashMap<>();
+        MentionRegistry.streamFunctions().forEach(function -> {
+            String functionName = function.name();
+            if (functionName == null || functionName.isEmpty()) {
+                return;
+            }
+            functionStyles.put(normalize(functionName), styleFor(function.pointColor()));
+        });
 
         MutableComponent builder = Component.empty();
         boolean changed = false;
@@ -97,8 +132,8 @@ public class MentionHighlighter {
                 builder.append(Component.literal(value.substring(index, range.mentionStart())));
             }
 
-            String token = range.tokenIn(value);
-            Style style = resolveStyle(token, groupTokens, playerTokens);
+            String name = range.tokenIn(value);
+            Style style = resolveStyle(name, groupNames, playerNames, groupStyles, functionStyles);
             String mentionText = range.mentionIn(value);
             if (style.isEmpty()) {
                 builder.append(Component.literal(mentionText));

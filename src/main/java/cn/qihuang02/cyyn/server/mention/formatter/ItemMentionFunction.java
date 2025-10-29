@@ -1,6 +1,6 @@
 package cn.qihuang02.cyyn.server.mention.formatter;
 
-import cn.qihuang02.cyyn.api.mention.MentionFormatter;
+import cn.qihuang02.cyyn.api.mention.MentionFunction;
 import cn.qihuang02.cyyn.common.mention.MentionTextUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.*;
@@ -10,12 +10,17 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
 
-public class ItemMentionFormatter implements MentionFormatter {
+public class ItemMentionFunction implements MentionFunction {
+    @Override
+    public @NotNull String name() {
+        return "item";
+    }
+
     @Override
     public @NotNull Result format(@NotNull ServerPlayer sender, @NotNull Component message) {
         String rawMessage = message.getString();
         if (rawMessage.isEmpty() || !rawMessage.contains("@")) {
-            return Result.pass();
+            return Result.pass(name());
         }
 
         Style baseStyle = message.getStyle();
@@ -36,13 +41,13 @@ public class ItemMentionFormatter implements MentionFormatter {
             MentionTextUtils.MentionTokenRange range = rangeOptional.get();
             appendStyledLiteral(rebuilt, rawMessage.substring(index, range.mentionStart()), baseStyle);
 
-            String token = range.tokenIn(rawMessage);
-            if ("item".equalsIgnoreCase(token)) {
+            String resolvedName = range.tokenIn(rawMessage);
+            if (name().equalsIgnoreCase(resolvedName)) {
                 if (mainHandItem.isEmpty()) {
                     sender.sendSystemMessage(
                             Component.translatable("message.cyyn.item.empty").withStyle(ChatFormatting.RED)
                     );
-                    return Result.cancel();
+                    return Result.cancel(name());
                 }
 
                 rebuilt.append(createItemComponent(mainHandItem));
@@ -59,10 +64,10 @@ public class ItemMentionFormatter implements MentionFormatter {
         }
 
         if (!replacedAny) {
-            return Result.pass();
+            return Result.pass(name());
         }
 
-        return Result.replace(rebuilt);
+        return Result.replace(name(), rebuilt);
     }
 
     @NotNull

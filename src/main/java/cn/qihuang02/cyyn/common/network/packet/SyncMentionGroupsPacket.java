@@ -1,6 +1,6 @@
 package cn.qihuang02.cyyn.common.network.packet;
 
-import cn.qihuang02.cyyn.client.chat.ClientMentionGroupTokens;
+import cn.qihuang02.cyyn.client.chat.ClientMentionGroupNames;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
@@ -13,25 +13,25 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Supplier;
 
-public record SyncMentionGroupsPacket(@NotNull List<String> tokens) {
-    public SyncMentionGroupsPacket(@NotNull Collection<String> tokens) {
-        this(new ArrayList<>(Objects.requireNonNull(tokens, "tokens")));
+public record SyncMentionGroupsPacket(@NotNull List<String> names) {
+    public SyncMentionGroupsPacket(@NotNull Collection<String> names) {
+        this(new ArrayList<>(Objects.requireNonNull(names, "names")));
     }
 
     public static void encode(SyncMentionGroupsPacket packet, FriendlyByteBuf buffer) {
-        buffer.writeVarInt(packet.tokens.size());
-        for (String token : packet.tokens) {
-            buffer.writeUtf(token);
+        buffer.writeVarInt(packet.names.size());
+        for (String name : packet.names) {
+            buffer.writeUtf(name);
         }
     }
 
     public static SyncMentionGroupsPacket decode(FriendlyByteBuf buffer) {
         int size = buffer.readVarInt();
-        List<String> tokens = new ArrayList<>(size);
+        List<String> names = new ArrayList<>(size);
         for (int i = 0; i < size; i++) {
-            tokens.add(buffer.readUtf(32767));
+            names.add(buffer.readUtf(32767));
         }
-        return new SyncMentionGroupsPacket(tokens);
+        return new SyncMentionGroupsPacket(names);
     }
 
     public static void handle(SyncMentionGroupsPacket packet, Supplier<NetworkEvent.Context> contextSupplier) {
@@ -39,7 +39,7 @@ public record SyncMentionGroupsPacket(@NotNull List<String> tokens) {
         context.enqueueWork(() -> DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> new DistExecutor.SafeRunnable() {
             @Override
             public void run() {
-                ClientMentionGroupTokens.updateTokens(packet.tokens);
+                ClientMentionGroupNames.updateNames(packet.names);
             }
         }));
         context.setPacketHandled(true);
