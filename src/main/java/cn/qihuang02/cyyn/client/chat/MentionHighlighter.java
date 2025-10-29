@@ -1,6 +1,5 @@
 package cn.qihuang02.cyyn.client.chat;
 
-import cn.qihuang02.cyyn.api.mention.MentionRegistry;
 import cn.qihuang02.cyyn.common.mention.MentionTextUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -12,24 +11,26 @@ import net.minecraft.network.chat.Style;
 import net.minecraft.util.FormattedCharSequence;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 public class MentionHighlighter {
-    private static final Style PLAYER_STYLE = styleFor(ChatFormatting.AQUA);
-    private static final Style DEFAULT_GROUP_STYLE = styleFor(ChatFormatting.LIGHT_PURPLE);
+    private static final Style PLAYER_STYLE = ClientMentionContext.styleFor(ChatFormatting.AQUA);
+    private static final Style DEFAULT_GROUP_STYLE = ClientMentionContext.styleFor(ChatFormatting.LIGHT_PURPLE);
     private final Minecraft minecraft;
     private final MentionCandidateProvider candidateProvider;
+    private final ClientMentionContext mentionContext;
     private boolean dirty = true;
     private String cachedValue = "";
     private int cachedRevision = -1;
     private FormattedCharSequence cachedSequence = Component.literal("").getVisualOrderText();
+
     public MentionHighlighter(@NotNull Minecraft minecraft) {
         this.minecraft = minecraft;
         this.candidateProvider = new MentionCandidateProvider(minecraft);
-    }
-
-    private static @NotNull Style styleFor(@NotNull ChatFormatting color) {
-        return Style.EMPTY.withColor(color);
+        this.mentionContext = ClientMentionContext.getInstance();
     }
 
     public static @NotNull FormattedCharSequence vanillaFormatter(String value, int cursorPosition) {
@@ -66,11 +67,13 @@ public class MentionHighlighter {
     public @NotNull FormattedCharSequence format(String value, int cursorPosition) {
         String sanitized = value == null ? "" : value;
         int revision = ClientMentionGroupNames.getRevision();
-        if (!this.dirty && this.cachedRevision == revision && sanitized.equals(this.cachedValue)) {
+        int registryVersion = this.mentionContext.getRegistryVersion();
+        int cachedContextVersion = -1;
+        if (!this.dirty && this.cachedRevision == revision && cachedContextVersion == registryVersion && sanitized.equals(this.cachedValue)) {
             return this.cachedSequence;
         }
 
-        FormattedCharSequence sequence = highlightMentions(sanitized, ClientMentionGroupNames.getNames());
+        FormattedCharSequence sequence = highlightMentions(sanitized);
         this.cachedValue = sanitized;
         this.cachedRevision = revision;
         this.cachedSequence = sequence;
@@ -78,7 +81,7 @@ public class MentionHighlighter {
         return sequence;
     }
 
-    private @NotNull FormattedCharSequence highlightMentions(@NotNull String value, List<String> groupNameList) {
+    private @NotNull FormattedCharSequence highlightMentions(@NotNull String value) {
         if (value.isEmpty()) {
             return Component.literal("").getVisualOrderText();
         }
@@ -86,26 +89,10 @@ public class MentionHighlighter {
         LocalPlayer localPlayer = this.minecraft.player;
         ClientPacketListener connection = this.minecraft.getConnection();
 
-        Set<String> groupNames = this.candidateProvider.getGroupNames(groupNameList, localPlayer);
+        Set<String> groupNames = this.mentionContext.getNormalizedGroupNames();
         Set<String> playerNames = this.candidateProvider.getPlayerNames(connection, localPlayer);
-
-        Map<String, Style> groupStyles = new HashMap<>();
-        MentionRegistry.streamGroups().forEach(group -> {
-            String groupName = group.name();
-            if (groupName == null || groupName.isEmpty()) {
-                return;
-            }
-            groupStyles.put(normalize(groupName), styleFor(group.pointColor()));
-        });
-
-        Map<String, Style> functionStyles = new HashMap<>();
-        MentionRegistry.streamFunctions().forEach(function -> {
-            String functionName = function.name();
-            if (functionName == null || functionName.isEmpty()) {
-                return;
-            }
-            functionStyles.put(normalize(functionName), styleFor(function.pointColor()));
-        });
+        Map<String, Style> groupStyles = this.mentionContext.getGroupStyles();
+        Map<String, Style> functionStyles = this.mentionContext.getFunctionStyles();
 
         MutableComponent builder = Component.empty();
         boolean changed = false;

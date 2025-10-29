@@ -24,6 +24,7 @@ public final class ClientMentionGroupNames {
             REVISION++;
             CallYouByYourName.LOGGER.info("Client mention group names updated: {}", NAMES);
         }
+        ClientMentionContext.getInstance().invalidateGroups();
     }
 
     public static @NotNull @UnmodifiableView List<String> getNames() {

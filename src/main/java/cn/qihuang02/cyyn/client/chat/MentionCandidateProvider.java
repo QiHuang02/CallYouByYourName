@@ -9,12 +9,17 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 public final class MentionCandidateProvider {
+    private static final String ITEM_FUNCTION_NAME = "item";
     private final Minecraft minecraft;
+    private final ClientMentionContext mentionContext;
 
     public MentionCandidateProvider(@NotNull Minecraft minecraft) {
         this.minecraft = minecraft;
+        this.mentionContext = ClientMentionContext.getInstance();
     }
 
     private static @NotNull List<String> sortAndDeduplicate(@NotNull Collection<String> values) {
@@ -40,21 +45,38 @@ public final class MentionCandidateProvider {
         return sorted;
     }
 
-    public @NotNull Set<String> getGroupNames(@NotNull Collection<String> names, @Nullable LocalPlayer player) {
+    private static @NotNull Predicate<ClientMentionContext.FunctionEntry> functionFilter(@Nullable LocalPlayer player) {
+        boolean hasItemInHand = player != null && !player.getMainHandItem().isEmpty();
+        if (hasItemInHand) {
+            return entry -> true;
+        }
+        return entry -> !ITEM_FUNCTION_NAME.equals(entry.normalizedName());
+    }
+
+    private @NotNull List<String> collectKeywordDirectory(@Nullable LocalPlayer player,
+                                                          @Nullable Consumer<? super List<String>> conditionalAppender) {
+        ClientMentionContext.KeywordDirectory directory = this.mentionContext.keywordDirectory();
+        return directory.collect(functionFilter(player), conditionalAppender);
+    }
+
+    private @NotNull Set<String> normalizeKeywords(@NotNull Collection<String> values) {
+        if (values.isEmpty()) {
+            return Collections.emptySet();
+        }
         Set<String> normalized = new LinkedHashSet<>();
-        for (String name : names) {
-            if (name == null || name.isEmpty()) {
+
+        for (String value : values) {
+            if (value == null || value.isEmpty()) {
                 continue;
             }
-            normalized.add(name.toLowerCase(Locale.ROOT));
-        }
-        normalized.add("here");
-        normalized.add("near");
-        normalized.add("spot");
-        if (player != null && !player.getMainHandItem().isEmpty()) {
-            normalized.add("item");
+            normalized.add(value.toLowerCase(Locale.ROOT));
         }
         return normalized;
+    }
+
+    public @NotNull Set<String> getGroupNames(@NotNull Collection<String> names, @Nullable LocalPlayer player) {
+        List<String> keywords = collectKeywordDirectory(player, values -> values.addAll(names));
+        return normalizeKeywords(keywords);
     }
 
     public @NotNull Set<String> getGroupNames(@Nullable LocalPlayer player) {
@@ -94,14 +116,8 @@ public final class MentionCandidateProvider {
     }
 
     public @NotNull List<String> getGroupCandidates(@Nullable LocalPlayer player) {
-        List<String> candidates = new ArrayList<>(ClientMentionGroupNames.getNames());
-        candidates.add("here");
-        candidates.add("near");
-        candidates.add("spot");
-        if (player != null && !player.getMainHandItem().isEmpty()) {
-            candidates.add("item");
-        }
-        return sortAndDeduplicate(candidates);
+        List<String> keywords = collectKeywordDirectory(player, null);
+        return sortAndDeduplicate(keywords);
     }
 
     public @NotNull List<String> getGroupCandidates() {
