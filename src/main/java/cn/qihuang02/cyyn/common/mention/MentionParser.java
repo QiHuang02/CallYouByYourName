@@ -14,6 +14,7 @@ public final class MentionParser {
         Map<UUID, ServerPlayer> mentionedPlayers = new LinkedHashMap<>();
         PlayerList playerList = Objects.requireNonNull(sender.getServer()).getPlayerList();
         boolean deniedGroupMention = false;
+        Set<MentionGroup> triggeredGroups = new LinkedHashSet<>();
 
         for (String word : message.split("\\s+")) {
             if (!word.startsWith("@") || word.length() <= 1) {
@@ -32,6 +33,7 @@ public final class MentionParser {
                     deniedGroupMention = true;
                     continue;
                 }
+                triggeredGroups.add(group);
                 group.resolveTargets(sender, playerList)
                         .forEach(player -> mentionedPlayers.putIfAbsent(player.getUUID(), player));
 
@@ -44,6 +46,8 @@ public final class MentionParser {
             }
         }
 
-        return new MentionParseResult(new ArrayList<>(mentionedPlayers.values()), deniedGroupMention);
+        return new MentionParseResult(new ArrayList<>(mentionedPlayers.values()),
+                deniedGroupMention,
+                new ArrayList<>(triggeredGroups));
     }
 }

@@ -1,6 +1,7 @@
 package cn.qihuang02.cyyn.server.mention.function;
 
 import cn.qihuang02.cyyn.api.mention.MentionFunction;
+import cn.qihuang02.cyyn.common.config.Config;
 import cn.qihuang02.cyyn.util.mention.MentionTextUtils;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -9,7 +10,6 @@ import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
-import java.util.Optional;
 
 public abstract class BaseMentionFunction implements MentionFunction {
     protected static void appendStyledLiteral(@NotNull MutableComponent builder, @NotNull String text, @NotNull Style baseStyle) {
@@ -49,12 +49,14 @@ public abstract class BaseMentionFunction implements MentionFunction {
         }
 
         boolean replacedAny = false;
+        boolean handledAny = false;
         int index = 0;
         for (MentionTextUtils.MentionTokenRange range : MentionTextUtils.scanMentions(rawMessage)) {
             appendStyledLiteral(rebuilt, rawMessage.substring(index, range.mentionStart()), baseStyle);
 
             String resolvedName = range.tokenIn(rawMessage);
             if (name().equalsIgnoreCase(resolvedName)) {
+                handledAny = true;
                 MentionDecision decision = handleMention(sender, message, range);
                 if (decision.type == DecisionType.CANCEL) {
                     return Result.cancel(name());
@@ -77,10 +79,15 @@ public abstract class BaseMentionFunction implements MentionFunction {
         }
 
         if (!replacedAny) {
-            return Result.pass(name());
+            return handledAny ? Result.handled(name()) : Result.pass(name());
         }
 
         return Result.replace(name(), rebuilt);
+    }
+
+    @Override
+    public int coolDown() {
+        return Config.mentionCooldownTicks;
     }
 
     protected abstract @NotNull MentionDecision handleMention(@NotNull ServerPlayer sender,

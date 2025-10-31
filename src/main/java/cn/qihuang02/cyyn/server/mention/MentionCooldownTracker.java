@@ -23,25 +23,30 @@ public class MentionCooldownTracker {
         playerCooldownMap.clear();
     }
 
-    public boolean isOnCooldown(@NotNull UUID playerId, long cooldownMs, long currentTime) {
-        return getRemainingMillis(playerId, cooldownMs, currentTime) > 0;
+    public boolean isOnCooldown(@NotNull UUID playerId, long cooldownTicks, long currentTick) {
+        return getRemainingTicks(playerId, cooldownTicks, currentTick) > 0;
     }
 
-    public long getRemainingSeconds(@NotNull UUID playerId, long cooldownMs, long currentTime) {
-        long remainingMillis = getRemainingMillis(playerId, cooldownMs, currentTime);
-        if (remainingMillis <= 0) {
+    public long getRemainingTicks(@NotNull UUID playerId, long cooldownTicks, long currentTick) {
+        if (cooldownTicks <= 0) {
             return 0;
         }
-        return remainingMillis / 1000L;
+
+        Long lastProcessedTick = playerCooldownMap.get(playerId);
+        if (lastProcessedTick == null) {
+            return 0;
+        }
+
+        long elapsed = currentTick - lastProcessedTick;
+        if (elapsed < 0) {
+            elapsed = cooldownTicks;
+        }
+
+        long remaining = cooldownTicks - elapsed;
+        return Math.max(remaining, 0);
     }
 
-    public void updateCooldown(@NotNull UUID playerId, long currentTime) {
-        playerCooldownMap.put(playerId, currentTime);
-    }
-
-    private long getRemainingMillis(@NotNull UUID playerId, long cooldownMs, long currentTime) {
-        long lastAtTime = playerCooldownMap.getOrDefault(playerId, 0L);
-        long elapsed = currentTime - lastAtTime;
-        return cooldownMs - elapsed;
+    public void updateCooldown(@NotNull UUID playerId, long currentTick) {
+        playerCooldownMap.put(playerId, currentTick);
     }
 }

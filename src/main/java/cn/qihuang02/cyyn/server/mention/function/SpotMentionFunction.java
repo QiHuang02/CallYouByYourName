@@ -17,6 +17,11 @@ public class SpotMentionFunction extends BaseMentionFunction {
     }
 
     @Override
+    public int coolDown() {
+        return super.coolDown();
+    }
+
+    @Override
     protected @NotNull MentionDecision handleMention(@NotNull ServerPlayer sender,
                                                      @NotNull Component message,
                                                      @NotNull MentionTextUtils.MentionTokenRange range) {

@@ -1,6 +1,7 @@
 package cn.qihuang02.cyyn.server.chat;
 
 import cn.qihuang02.cyyn.api.mention.MentionFunction;
+import cn.qihuang02.cyyn.api.mention.MentionGroup;
 import cn.qihuang02.cyyn.api.mention.MentionRegistry;
 import cn.qihuang02.cyyn.common.config.Config;
 import cn.qihuang02.cyyn.common.mention.MentionParseResult;
@@ -57,12 +58,17 @@ public class MentionChatProcessor {
 
         boolean eventCanceled = false;
         boolean broadcastManually = false;
+        int maxCooldownTicks = Config.mentionCooldownTicks;
         List<MentionFunction> mentionFunctions = Objects.requireNonNullElseGet(mentionFunctionsSupplier.get(), List::of);
         for (MentionFunction function : mentionFunctions) {
             MentionFunction.Result result = function.format(sender, processedComponent);
             if (result.component() != null) {
                 processedComponent = result.component();
                 broadcastManually = true;
+            }
+
+            if (result.handled()) {
+                maxCooldownTicks = Math.max(maxCooldownTicks, function.coolDown());
             }
 
             if (result.cancelEvent()) {
@@ -96,6 +102,9 @@ public class MentionChatProcessor {
         }
 
         List<ServerPlayer> mentionedPlayers = mentionParseResult.players();
+        for (MentionGroup group : mentionParseResult.groups()) {
+            maxCooldownTicks = Math.max(maxCooldownTicks, group.coolDown());
+        }
         if (mentionedPlayers.isEmpty()) {
             if (broadcastManually) {
                 notificationService.broadcastCustomChat(sender, processedComponent);
@@ -112,13 +121,14 @@ public class MentionChatProcessor {
             event.setMessage(processedComponent);
         }
 
-        long currentTime = System.currentTimeMillis();
+        long currentTick = sender.serverLevel().getGameTime();
         UUID senderId = sender.getUUID();
-        long cooldownMs = Config.mentionCooldownMs;
-        if (cooldownTracker.isOnCooldown(senderId, cooldownMs, currentTime)) {
-            long timeLeft = cooldownTracker.getRemainingSeconds(senderId, cooldownMs, currentTime);
+        long cooldownTicks = maxCooldownTicks;
+        if (cooldownTracker.isOnCooldown(senderId, cooldownTicks, currentTick)) {
+            long ticksLeft = cooldownTracker.getRemainingTicks(senderId, cooldownTicks, currentTick);
+            long secondsLeft = (ticksLeft + 19L) / 20L;
             sender.sendSystemMessage(
-                    Component.translatable("message.cyyn.cooldown", (timeLeft + 1))
+                    Component.translatable("message.cyyn.cooldown", secondsLeft)
                             .withStyle(ChatFormatting.RED)
             );
             event.setCanceled(true);
@@ -129,7 +139,7 @@ public class MentionChatProcessor {
             notificationService.notifyPlayer(sender, targetPlayer);
         }
 
-        cooldownTracker.updateCooldown(senderId, currentTime);
+        cooldownTracker.updateCooldown(senderId, currentTick);
         return eventCanceled;
     }
 }

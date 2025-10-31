@@ -1,6 +1,7 @@
 package cn.qihuang02.cyyn.server.mention.group;
 
 import cn.qihuang02.cyyn.api.mention.MentionGroup;
+import cn.qihuang02.cyyn.common.config.Config;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.players.PlayerList;
@@ -29,5 +30,10 @@ public abstract class BaseMentionGroup implements MentionGroup {
      */
     protected boolean shouldInclude(@NotNull ServerPlayer sender, @NotNull ServerPlayer target) {
         return true;
+    }
+
+    @Override
+    public int coolDown() {
+        return Config.mentionCooldownTicks;
     }
 }

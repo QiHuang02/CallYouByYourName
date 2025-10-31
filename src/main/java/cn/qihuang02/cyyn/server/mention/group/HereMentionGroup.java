@@ -15,4 +15,9 @@ public class HereMentionGroup extends BaseMentionGroup {
     public int permissionLevel() {
         return 0;
     }
+
+    @Override
+    public int coolDown() {
+        return super.coolDown();
+    }
 }

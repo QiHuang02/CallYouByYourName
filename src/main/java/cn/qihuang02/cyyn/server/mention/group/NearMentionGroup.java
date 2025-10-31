@@ -23,4 +23,9 @@ public class NearMentionGroup extends BaseMentionGroup {
     protected boolean shouldInclude(@NotNull ServerPlayer sender, @NotNull ServerPlayer target) {
         return sender.distanceToSqr(target) <= NEAR_MENTION_RANGE_SQ;
     }
+
+    @Override
+    public int coolDown() {
+        return super.coolDown();
+    }
 }

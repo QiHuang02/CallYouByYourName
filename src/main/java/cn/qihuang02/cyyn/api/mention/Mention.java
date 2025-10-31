@@ -38,4 +38,11 @@ public interface Mention {
     default boolean isDenied(@NotNull ServerPlayer sender) {
         return !isAllowed(sender);
     }
+
+    /**
+     * @return the number of game ticks a sender must wait before invoking this mention again.
+     */
+    default int coolDown() {
+        return 5 * 20;
+    }
 }

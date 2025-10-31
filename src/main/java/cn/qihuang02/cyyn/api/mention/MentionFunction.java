@@ -26,21 +26,25 @@ public interface MentionFunction extends Mention {
         return ChatFormatting.GOLD;
     }
 
-    record Result(@NotNull String name, @Nullable Component component, boolean cancelEvent) {
+    record Result(@NotNull String name, @Nullable Component component, boolean cancelEvent, boolean handled) {
         public Result {
             Objects.requireNonNull(name, "name");
         }
 
         public static @NotNull Result pass(@NotNull String name) {
-            return new Result(name, null, false);
+            return new Result(name, null, false, false);
         }
 
         public static @NotNull Result cancel(@NotNull String name) {
-            return new Result(name, null, true);
+            return new Result(name, null, true, true);
         }
 
         public static @NotNull Result replace(@NotNull String name, @NotNull Component component) {
-            return new Result(name, component, false);
+            return new Result(name, component, false, true);
+        }
+
+        public static @NotNull Result handled(@NotNull String name) {
+            return new Result(name, null, false, true);
         }
 
         public boolean replaced() {
