@@ -8,5 +8,8 @@
   },
   "overwrites": {
     "requireAnnotations": true
-  }
+  },
+  "client": [
+    "ChatScreenMixin"
+  ]
 }

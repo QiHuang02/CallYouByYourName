@@ -10,9 +10,6 @@ import java.util.regex.Pattern;
 public final class MentionTokens {
     private static final Pattern PATTERN = Pattern.compile("@([A-Za-z0-9_]+)");
 
-    public record Token(int startIndex, int endIndex, @NotNull String key) {
-    }
-
     public static @NotNull List<Token> scan(@NotNull String text) {
         if (text.isEmpty()) {
             return List.of();
@@ -27,5 +24,8 @@ public final class MentionTokens {
             tokens.add(new Token(start, end, key));
         }
         return tokens;
+    }
+
+    public record Token(int startIndex, int endIndex, @NotNull String key) {
     }
 }

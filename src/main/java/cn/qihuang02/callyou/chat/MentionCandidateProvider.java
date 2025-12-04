@@ -9,9 +9,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 
-public final class MentionCandidateProvider {
-    private final Minecraft minecraft;
-
+public record MentionCandidateProvider(Minecraft minecraft) {
     public MentionCandidateProvider(@NotNull Minecraft minecraft) {
         this.minecraft = minecraft;
     }
@@ -28,8 +26,12 @@ public final class MentionCandidateProvider {
 
         for (PlayerInfo info : connection.getOnlinePlayers()) {
             String name = info.getProfile().getName();
-            if (name == null || name.isEmpty()) continue;
-            if (name.equals(selfName)) continue;
+            if (name == null || name.isEmpty()) {
+                continue;
+            }
+            if (name.equals(selfName)) {
+                continue;
+            }
             result.add(name);
         }
 

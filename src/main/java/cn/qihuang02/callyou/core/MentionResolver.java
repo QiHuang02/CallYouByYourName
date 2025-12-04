@@ -16,22 +16,6 @@ import java.util.Locale;
 import java.util.Optional;
 
 public final class MentionResolver {
-    public record ResolvedMention(
-            int startIndex,
-            int endIndex,
-            @NotNull String key,
-            @Nullable MentionType mentionType,
-            @Nullable ServerPlayer playerTarget
-    ) {
-        public boolean isPlayerMention() {
-            return playerTarget != null;
-        }
-
-        public boolean isTypeMention() {
-            return mentionType != null && playerTarget == null;
-        }
-    }
-
     public static @NotNull List<ResolvedMention> resolve(@NotNull MinecraftServer server,
                                                          @NotNull ServerPlayer sender,
                                                          @NotNull String rawText) {
@@ -78,5 +62,21 @@ public final class MentionResolver {
         }
 
         return result;
+    }
+
+    public record ResolvedMention(
+            int startIndex,
+            int endIndex,
+            @NotNull String key,
+            @Nullable MentionType mentionType,
+            @Nullable ServerPlayer playerTarget
+    ) {
+        public boolean isPlayerMention() {
+            return playerTarget != null;
+        }
+
+        public boolean isTypeMention() {
+            return mentionType != null && playerTarget == null;
+        }
     }
 }

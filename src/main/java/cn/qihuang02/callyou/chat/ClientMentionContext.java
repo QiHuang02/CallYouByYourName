@@ -2,6 +2,8 @@ package cn.qihuang02.callyou.chat;
 
 import cn.qihuang02.callyou.CallYouByYourName;
 import cn.qihuang02.callyou.api.MentionType;
+import cn.qihuang02.callyou.core.impl.formatter.PlayerNameTextFormatter;
+import cn.qihuang02.callyou.core.impl.formatter.SimpleTextFormatter;
 import cn.qihuang02.callyou.registry.CallYouMentionRegistries;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -19,8 +21,20 @@ public final class ClientMentionContext {
 
     private Map<String, Style> mentionTypeStyles = Map.of();
 
+    private Style playerMentionStyle = Style.EMPTY;
+
     public ClientMentionContext(@NotNull Minecraft minecraft) {
         this.minecraft = minecraft;
+    }
+
+    private static @NotNull Style resolveStyle(@NotNull MentionType mentionType) {
+        if (mentionType.textFormatter() instanceof SimpleTextFormatter simple) {
+            return Style.EMPTY.withColor(simple.color());
+        }
+        if (mentionType.textFormatter() instanceof PlayerNameTextFormatter(ChatFormatting color)) {
+            return Style.EMPTY.withColor(color);
+        }
+        return Style.EMPTY;
     }
 
     public void rebuild() {
@@ -28,6 +42,7 @@ public final class ClientMentionContext {
         if (connection == null) {
             this.mentionTypeKeys = Set.of();
             this.mentionTypeStyles = Map.of();
+            this.playerMentionStyle = Style.EMPTY;
             return;
         }
 
@@ -38,6 +53,7 @@ public final class ClientMentionContext {
         if (optionalRegistry.isEmpty()) {
             this.mentionTypeKeys = Set.of();
             this.mentionTypeStyles = Map.of();
+            this.playerMentionStyle = Style.EMPTY;
             return;
         }
 
@@ -45,25 +61,35 @@ public final class ClientMentionContext {
 
         Set<String> keys = new LinkedHashSet<>();
         Map<String, Style> styles = new LinkedHashMap<>();
+        Style playerStyle = Style.EMPTY;
 
         for (var entry : registry.entrySet()) {
-            ResourceLocation id = registry.getKey(entry.getValue());
-            if (id == null) continue;
-
-            if (CallYouByYourName.MODID.equals(id.getNamespace())
-                    && "player".equals(id.getPath())) {
+            MentionType mentionType = entry.getValue();
+            ResourceLocation id = registry.getKey(mentionType);
+            if (id == null) {
                 continue;
             }
 
-            String key = id.getPath();
-            String normalized = key.toLowerCase(Locale.ROOT);
-            keys.add(normalized);
+            String path = id.getPath();
+            if (path == null || path.isEmpty()) {
+                continue;
+            }
 
-            styles.put(normalized, Style.EMPTY.withColor(ChatFormatting.LIGHT_PURPLE));
+            String normalized = path.toLowerCase(Locale.ROOT);
+            Style style = resolveStyle(mentionType);
+
+            if (CallYouByYourName.MODID.equals(id.getNamespace()) && "player".equals(id.getPath())) {
+                playerStyle = style;
+                continue;
+            }
+
+            keys.add(normalized);
+            styles.put(normalized, style);
         }
 
         this.mentionTypeKeys = Collections.unmodifiableSet(keys);
         this.mentionTypeStyles = Collections.unmodifiableMap(styles);
+        this.playerMentionStyle = playerStyle;
     }
 
     public @NotNull Set<String> getMentionTypeKeys() {
@@ -72,5 +98,9 @@ public final class ClientMentionContext {
 
     public @NotNull Map<String, Style> getMentionTypeStyles() {
         return mentionTypeStyles;
+    }
+
+    public @NotNull Style getPlayerMentionStyle() {
+        return playerMentionStyle == null ? Style.EMPTY : playerMentionStyle;
     }
 }

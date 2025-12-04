@@ -4,6 +4,7 @@ import cn.qihuang02.callyou.CallYouByYourName;
 import cn.qihuang02.callyou.api.NotificationRuleType;
 import cn.qihuang02.callyou.api.TargetProviderType;
 import cn.qihuang02.callyou.api.TextFormatterType;
+import cn.qihuang02.callyou.core.impl.formatter.PlayerNameTextFormatter;
 import cn.qihuang02.callyou.core.impl.formatter.SimpleTextFormatter;
 import cn.qihuang02.callyou.core.impl.notify.SoundNotificationRule;
 import cn.qihuang02.callyou.core.impl.target.PlayerNameTargetProvider;
@@ -30,6 +31,9 @@ public final class BuiltInCallYouRegistries {
 
     public static final DeferredHolder<TextFormatterType, TextFormatterType> SIMPLE_FORMATTER_TYPE =
             TEXT_FORMATTER_TYPES.register("simple_formatter", () -> new TextFormatterType(SimpleTextFormatter.MAP_CODEC));
+
+    public static final DeferredHolder<TextFormatterType, TextFormatterType> PLAYER_NAME_FORMATTER_TYPE =
+            TEXT_FORMATTER_TYPES.register("player_name", () -> new TextFormatterType(PlayerNameTextFormatter.MAP_CODEC));
 
     public static final DeferredHolder<NotificationRuleType, NotificationRuleType> SOUND_TYPE =
             NOTIFICATION_RULE_TYPES.register("sound", () -> new NotificationRuleType(SoundNotificationRule.MAP_CODEC));

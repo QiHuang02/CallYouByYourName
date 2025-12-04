@@ -1,38 +1,62 @@
 package cn.qihuang02.callyou.core;
 
-import cn.qihuang02.callyou.api.MentionContext;
 import cn.qihuang02.callyou.api.MentionType;
-import cn.qihuang02.callyou.api.NotificationRule;
-import cn.qihuang02.callyou.api.TargetProvider;
-import cn.qihuang02.callyou.api.event.MentionEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.server.level.ServerPlayer;
-import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.ServerChatEvent;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public final class MentionExecutor {
+    private static final MentionGuard GUARD = new MentionGuard();
+
     public static void handleChatEvent(@NotNull ServerChatEvent event) {
         ServerPlayer sender = event.getPlayer();
         String raw = event.getRawText();
         Component originalMessage = event.getMessage();
 
-        List<MentionResolver.ParsedMention> mentions = MentionResolver.findAll(sender, raw);
+        List<MentionResolver.ResolvedMention> mentions =
+                MentionResolver.resolve(sender.server, sender, raw);
         if (mentions.isEmpty()) {
             return;
         }
 
+        for (MentionResolver.ResolvedMention parsed : mentions) {
+            MentionType type = parsed.mentionType();
+            if (type == null) {
+                continue;
+            }
+
+
+            if (!GUARD.canUseMentionType(sender, type)) {
+                String key = parsed.key();
+                Component display = Component.literal("@" + key);
+                sender.sendSystemMessage(
+                        Component.translatable("message.callyou.no_permission", display)
+                );
+
+
+                event.setCanceled(true);
+                return;
+            }
+        }
+
+
         MutableComponent rebuilt = Component.literal("");
         int lastIndex = 0;
 
-        for (MentionResolver.ParsedMention parsed : mentions) {
+
+        for (MentionResolver.ResolvedMention parsed : mentions) {
             int start = parsed.startIndex();
             int end = parsed.endIndex();
-            MentionType type = parsed.type();
+
+
+            if (start < lastIndex || start >= raw.length() || end <= start) {
+                continue;
+            }
+
 
             if (start > lastIndex) {
                 String before = raw.substring(lastIndex, start);
@@ -41,54 +65,12 @@ public final class MentionExecutor {
                 }
             }
 
-            MentionContext ctx = new MentionContext(
-                    sender,
-                    originalMessage,
-                    raw,
-                    parsed.key()
-            );
 
-            Component formattedMention = type.textFormatter().format(ctx);
-            rebuilt.append(formattedMention);
-
-            executeSingleMention(type, ctx);
-
-            lastIndex = end;
-        }
-
-        if (lastIndex < raw.length()) {
-            String tail = raw.substring(lastIndex);
-            if (!tail.isEmpty()) {
-                rebuilt.append(tail);
+            MentionType type = parsed.mentionType();
+            if (type == null) {
+                String literal = raw.substring(start, Math.min(end, raw.length()));
+                rebuilt.append(literal);
             }
         }
-
-        event.setMessage(rebuilt);
-    }
-
-    private static void executeSingleMention(@NotNull MentionType type, @NotNull MentionContext context) {
-        TargetProvider targetProvider = type.targetProvider();
-        NotificationRule notificationRule = type.notificationRule();
-
-        List<ServerPlayer> targets = new ArrayList<>(targetProvider.getTargets(context));
-        if (targets.isEmpty()) {
-            return;
-        }
-
-        MentionEvent.Pre preEvent = NeoForge.EVENT_BUS.post(
-                new MentionEvent.Pre(context, type, targets)
-        );
-
-        if (preEvent.isCanceled() || preEvent.getTargets().isEmpty()) {
-            return;
-        }
-
-        List<ServerPlayer> finalTargets = preEvent.getTargets();
-
-        notificationRule.apply(context, targets);
-
-        NeoForge.EVENT_BUS.post(
-                new MentionEvent.Post(context, type, finalTargets)
-        );
     }
 }
