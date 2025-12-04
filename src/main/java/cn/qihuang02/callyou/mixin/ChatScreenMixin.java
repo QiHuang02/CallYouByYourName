@@ -1,6 +1,6 @@
 package cn.qihuang02.callyou.mixin;
 
-import cn.qihuang02.callyou.chat.MentionSuggestions;
+import cn.qihuang02.callyou.client.chat.MentionSuggestions;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;

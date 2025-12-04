@@ -1,4 +1,4 @@
-package cn.qihuang02.callyou.chat;
+package cn.qihuang02.callyou.client.chat;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientPacketListener;

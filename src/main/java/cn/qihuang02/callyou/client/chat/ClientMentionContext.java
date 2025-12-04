@@ -1,4 +1,4 @@
-package cn.qihuang02.callyou.chat;
+package cn.qihuang02.callyou.client.chat;
 
 import cn.qihuang02.callyou.CallYouByYourName;
 import cn.qihuang02.callyou.api.MentionType;
