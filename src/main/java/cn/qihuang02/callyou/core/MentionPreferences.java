@@ -27,6 +27,10 @@ public final class MentionPreferences {
                                     .collect(Collectors.toList()))
             ).apply(instance, MentionPreferences::fromCodec)
     );
+    final Set<UUID> blockedSenders = new HashSet<>();
+    private final Set<String> blockedKeys = new HashSet<>();
+    private boolean allowMentions = true;
+    private boolean allowMassMentions = true;
 
     private static @NotNull MentionPreferences fromCodec(boolean allowMentions,
                                                          boolean allowMassMentions,
@@ -48,13 +52,10 @@ public final class MentionPreferences {
         return prefs;
     }
 
-    private boolean allowMentions = true;
-
-    private boolean allowMassMentions = true;
-
-    private final Set<String> blockedKeys = new HashSet<>();
-
-    final Set<UUID> blockedSenders = new HashSet<>();
+    @Contract(pure = true)
+    private static @NotNull String normalizeKey(@NotNull String key) {
+        return key.toLowerCase(Locale.ROOT);
+    }
 
     public boolean isAllowMentions() {
         return allowMentions;
@@ -109,11 +110,6 @@ public final class MentionPreferences {
         this.allowMassMentions = true;
         this.blockedKeys.clear();
         this.blockedSenders.clear();
-    }
-
-    @Contract(pure = true)
-    private static @NotNull String normalizeKey(@NotNull String key) {
-        return key.toLowerCase(Locale.ROOT);
     }
 
     public boolean isMentionAllowed(@NotNull MentionType type,

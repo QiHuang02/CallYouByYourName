@@ -35,26 +35,47 @@ public enum ItemTextFormatter implements TextFormatter {
 
         ItemStack stack = sender.getMainHandItem();
         if (stack.isEmpty()) {
-            Component reason = Component.translatable("message.callyou.item.empty").withStyle(ChatFormatting.RED);
-
+            Component reason = Component
+                    .translatable("message.callyou.item.empty")
+                    .withStyle(ChatFormatting.RED);
             throw new MentionCancelException(reason);
         }
 
         ItemStack copy = stack.copy();
         Rarity rarity = copy.getRarity();
 
-        HoverEvent hover = new HoverEvent(HoverEvent.Action.SHOW_ITEM, new HoverEvent.ItemStackInfo(copy));
+        HoverEvent hover = new HoverEvent(
+                HoverEvent.Action.SHOW_ITEM,
+                new HoverEvent.ItemStackInfo(copy)
+        );
 
-        MutableComponent nameName = copy.getHoverName().copy();
+        MutableComponent nameComponent = copy.getHoverName().copy();
 
-        MutableComponent styledName = nameName.withStyle(existing -> {
+        MutableComponent styledName = nameComponent.withStyle(existing -> {
             var base = rarity.getStyleModifier().apply(existing);
-            return base.withHoverEvent(hover).withInsertion(copy.getDescriptionId());
+            return base
+                    .withHoverEvent(hover)
+                    .withInsertion(copy.getDescriptionId());
         });
 
-        return ComponentUtils.wrapInSquareBrackets(styledName).withStyle(existing -> {
-            var base = rarity.getStyleModifier().apply(existing);
-            return base.withHoverEvent(hover).withInsertion(copy.getDescriptionId());
-        });
+        MutableComponent bracketed = ComponentUtils
+                .wrapInSquareBrackets(styledName)
+                .withStyle(existing -> {
+                    var base = rarity.getStyleModifier().apply(existing);
+                    return base
+                            .withHoverEvent(hover)
+                            .withInsertion(copy.getDescriptionId());
+                });
+
+        MutableComponent prefix = Component
+                .literal(" ")
+                .withStyle(existing -> {
+                    var base = rarity.getStyleModifier().apply(existing);
+                    return base
+                            .withHoverEvent(hover)
+                            .withInsertion(copy.getDescriptionId());
+                });
+
+        return prefix.append(bracketed);
     }
 }

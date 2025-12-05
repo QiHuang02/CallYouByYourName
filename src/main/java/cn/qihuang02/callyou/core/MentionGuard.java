@@ -7,11 +7,7 @@ import cn.qihuang02.callyou.config.CallYouConfig;
 import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Locale;
-import java.util.UUID;
+import java.util.*;
 
 public final class MentionGuard {
 

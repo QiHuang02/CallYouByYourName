@@ -10,7 +10,8 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
-public record MentionHighlighter(Minecraft minecraft, ClientMentionContext mentionContext, MentionCandidateProvider candidateProvider) {
+public record MentionHighlighter(Minecraft minecraft, ClientMentionContext mentionContext,
+                                 MentionCandidateProvider candidateProvider) {
     public MentionHighlighter(@NotNull Minecraft minecraft,
                               @NotNull ClientMentionContext mentionContext,
                               @NotNull MentionCandidateProvider candidateProvider) {

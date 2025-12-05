@@ -3,8 +3,8 @@ package cn.qihuang02.callyou.core;
 import cn.qihuang02.callyou.CallYouByYourName;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.server.permission.PermissionAPI;
 import net.neoforged.neoforge.server.permission.events.PermissionGatherEvent;
 import net.neoforged.neoforge.server.permission.nodes.PermissionDynamicContext;
@@ -30,7 +30,8 @@ public final class CallYouPermissions {
                             player != null && player.hasPermissions(2)
             );
 
-    private CallYouPermissions() {}
+    private CallYouPermissions() {
+    }
 
     @SubscribeEvent
     public static void onGatherPermissionNodes(PermissionGatherEvent.@NotNull Nodes event) {

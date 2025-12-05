@@ -2,8 +2,8 @@ package cn.qihuang02.callyou.core;
 
 import cn.qihuang02.callyou.CallYouByYourName;
 import com.mojang.brigadier.CommandDispatcher;
-import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.network.chat.Component;
@@ -21,7 +21,8 @@ import static net.minecraft.commands.Commands.literal;
 @EventBusSubscriber(modid = CallYouByYourName.MODID)
 public final class CallYouCommands {
 
-    private CallYouCommands() {}
+    private CallYouCommands() {
+    }
 
     @SubscribeEvent
     public static void onRegisterCommands(@NotNull RegisterCommandsEvent event) {

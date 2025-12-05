@@ -14,14 +14,10 @@ public record MentionRules(int minOpLevel, @Nullable String permission, boolean 
 
 
                     Codec.STRING.optionalFieldOf("permission", "")
-                            .xmap(
-                                    s -> s.isEmpty() ? null : s,
-                                    s -> s == null ? "" : s
-                            )
-                            .forGetter(MentionRules::permission),
+                            .forGetter(rules -> rules.permission() == null ? "" : rules.permission()),
 
 
                     Codec.BOOL.optionalFieldOf("is_mass", false)
                             .forGetter(MentionRules::isMass)
-            ).apply(instance, MentionRules::new));
+            ).apply(instance, (minOpLevel, permission, isMass) -> new MentionRules(minOpLevel, permission.isEmpty() ? null : permission, isMass)));
 }

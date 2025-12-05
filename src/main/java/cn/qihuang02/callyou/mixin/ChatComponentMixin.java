@@ -1,7 +1,6 @@
 package cn.qihuang02.callyou.mixin;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.datafixers.util.Pair;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -10,108 +9,109 @@ import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.Blocks;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
 import org.jetbrains.annotations.NotNull;
-import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
-import java.util.ArrayList;
-import java.util.List;
-
+@OnlyIn(Dist.CLIENT)
 @Mixin(ChatComponent.class)
 public abstract class ChatComponentMixin {
 
-    @Shadow @Final
-    private Minecraft minecraft;
+    @Unique
+    private static final float CALYOU_ITEM_ICON_SCALE = 0.6F;
 
     @Redirect(
             method = "render",
             at = @At(
                     value = "INVOKE",
                     target = "Lnet/minecraft/client/gui/GuiGraphics;drawString(Lnet/minecraft/client/gui/Font;Lnet/minecraft/util/FormattedCharSequence;III)I"
-            )
+            ),
+            require = 0
     )
-    private int callyou$drawStringWithItemIcons(
-            @NotNull GuiGraphics graphics,
-            Font font,
-            FormattedCharSequence text,
-            int x,
-            int y,
-            int color
-    ) {
-        int result = graphics.drawString(font, text, x, y, color);
-
-        callyou$renderItemIconsInLine(graphics, font, text, x, y);
-
-        return result;
+    private int callyou$renderItemIconsBeforeText(GuiGraphics guiGraphics,
+                                                  Font font,
+                                                  FormattedCharSequence line,
+                                                  int x,
+                                                  int y,
+                                                  int color) {
+        callyou$renderItemIconsInLine(guiGraphics, font, line, x, y, color);
+        return guiGraphics.drawString(font, line, x, y, color);
     }
 
     @Unique
-    private void callyou$renderItemIconsInLine(
-            @NotNull GuiGraphics graphics,
-            @NotNull Font font,
-            @NotNull FormattedCharSequence line,
-            int baseX,
-            int baseY
-    ) {
-        List<Pair<Integer, ItemStack>> icons = callyou$findItemIcons(font, line, baseX);
-        if (icons.isEmpty()) {
+    private void callyou$renderItemIconsInLine(GuiGraphics guiGraphics,
+                                               Font font,
+                                               FormattedCharSequence line,
+                                               int baseX,
+                                               int baseY,
+                                               int color) {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc == null) {
             return;
         }
 
-        PoseStack pose = graphics.pose();
-        pose.pushPose();
-        pose.translate(0.0F, 0.0F, 200.0F);
+        StringBuilder before = new StringBuilder();
+        int halfSpace = font.width(" ") / 2;
 
-        for (Pair<Integer, ItemStack> icon : icons) {
-            int iconX = icon.getFirst();
-            ItemStack stack = icon.getSecond();
-            if (stack.isEmpty()) continue;
+        line.accept((index, style, codePoint) -> {
+            String soFar = before.toString();
 
-            int iconY = baseY - 4;
+            if (soFar.endsWith("  ")) {
+                String beforeText = soFar.substring(0, soFar.length() - 2);
 
-            graphics.renderItem(stack, iconX, iconY);
-        }
+                float extraShift = (codePoint == ' ') ? 0.0F : -halfSpace;
 
-        pose.popPose();
+                callyou$renderSingleItemIcon(guiGraphics, font, beforeText,
+                        extraShift, baseX, baseY, style, color);
+
+                return false;
+            }
+
+            before.appendCodePoint(codePoint);
+            return true;
+        });
     }
 
     @Unique
-    private @NotNull List<Pair<Integer, ItemStack>> callyou$findItemIcons(
-            @NotNull Font font,
-            @NotNull FormattedCharSequence line,
-            int baseX
-    ) {
-        List<Pair<Integer, ItemStack>> result = new ArrayList<>();
-
-        var splitter = font.getSplitter();
-        int totalWidth = font.width(line);
-
-        HoverEvent.ItemStackInfo currentInfo = null;
-
-        for (int dx = 0; dx < totalWidth; dx++) {
-            Style style = splitter.componentStyleAtWidth(line, dx);
-            HoverEvent hover = style != null ? style.getHoverEvent() : null;
-
-            HoverEvent.ItemStackInfo info = null;
-            if (hover != null && hover.getAction() == HoverEvent.Action.SHOW_ITEM) {
-                info = hover.getValue(HoverEvent.Action.SHOW_ITEM);
-            }
-
-            if (info != null && info != currentInfo) {
-                ItemStack stack = info.getItemStack();
-                if (!stack.isEmpty()) {
-                    int iconX = baseX + dx - 10;
-                    result.add(Pair.of(iconX, stack));
-                }
-            }
-
-            currentInfo = info;
+    private void callyou$renderSingleItemIcon(GuiGraphics guiGraphics,
+                                              Font font,
+                                              String beforeText,
+                                              float extraShift,
+                                              int baseX,
+                                              int baseY,
+                                              @NotNull Style style,
+                                              int color) {
+        HoverEvent hover = style.getHoverEvent();
+        if (hover == null || hover.getAction() != HoverEvent.Action.SHOW_ITEM) {
+            return;
         }
 
-        return result;
+        HoverEvent.ItemStackInfo info = hover.getValue(HoverEvent.Action.SHOW_ITEM);
+        ItemStack stack = info != null ? info.getItemStack() : ItemStack.EMPTY;
+        if (stack.isEmpty()) {
+            stack = new ItemStack(Blocks.BARRIER);
+        }
+
+        float alpha = (color >> 24 & 0xFF) / 255.0F;
+        if (alpha <= 0.0F) {
+            return;
+        }
+
+        float shift = font.width(beforeText) + extraShift;
+
+        PoseStack pose = guiGraphics.pose();
+        pose.pushPose();
+
+        pose.translate(baseX + shift, baseY - 1, 200.0F);
+        pose.scale(CALYOU_ITEM_ICON_SCALE, CALYOU_ITEM_ICON_SCALE, 1.0F);
+
+        guiGraphics.renderItem(stack, 0, 0);
+
+        pose.popPose();
     }
 }
