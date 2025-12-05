@@ -9,6 +9,7 @@ import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Locale;
 
@@ -23,16 +24,30 @@ public record PlayerNameTextFormatter(ChatFormatting color) implements TextForma
     ).apply(instance, PlayerNameTextFormatter::new));
 
     @Override
-    public TextFormatterType type() {
+    public @NotNull TextFormatterType type() {
         return BuiltInCallYouRegistries.PLAYER_NAME_FORMATTER_TYPE.get();
     }
 
     @Override
-    public Component format(MentionContext context) {
+    public @NotNull Component format(@NotNull MentionContext context) {
         String key = context.mentionKey();
         if (key == null || key.isEmpty()) {
             key = "player";
         }
         return Component.literal("@" + key).withStyle(this.color);
+    }
+
+    @Override
+    public boolean supportReply() {
+        return true;
+    }
+
+    @Override
+    public @NotNull String buildReplySuggestion(@NotNull MentionContext context, @NotNull Component formattedMention) {
+        String name = context.mentionKey();
+        if (name == null || name.isEmpty()) {
+            return "";
+        }
+        return "@" + name + " ";
     }
 }

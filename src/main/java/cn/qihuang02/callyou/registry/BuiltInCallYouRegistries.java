@@ -4,11 +4,12 @@ import cn.qihuang02.callyou.CallYouByYourName;
 import cn.qihuang02.callyou.api.NotificationRuleType;
 import cn.qihuang02.callyou.api.TargetProviderType;
 import cn.qihuang02.callyou.api.TextFormatterType;
+import cn.qihuang02.callyou.core.impl.formatter.ItemTextFormatter;
 import cn.qihuang02.callyou.core.impl.formatter.PlayerNameTextFormatter;
 import cn.qihuang02.callyou.core.impl.formatter.SimpleTextFormatter;
+import cn.qihuang02.callyou.core.impl.formatter.SpotTextFormatter;
 import cn.qihuang02.callyou.core.impl.notify.SoundNotificationRule;
-import cn.qihuang02.callyou.core.impl.target.PlayerNameTargetProvider;
-import cn.qihuang02.callyou.core.impl.target.RadiusTargetProvider;
+import cn.qihuang02.callyou.core.impl.target.*;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
@@ -29,8 +30,23 @@ public final class BuiltInCallYouRegistries {
     public static final DeferredHolder<TargetProviderType, TargetProviderType> PLAYER_NAME_TYPE =
             TARGET_PROVIDER_TYPES.register("player", () -> new TargetProviderType(PlayerNameTargetProvider.MAP_CODEC));
 
+    public static final DeferredHolder<TargetProviderType, TargetProviderType> NONE_TARGET_TYPE =
+            TARGET_PROVIDER_TYPES.register("none", () -> new TargetProviderType(NoneTargetProvider.MAP_CODEC));
+
+    public static final DeferredHolder<TargetProviderType, TargetProviderType> DIMENSION_TARGET_TYPE =
+            TARGET_PROVIDER_TYPES.register("dimension", () -> new TargetProviderType(DimensionTargetProvider.MAP_CODEC));
+
+    public static final DeferredHolder<TargetProviderType, TargetProviderType> SAME_DIMENSION_TARGET_TYPE =
+            TARGET_PROVIDER_TYPES.register("same_dimension", () -> new TargetProviderType(SameDimensionTargetProvider.MAP_CODEC));
+
     public static final DeferredHolder<TextFormatterType, TextFormatterType> SIMPLE_FORMATTER_TYPE =
             TEXT_FORMATTER_TYPES.register("simple_formatter", () -> new TextFormatterType(SimpleTextFormatter.MAP_CODEC));
+
+    public static final DeferredHolder<TextFormatterType, TextFormatterType> SPOT_FORMATTER_TYPE =
+            TEXT_FORMATTER_TYPES.register("spot", () -> new TextFormatterType(SpotTextFormatter.MAP_CODEC));
+
+    public static final DeferredHolder<TextFormatterType, TextFormatterType> ITEM_FORMATTER_TYPE =
+            TEXT_FORMATTER_TYPES.register("item", () -> new TextFormatterType(ItemTextFormatter.MAP_CODEC));
 
     public static final DeferredHolder<TextFormatterType, TextFormatterType> PLAYER_NAME_FORMATTER_TYPE =
             TEXT_FORMATTER_TYPES.register("player_name", () -> new TextFormatterType(PlayerNameTextFormatter.MAP_CODEC));

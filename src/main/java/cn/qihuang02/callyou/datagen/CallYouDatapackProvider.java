@@ -3,11 +3,15 @@ package cn.qihuang02.callyou.datagen;
 import cn.qihuang02.callyou.CallYouByYourName;
 import cn.qihuang02.callyou.api.MentionRules;
 import cn.qihuang02.callyou.api.MentionType;
+import cn.qihuang02.callyou.core.impl.formatter.ItemTextFormatter;
 import cn.qihuang02.callyou.core.impl.formatter.PlayerNameTextFormatter;
 import cn.qihuang02.callyou.core.impl.formatter.SimpleTextFormatter;
+import cn.qihuang02.callyou.core.impl.formatter.SpotTextFormatter;
 import cn.qihuang02.callyou.core.impl.notify.SoundNotificationRule;
+import cn.qihuang02.callyou.core.impl.target.NoneTargetProvider;
 import cn.qihuang02.callyou.core.impl.target.PlayerNameTargetProvider;
 import cn.qihuang02.callyou.core.impl.target.RadiusTargetProvider;
+import cn.qihuang02.callyou.core.impl.target.SameDimensionTargetProvider;
 import cn.qihuang02.callyou.registry.CallYouMentionRegistries;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.HolderLookup;
@@ -31,6 +35,18 @@ public final class CallYouDatapackProvider extends DatapackBuiltinEntriesProvide
     private static final ResourceKey<MentionType> PLAYER_MENTION = ResourceKey.create(
             CallYouMentionRegistries.MENTION_TYPE_REGISTRY_KEY,
             ResourceLocation.fromNamespaceAndPath(CallYouByYourName.MODID, "player")
+    );
+    private static final ResourceKey<MentionType> ITEM_MENTION = ResourceKey.create(
+            CallYouMentionRegistries.MENTION_TYPE_REGISTRY_KEY,
+            ResourceLocation.fromNamespaceAndPath(CallYouByYourName.MODID, "item")
+    );
+    private static final ResourceKey<MentionType> HERE_MENTION = ResourceKey.create(
+            CallYouMentionRegistries.MENTION_TYPE_REGISTRY_KEY,
+            ResourceLocation.fromNamespaceAndPath(CallYouByYourName.MODID, "here")
+    );
+    private static final ResourceKey<MentionType> SPOT_MENTION = ResourceKey.create(
+            CallYouMentionRegistries.MENTION_TYPE_REGISTRY_KEY,
+            ResourceLocation.fromNamespaceAndPath(CallYouByYourName.MODID, "spot")
     );
     private static final RegistrySetBuilder BUILDER = new RegistrySetBuilder()
             .add(
@@ -72,5 +88,45 @@ public final class CallYouDatapackProvider extends DatapackBuiltinEntriesProvide
         );
 
         context.register(PLAYER_MENTION, playerMention);
+
+        MentionType itemMention = new MentionType(
+                NoneTargetProvider.INSTANCE,
+                ItemTextFormatter.INSTANCE,
+                new SoundNotificationRule(
+                        SoundEvents.EXPERIENCE_ORB_PICKUP,
+                        1.0F,
+                        1.0F
+                ),
+                MentionRules.DEFAULT
+        );
+        context.register(ITEM_MENTION, itemMention);
+
+        MentionType hereMention = new MentionType(
+                new SameDimensionTargetProvider(),
+                new SimpleTextFormatter("@here", ChatFormatting.AQUA),
+                new SoundNotificationRule(
+                        SoundEvents.EXPERIENCE_ORB_PICKUP,
+                        1.0F,
+                        1.0F
+                ),
+                new MentionRules(
+                        0,
+                        null,
+                        true
+                )
+        );
+        context.register(HERE_MENTION, hereMention);
+
+        MentionType spotMention = new MentionType(
+                NoneTargetProvider.INSTANCE,
+                SpotTextFormatter.INSTANCE,
+                new SoundNotificationRule(
+                        SoundEvents.EXPERIENCE_ORB_PICKUP,
+                        1.0F,
+                        1.0F
+                ),
+                MentionRules.DEFAULT
+        );
+        context.register(SPOT_MENTION, spotMention);
     }
 }
