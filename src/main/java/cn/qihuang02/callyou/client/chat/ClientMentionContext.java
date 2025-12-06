@@ -9,22 +9,52 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.Registry;
 import net.minecraft.network.chat.Style;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
 public final class ClientMentionContext {
-    private final Minecraft minecraft;
+    private final Set<String> mentionTypeKeys;
+    private final Map<String, Style> mentionTypeStyles;
 
-    private Set<String> mentionTypeKeys = Set.of();
+    private final Style playerMentionStyle = Style.EMPTY;
 
-    private Map<String, Style> mentionTypeStyles = Map.of();
+    public ClientMentionContext(@NotNull Set<String> keys, @NotNull Map<String, Style> styles) {
+        this.mentionTypeKeys = Set.copyOf(keys);
+        this.mentionTypeStyles = Map.copyOf(styles);
+    }
 
-    private Style playerMentionStyle = Style.EMPTY;
+    public static @NotNull ClientMentionContext create(@NotNull Minecraft minecraft) {
+        var keys = new LinkedHashSet<String>();
+        var styles = new LinkedHashMap<String, Style>();
 
-    public ClientMentionContext(@NotNull Minecraft minecraft) {
-        this.minecraft = minecraft;
+        if (minecraft.level == null) {
+            return new ClientMentionContext(keys, styles);
+        }
+
+        var registryAccess = minecraft.level.registryAccess();
+        var optRegistry = registryAccess.registry(CallYouMentionRegistries.MENTION_TYPE_REGISTRY_KEY);
+        if (optRegistry.isEmpty()) {
+            CallYouByYourName.LOGGER.warn("[CallYou] Mention type registry is not available on the client.");
+            return new ClientMentionContext(keys, styles);
+        }
+
+        Registry<MentionType> registry = optRegistry.get();
+
+        for (Map.Entry<ResourceKey<MentionType>, MentionType> entry : registry.entrySet()) {
+            ResourceKey<MentionType> key = entry.getKey();
+            MentionType mentionType = entry.getValue();
+
+            ResourceLocation id = key.location();
+            String simpleKey = id.getPath().toLowerCase(Locale.ROOT);
+
+            keys.add(simpleKey);
+            styles.put(simpleKey, resolveStyle(mentionType));
+        }
+
+        return new ClientMentionContext(keys, styles);
     }
 
     private static @NotNull Style resolveStyle(@NotNull MentionType mentionType) {
@@ -35,61 +65,6 @@ public final class ClientMentionContext {
             return Style.EMPTY.withColor(color);
         }
         return Style.EMPTY;
-    }
-
-    public void rebuild() {
-        var connection = minecraft.getConnection();
-        if (connection == null) {
-            this.mentionTypeKeys = Set.of();
-            this.mentionTypeStyles = Map.of();
-            this.playerMentionStyle = Style.EMPTY;
-            return;
-        }
-
-        var access = connection.registryAccess();
-        Optional<Registry<MentionType>> optionalRegistry =
-                access.registry(CallYouMentionRegistries.MENTION_TYPE_REGISTRY_KEY);
-
-        if (optionalRegistry.isEmpty()) {
-            this.mentionTypeKeys = Set.of();
-            this.mentionTypeStyles = Map.of();
-            this.playerMentionStyle = Style.EMPTY;
-            return;
-        }
-
-        Registry<MentionType> registry = optionalRegistry.get();
-
-        Set<String> keys = new LinkedHashSet<>();
-        Map<String, Style> styles = new LinkedHashMap<>();
-        Style playerStyle = Style.EMPTY;
-
-        for (var entry : registry.entrySet()) {
-            MentionType mentionType = entry.getValue();
-            ResourceLocation id = registry.getKey(mentionType);
-            if (id == null) {
-                continue;
-            }
-
-            String path = id.getPath();
-            if (path == null || path.isEmpty()) {
-                continue;
-            }
-
-            String normalized = path.toLowerCase(Locale.ROOT);
-            Style style = resolveStyle(mentionType);
-
-            if (CallYouByYourName.MODID.equals(id.getNamespace()) && "player".equals(id.getPath())) {
-                playerStyle = style;
-                continue;
-            }
-
-            keys.add(normalized);
-            styles.put(normalized, style);
-        }
-
-        this.mentionTypeKeys = Collections.unmodifiableSet(keys);
-        this.mentionTypeStyles = Collections.unmodifiableMap(styles);
-        this.playerMentionStyle = playerStyle;
     }
 
     public @NotNull Set<String> getMentionTypeKeys() {
