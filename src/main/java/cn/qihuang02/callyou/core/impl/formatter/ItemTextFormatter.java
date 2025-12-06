@@ -68,7 +68,7 @@ public enum ItemTextFormatter implements TextFormatter {
                 });
 
         MutableComponent prefix = Component
-                .literal(" ")
+                .literal("  ")
                 .withStyle(existing -> {
                     var base = rarity.getStyleModifier().apply(existing);
                     return base

@@ -23,7 +23,11 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 public abstract class ChatComponentMixin {
 
     @Unique
-    private static final float CALYOU_ITEM_ICON_SCALE = 0.6F;
+    private static final float CALLYOU_ITEM_ICON_SCALE = 0.6F;
+    @Unique
+    private static final float CALLYOU_ITEM_ICON_EXTRA_SHIFT = 1.0F;
+    @Unique
+    private static final String CALLYOU_ITEM_ICON_PLACEHOLDER = "  ";
 
     @Redirect(
             method = "render",
@@ -56,15 +60,15 @@ public abstract class ChatComponentMixin {
         }
 
         StringBuilder before = new StringBuilder();
-        int halfSpace = font.width(" ") / 2;
+        int halfSpace = font.width("  ") / 2;
 
         line.accept((index, style, codePoint) -> {
             String soFar = before.toString();
 
-            if (soFar.endsWith("  ")) {
-                String beforeText = soFar.substring(0, soFar.length() - 2);
+            if (codePoint != ' ' && soFar.endsWith(CALLYOU_ITEM_ICON_PLACEHOLDER)) {
+                String beforeText = soFar.substring(0, soFar.length() - CALLYOU_ITEM_ICON_PLACEHOLDER.length());
 
-                float extraShift = (codePoint == ' ') ? 0.0F : -halfSpace;
+                float extraShift = -halfSpace;
 
                 callyou$renderSingleItemIcon(guiGraphics, font, beforeText,
                         extraShift, baseX, baseY, style, color);
@@ -102,13 +106,13 @@ public abstract class ChatComponentMixin {
             return;
         }
 
-        float shift = font.width(beforeText) + extraShift;
+        float shift = font.width(beforeText) + extraShift + CALLYOU_ITEM_ICON_EXTRA_SHIFT;
 
         PoseStack pose = guiGraphics.pose();
         pose.pushPose();
 
         pose.translate(baseX + shift, baseY - 1, 200.0F);
-        pose.scale(CALYOU_ITEM_ICON_SCALE, CALYOU_ITEM_ICON_SCALE, 1.0F);
+        pose.scale(CALLYOU_ITEM_ICON_SCALE, CALLYOU_ITEM_ICON_SCALE, 1.0F);
 
         guiGraphics.renderItem(stack, 0, 0);
 
