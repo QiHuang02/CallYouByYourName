@@ -20,5 +20,6 @@ public class DataGenerators {
         CompletableFuture<HolderLookup.Provider> lookupProvider = event.getLookupProvider();
 
         generator.addProvider(event.includeServer(), new CallYouDatapackProvider(packOutput, lookupProvider));
+        generator.addProvider(event.includeClient(), new CallYouLangProvider(packOutput));
     }
 }
