@@ -19,6 +19,6 @@ public class CallYouByYourName {
     public CallYouByYourName(IEventBus modEventBus, @NotNull ModContainer modContainer) {
         BuiltInCallYouRegistries.register(modEventBus);
         CallYouAttachments.ATTACHMENT_TYPES.register(modEventBus);
-        modContainer.registerConfig(ModConfig.Type.SERVER, CallYouConfig.SERVER_SPEC);
+        modContainer.registerConfig(ModConfig.Type.COMMON, CallYouConfig.COMMON_SPEC);
     }
 }

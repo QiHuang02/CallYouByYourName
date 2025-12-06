@@ -5,25 +5,26 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 
 public class CallYouConfig {
-    public static final ModConfigSpec SERVER_SPEC;
-    public static final Server SERVER;
+    public static final ModConfigSpec COMMON_SPEC;
+    public static final Common COMMON;
 
 
     static {
-        Pair<Server, ModConfigSpec> pair =
-                new ModConfigSpec.Builder().configure(Server::new);
-        SERVER = pair.getLeft();
-        SERVER_SPEC = pair.getRight();
+        Pair<Common, ModConfigSpec> pair =
+                new ModConfigSpec.Builder().configure(Common::new);
+        COMMON = pair.getLeft();
+        COMMON_SPEC = pair.getRight();
     }
 
-    public static final class Server {
+    public static final class Common {
         public final ModConfigSpec.IntValue maxMentionsPerMessage;
         public final ModConfigSpec.IntValue maxTargetsPerMention;
         public final ModConfigSpec.IntValue globalCooldownTicks;
         public final ModConfigSpec.IntValue perTargetCooldownTicks;
+        public final ModConfigSpec.BooleanValue renderItemIconAndPlaceholder;
 
 
-        Server(ModConfigSpec.@NotNull Builder builder) {
+        Common(ModConfigSpec.@NotNull Builder builder) {
             builder.push("mentions");
 
 
@@ -45,6 +46,10 @@ public class CallYouConfig {
             perTargetCooldownTicks = builder
                     .comment("Cooldown in ticks between mentions from the same sender to the same target. 0 = no limit.")
                     .defineInRange("perTargetCooldownTicks", 40, 0, 20 * 60);
+
+            renderItemIconAndPlaceholder = builder
+                    .comment("Whether to enable rendering of item icons and placeholder spaces after an @item mention.")
+                    .define("renderItemIconAndPlaceholder", true);
 
 
             builder.pop();

@@ -48,7 +48,7 @@ public final class MentionGuard {
     public boolean checkMessageRate(@NotNull ServerPlayer sender,
                                     int effectiveMentionCount,
                                     long nowTick) {
-        CallYouConfig.Server cfg = CallYouConfig.SERVER;
+        CallYouConfig.Common cfg = CallYouConfig.COMMON;
 
         int maxMentionsPerMessage = cfg.maxMentionsPerMessage.get();
         if (maxMentionsPerMessage > 0 && effectiveMentionCount > maxMentionsPerMessage) {
@@ -73,7 +73,7 @@ public final class MentionGuard {
             return result;
         }
 
-        CallYouConfig.Server cfg = CallYouConfig.SERVER;
+        CallYouConfig.Common cfg = CallYouConfig.COMMON;
 
         String key = context.mentionKey().toLowerCase(Locale.ROOT);
         int maxTargets = cfg.maxTargetsPerMention.get();

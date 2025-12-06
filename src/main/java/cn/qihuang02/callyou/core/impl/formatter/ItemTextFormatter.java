@@ -3,6 +3,7 @@ package cn.qihuang02.callyou.core.impl.formatter;
 import cn.qihuang02.callyou.api.MentionContext;
 import cn.qihuang02.callyou.api.TextFormatter;
 import cn.qihuang02.callyou.api.TextFormatterType;
+import cn.qihuang02.callyou.config.CallYouConfig;
 import cn.qihuang02.callyou.core.MentionCancelException;
 import cn.qihuang02.callyou.registry.BuiltInCallYouRegistries;
 import com.mojang.serialization.MapCodec;
@@ -66,6 +67,10 @@ public enum ItemTextFormatter implements TextFormatter {
                             .withHoverEvent(hover)
                             .withInsertion(copy.getDescriptionId());
                 });
+
+        if (!CallYouConfig.COMMON.renderItemIconAndPlaceholder.get()) {
+            return bracketed;
+        }
 
         MutableComponent prefix = Component
                 .literal("  ")

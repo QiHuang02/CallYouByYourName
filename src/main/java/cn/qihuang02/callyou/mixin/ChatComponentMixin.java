@@ -1,5 +1,6 @@
 package cn.qihuang02.callyou.mixin;
 
+import cn.qihuang02.callyou.config.CallYouConfig;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -54,6 +55,10 @@ public abstract class ChatComponentMixin {
                                                int baseX,
                                                int baseY,
                                                int color) {
+        if (!CallYouConfig.COMMON.renderItemIconAndPlaceholder.get()) {
+            return;
+        }
+
         Minecraft mc = Minecraft.getInstance();
         if (mc == null) {
             return;
@@ -119,3 +124,4 @@ public abstract class ChatComponentMixin {
         pose.popPose();
     }
 }
+
