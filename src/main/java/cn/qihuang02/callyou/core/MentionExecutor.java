@@ -138,9 +138,11 @@ public final class MentionExecutor {
         }
     }
 
-    private static @NotNull List<ServerPlayer> executeSingleMention(@NotNull MentionType type,
-                                                                    @NotNull MentionContext context,
-                                                                    long nowTick) {
+    private static @NotNull List<ServerPlayer> executeSingleMention(
+            @NotNull MentionType type,
+            @NotNull MentionContext context,
+            long nowTick
+    ) {
         TargetProvider targetProvider = type.targetProvider();
         Notifier notifier = type.notifier();
 

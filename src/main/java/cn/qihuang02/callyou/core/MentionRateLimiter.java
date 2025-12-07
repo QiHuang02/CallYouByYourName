@@ -12,9 +12,6 @@ public final class MentionRateLimiter {
     private final Map<UUID, Long> lastMessageTick = new HashMap<>();
     private final Map<UUID, Map<UUID, Long>> lastSenderToTargetTick = new HashMap<>();
 
-    public MentionRateLimiter() {
-    }
-
     public boolean canSendMessage(ServerPlayer sender, long nowTick, int cooldownTicks) {
         if (cooldownTicks <= 0) {
             return true;
@@ -27,8 +24,12 @@ public final class MentionRateLimiter {
         return nowTick - last >= cooldownTicks;
     }
 
-    public boolean canMentionTarget(ServerPlayer sender, ServerPlayer target,
-                                    long nowTick, int cooldownTicks) {
+    public boolean canMentionTarget(
+            ServerPlayer sender,
+            ServerPlayer target,
+            long nowTick,
+            int cooldownTicks
+    ) {
         if (cooldownTicks <= 0) {
             return true;
         }

@@ -16,8 +16,10 @@ public final class MentionGuard {
     public MentionGuard() {
     }
 
-    public boolean canUseMentionType(@NotNull ServerPlayer sender,
-                                     @NotNull MentionType type) {
+    public boolean canUseMentionType(
+            @NotNull ServerPlayer sender,
+            @NotNull MentionType type
+    ) {
         MentionRules rules = type.rules();
 
         int minOp = rules.minOpLevel();
@@ -45,9 +47,11 @@ public final class MentionGuard {
         return true;
     }
 
-    public boolean checkMessageRate(@NotNull ServerPlayer sender,
-                                    int effectiveMentionCount,
-                                    long nowTick) {
+    public boolean checkMessageRate(
+            @NotNull ServerPlayer sender,
+            int effectiveMentionCount,
+            long nowTick
+    ) {
         CallYouConfig.Common cfg = CallYouConfig.COMMON;
 
         int maxMentionsPerMessage = cfg.maxMentionsPerMessage.get();
@@ -63,11 +67,13 @@ public final class MentionGuard {
         return true;
     }
 
-    public @NotNull List<ServerPlayer> filterTargets(@NotNull ServerPlayer sender,
-                                                     @NotNull MentionType type,
-                                                     @NotNull MentionContext context,
-                                                     @NotNull List<ServerPlayer> rawTargets,
-                                                     long nowTick) {
+    public @NotNull List<ServerPlayer> filterTargets(
+            @NotNull ServerPlayer sender,
+            @NotNull MentionType type,
+            @NotNull MentionContext context,
+            @NotNull List<ServerPlayer> rawTargets,
+            long nowTick
+    ) {
         List<ServerPlayer> result = new ArrayList<>();
         if (rawTargets.isEmpty()) {
             return result;
@@ -101,9 +107,11 @@ public final class MentionGuard {
         return result;
     }
 
-    public void recordUsage(@NotNull ServerPlayer sender,
-                            @NotNull Collection<ServerPlayer> hitTargets,
-                            long nowTick) {
+    public void recordUsage(
+            @NotNull ServerPlayer sender,
+            @NotNull Collection<ServerPlayer> hitTargets,
+            long nowTick
+    ) {
         limiter.record(sender, hitTargets, nowTick);
     }
 }

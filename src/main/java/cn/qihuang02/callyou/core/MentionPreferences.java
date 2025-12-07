@@ -32,10 +32,12 @@ public final class MentionPreferences {
     private boolean allowMentions = true;
     private boolean allowMassMentions = true;
 
-    private static @NotNull MentionPreferences fromCodec(boolean allowMentions,
-                                                         boolean allowMassMentions,
-                                                         @NotNull List<String> blockedKeys,
-                                                         List<String> blockedSenderStrings) {
+    private static @NotNull MentionPreferences fromCodec(
+            boolean allowMentions,
+            boolean allowMassMentions,
+            @NotNull List<String> blockedKeys,
+            List<String> blockedSenderStrings
+    ) {
         MentionPreferences prefs = new MentionPreferences();
         prefs.allowMentions = allowMentions;
         prefs.allowMassMentions = allowMassMentions;
@@ -112,10 +114,11 @@ public final class MentionPreferences {
         this.blockedSenders.clear();
     }
 
-    public boolean isMentionAllowed(@NotNull MentionType type,
-                                    @NotNull String key,
-                                    @NotNull UUID senderId) {
-
+    public boolean isMentionAllowed(
+            @NotNull MentionType type,
+            @NotNull String key,
+            @NotNull UUID senderId
+    ) {
         if (!allowMentions) {
             return false;
         }
@@ -129,10 +132,6 @@ public final class MentionPreferences {
         }
 
         MentionRules rules = type.rules();
-        if (!allowMassMentions && rules != null && rules.isMass()) {
-            return false;
-        }
-
-        return true;
+        return allowMassMentions || rules == null || !rules.isMass();
     }
 }

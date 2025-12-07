@@ -16,9 +16,11 @@ import java.util.Locale;
 import java.util.Optional;
 
 public final class MentionResolver {
-    public static @NotNull List<ResolvedMention> resolve(@NotNull MinecraftServer server,
-                                                         @NotNull ServerPlayer sender,
-                                                         @NotNull String rawText) {
+    public static @NotNull List<ResolvedMention> resolve(
+            @NotNull MinecraftServer server,
+            @NotNull ServerPlayer sender,
+            @NotNull String rawText
+    ) {
         List<ResolvedMention> result = new ArrayList<>();
 
         var access = server.registryAccess();
