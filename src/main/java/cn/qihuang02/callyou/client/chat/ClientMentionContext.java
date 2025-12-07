@@ -17,13 +17,9 @@ import java.util.*;
 
 public final class ClientMentionContext {
     private final Set<String> mentionTypeKeys;
-    private final Map<String, Style> mentionTypeStyles;
-
-    private final Style playerMentionStyle = Style.EMPTY;
 
     public ClientMentionContext(@NotNull Set<String> keys, @NotNull Map<String, Style> styles) {
         this.mentionTypeKeys = Set.copyOf(keys);
-        this.mentionTypeStyles = Map.copyOf(styles);
     }
 
     public static @NotNull ClientMentionContext create(@NotNull Minecraft minecraft) {
@@ -69,13 +65,5 @@ public final class ClientMentionContext {
 
     public @NotNull Set<String> getMentionTypeKeys() {
         return mentionTypeKeys;
-    }
-
-    public @NotNull Map<String, Style> getMentionTypeStyles() {
-        return mentionTypeStyles;
-    }
-
-    public @NotNull Style getPlayerMentionStyle() {
-        return playerMentionStyle == null ? Style.EMPTY : playerMentionStyle;
     }
 }

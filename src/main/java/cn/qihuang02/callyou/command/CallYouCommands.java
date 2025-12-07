@@ -1,6 +1,7 @@
-package cn.qihuang02.callyou.core;
+package cn.qihuang02.callyou.command;
 
 import cn.qihuang02.callyou.CallYouByYourName;
+import cn.qihuang02.callyou.core.CallYouAttachments;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
@@ -20,10 +21,6 @@ import static net.minecraft.commands.Commands.literal;
 
 @EventBusSubscriber(modid = CallYouByYourName.MODID)
 public final class CallYouCommands {
-
-    private CallYouCommands() {
-    }
-
     @SubscribeEvent
     public static void onRegisterCommands(@NotNull RegisterCommandsEvent event) {
         CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
