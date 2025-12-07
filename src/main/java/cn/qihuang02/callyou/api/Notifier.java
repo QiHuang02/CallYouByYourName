@@ -6,22 +6,17 @@ import net.minecraft.server.level.ServerPlayer;
 
 import java.util.List;
 
-public interface NotificationRule {
-    Codec<NotificationRule> CODEC =
+public interface Notifier {
+    Codec<Notifier> CODEC =
             CallYouRegistries.NOTIFICATION_RULE_TYPES
                     .byNameCodec()
                     .dispatch(
                             "type",
-                            NotificationRule::type,
-                            NotificationRuleType::mapCodec
+                            Notifier::type,
+                            NotifierType::mapCodec
                     );
 
-    NotificationRuleType type();
+    NotifierType type();
 
-    /**
-     * Apply the notification side effects for this mention.
-     * This method is not wired up anywhere yet – you will call it
-     * from your actual chat handling logic later.
-     */
     void apply(MentionContext context, List<ServerPlayer> targets);
 }

@@ -142,7 +142,7 @@ public final class MentionExecutor {
                                                                     @NotNull MentionContext context,
                                                                     long nowTick) {
         TargetProvider targetProvider = type.targetProvider();
-        NotificationRule notificationRule = type.notificationRule();
+        Notifier notifier = type.notifier();
 
         List<ServerPlayer> rawTargets = new ArrayList<>(targetProvider.getTargets(context));
 
@@ -162,7 +162,7 @@ public final class MentionExecutor {
             return List.of();
         }
 
-        notificationRule.apply(context, filteredTargets);
+        notifier.apply(context, filteredTargets);
 
         NeoForge.EVENT_BUS.post(new MentionEvent.Post(context, type, filteredTargets));
 

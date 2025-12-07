@@ -1,8 +1,8 @@
 package cn.qihuang02.callyou.core.impl.notify;
 
 import cn.qihuang02.callyou.api.MentionContext;
-import cn.qihuang02.callyou.api.NotificationRule;
-import cn.qihuang02.callyou.api.NotificationRuleType;
+import cn.qihuang02.callyou.api.Notifier;
+import cn.qihuang02.callyou.api.NotifierType;
 import cn.qihuang02.callyou.registry.BuiltInCallYouRegistries;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
@@ -16,23 +16,23 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-public record SoundNotificationRule(SoundEvent sound, float volume, float pitch) implements NotificationRule {
-    public static final MapCodec<SoundNotificationRule> MAP_CODEC =
+public record SoundNotifier(SoundEvent sound, float volume, float pitch) implements Notifier {
+    public static final MapCodec<SoundNotifier> MAP_CODEC =
             RecordCodecBuilder.mapCodec(instance -> instance.group(
                     BuiltInRegistries.SOUND_EVENT.byNameCodec()
                             .fieldOf("sound")
-                            .forGetter(SoundNotificationRule::sound),
+                            .forGetter(SoundNotifier::sound),
                     Codec.FLOAT
                             .optionalFieldOf("volume", 1.0f)
-                            .forGetter(SoundNotificationRule::volume),
+                            .forGetter(SoundNotifier::volume),
                     Codec.FLOAT
                             .optionalFieldOf("pitch", 1.0f)
-                            .forGetter(SoundNotificationRule::pitch)
-            ).apply(instance, SoundNotificationRule::new));
+                            .forGetter(SoundNotifier::pitch)
+            ).apply(instance, SoundNotifier::new));
 
     @Contract(pure = true)
     @Override
-    public @NotNull NotificationRuleType type() {
+    public @NotNull NotifierType type() {
         return BuiltInCallYouRegistries.SOUND_TYPE.get();
     }
 

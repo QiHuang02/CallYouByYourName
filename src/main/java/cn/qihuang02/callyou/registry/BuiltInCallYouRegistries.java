@@ -1,15 +1,15 @@
 package cn.qihuang02.callyou.registry;
 
 import cn.qihuang02.callyou.CallYouByYourName;
-import cn.qihuang02.callyou.api.NotificationRuleType;
+import cn.qihuang02.callyou.api.NotifierType;
 import cn.qihuang02.callyou.api.TargetProviderType;
 import cn.qihuang02.callyou.api.TextFormatterType;
 import cn.qihuang02.callyou.core.impl.formatter.ItemTextFormatter;
 import cn.qihuang02.callyou.core.impl.formatter.PlayerNameTextFormatter;
 import cn.qihuang02.callyou.core.impl.formatter.SimpleTextFormatter;
 import cn.qihuang02.callyou.core.impl.formatter.SpotTextFormatter;
-import cn.qihuang02.callyou.core.impl.notify.ActionBarNotificationRule;
-import cn.qihuang02.callyou.core.impl.notify.SoundNotificationRule;
+import cn.qihuang02.callyou.core.impl.notify.ActionBarNotifier;
+import cn.qihuang02.callyou.core.impl.notify.SoundNotifier;
 import cn.qihuang02.callyou.core.impl.target.*;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredHolder;
@@ -22,7 +22,7 @@ public final class BuiltInCallYouRegistries {
     public static final DeferredRegister<TextFormatterType> TEXT_FORMATTER_TYPES =
             DeferredRegister.create(CallYouRegistries.TEXT_FORMATTER_TYPE_REGISTRY_KEY, CallYouByYourName.MODID);
 
-    public static final DeferredRegister<NotificationRuleType> NOTIFICATION_RULE_TYPES =
+    public static final DeferredRegister<NotifierType> NOTIFICATION_RULE_TYPES =
             DeferredRegister.create(CallYouRegistries.NOTIFICATION_RULE_TYPE_REGISTRY_KEY, CallYouByYourName.MODID);
 
     public static final DeferredHolder<TargetProviderType, TargetProviderType> RADIUS_TYPE =
@@ -55,11 +55,11 @@ public final class BuiltInCallYouRegistries {
     public static final DeferredHolder<TextFormatterType, TextFormatterType> PLAYER_NAME_FORMATTER_TYPE =
             TEXT_FORMATTER_TYPES.register("player_name", () -> new TextFormatterType(PlayerNameTextFormatter.MAP_CODEC));
 
-    public static final DeferredHolder<NotificationRuleType, NotificationRuleType> SOUND_TYPE =
-            NOTIFICATION_RULE_TYPES.register("sound", () -> new NotificationRuleType(SoundNotificationRule.MAP_CODEC));
+    public static final DeferredHolder<NotifierType, NotifierType> SOUND_TYPE =
+            NOTIFICATION_RULE_TYPES.register("sound", () -> new NotifierType(SoundNotifier.MAP_CODEC));
 
-    public static final DeferredHolder<NotificationRuleType, NotificationRuleType> ACTION_BAR_TYPE =
-            NOTIFICATION_RULE_TYPES.register("action_bar", () -> new NotificationRuleType(ActionBarNotificationRule.MAP_CODEC));
+    public static final DeferredHolder<NotifierType, NotifierType> ACTION_BAR_TYPE =
+            NOTIFICATION_RULE_TYPES.register("action_bar", () -> new NotifierType(ActionBarNotifier.MAP_CODEC));
 
     public static void register(IEventBus modEventBus) {
         TARGET_PROVIDER_TYPES.register(modEventBus);

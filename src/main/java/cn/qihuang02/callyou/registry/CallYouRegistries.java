@@ -1,7 +1,7 @@
 package cn.qihuang02.callyou.registry;
 
 import cn.qihuang02.callyou.CallYouByYourName;
-import cn.qihuang02.callyou.api.NotificationRuleType;
+import cn.qihuang02.callyou.api.NotifierType;
 import cn.qihuang02.callyou.api.TargetProviderType;
 import cn.qihuang02.callyou.api.TextFormatterType;
 import net.minecraft.core.Registry;
@@ -23,7 +23,7 @@ public final class CallYouRegistries {
             ResourceKey.createRegistryKey(ResourceLocation.fromNamespaceAndPath(CallYouByYourName.MODID, "text_formatter_type"));
 
 
-    public static final ResourceKey<Registry<NotificationRuleType>> NOTIFICATION_RULE_TYPE_REGISTRY_KEY =
+    public static final ResourceKey<Registry<NotifierType>> NOTIFICATION_RULE_TYPE_REGISTRY_KEY =
             ResourceKey.createRegistryKey(ResourceLocation.fromNamespaceAndPath(CallYouByYourName.MODID, "notification_rule_type"));
 
 
@@ -39,7 +39,7 @@ public final class CallYouRegistries {
                     .create();
 
 
-    public static final Registry<NotificationRuleType> NOTIFICATION_RULE_TYPES =
+    public static final Registry<NotifierType> NOTIFICATION_RULE_TYPES =
             new RegistryBuilder<>(NOTIFICATION_RULE_TYPE_REGISTRY_KEY)
                     .sync(true)
                     .create();

@@ -26,7 +26,7 @@ public class FTBTeamTargetProvider implements TargetProvider {
     public List<ServerPlayer> getTargets(@NotNull MentionContext context) {
         ServerPlayer sender = context.sender();
 
-        if (!FTBTeamsAPIWrapper.isLoaded()) {
+        if (FTBTeamsAPIWrapper.isLoaded()) {
             return Collections.emptyList();
         }
 

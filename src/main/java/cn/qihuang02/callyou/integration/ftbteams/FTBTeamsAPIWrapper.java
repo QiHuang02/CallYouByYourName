@@ -11,12 +11,12 @@ public class FTBTeamsAPIWrapper {
     public static final String MOD_ID = "ftbteams";
 
     public static boolean isLoaded() {
-        return ModList.get().isLoaded(MOD_ID);
+        return !ModList.get().isLoaded(MOD_ID);
     }
 
     @NotNull
     public static List<UUID> getTeamMembers(ServerPlayer player) {
-        if (!isLoaded()) {
+        if (isLoaded()) {
             return Collections.emptyList();
         }
 

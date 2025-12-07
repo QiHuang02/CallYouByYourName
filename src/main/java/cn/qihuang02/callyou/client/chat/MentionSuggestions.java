@@ -24,12 +24,14 @@ public class MentionSuggestions extends CommandSuggestions {
     @Nullable
     private MentionTokens.Token currentToken;
 
-    public MentionSuggestions(Minecraft minecraft,
-                              ChatScreen screen,
-                              EditBox input,
-                              Font font,
-                              ClientMentionContext mentionContext,
-                              MentionCandidateProvider candidateProvider) {
+    public MentionSuggestions(
+            Minecraft minecraft,
+            ChatScreen screen,
+            EditBox input,
+            Font font,
+            ClientMentionContext mentionContext,
+            MentionCandidateProvider candidateProvider
+    ) {
         super(minecraft, screen, input, font,
                 false,
                 false,
