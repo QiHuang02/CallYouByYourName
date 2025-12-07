@@ -38,23 +38,27 @@ public abstract class ChatComponentMixin {
             ),
             require = 0
     )
-    private int callyou$renderItemIconsBeforeText(GuiGraphics guiGraphics,
-                                                  Font font,
-                                                  FormattedCharSequence line,
-                                                  int x,
-                                                  int y,
-                                                  int color) {
+    private int callyou$renderItemIconsBeforeText(
+            GuiGraphics guiGraphics,
+            Font font,
+            FormattedCharSequence line,
+            int x,
+            int y,
+            int color
+    ) {
         callyou$renderItemIconsInLine(guiGraphics, font, line, x, y, color);
         return guiGraphics.drawString(font, line, x, y, color);
     }
 
     @Unique
-    private void callyou$renderItemIconsInLine(GuiGraphics guiGraphics,
-                                               Font font,
-                                               FormattedCharSequence line,
-                                               int baseX,
-                                               int baseY,
-                                               int color) {
+    private void callyou$renderItemIconsInLine(
+            GuiGraphics guiGraphics,
+            Font font,
+            FormattedCharSequence line,
+            int baseX,
+            int baseY,
+            int color
+    ) {
         if (!CallYouConfig.COMMON.renderItemIconAndPlaceholder.get()) {
             return;
         }
@@ -87,14 +91,16 @@ public abstract class ChatComponentMixin {
     }
 
     @Unique
-    private void callyou$renderSingleItemIcon(GuiGraphics guiGraphics,
-                                              Font font,
-                                              String beforeText,
-                                              float extraShift,
-                                              int baseX,
-                                              int baseY,
-                                              @NotNull Style style,
-                                              int color) {
+    private void callyou$renderSingleItemIcon(
+            GuiGraphics guiGraphics,
+            Font font,
+            String beforeText,
+            float extraShift,
+            int baseX,
+            int baseY,
+            @NotNull Style style,
+            int color
+    ) {
         HoverEvent hover = style.getHoverEvent();
         if (hover == null || hover.getAction() != HoverEvent.Action.SHOW_ITEM) {
             return;
