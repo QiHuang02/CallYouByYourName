@@ -30,14 +30,14 @@ public class FTBTeamTargetProvider implements TargetProvider {
             return Collections.emptyList();
         }
 
-        List<UUID> menberUUIDs = FTBTeamsAPIWrapper.getTeamMembers(sender);
+        List<UUID> memberUUIDs = FTBTeamsAPIWrapper.getTeamMembers(sender);
 
-        if (menberUUIDs.isEmpty()) {
+        if (memberUUIDs.isEmpty()) {
             return Collections.emptyList();
         }
 
         List<ServerPlayer> targets = new ArrayList<>();
-        for (UUID uuid : menberUUIDs) {
+        for (UUID uuid : memberUUIDs) {
             if (uuid.equals(sender.getUUID())) {
                 continue;
             }

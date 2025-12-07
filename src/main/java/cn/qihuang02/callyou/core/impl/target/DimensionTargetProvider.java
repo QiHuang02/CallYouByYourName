@@ -25,8 +25,10 @@ public record DimensionTargetProvider(@Nullable ResourceLocation dimensionId) im
             ).apply(instance, opt -> new DimensionTargetProvider(opt.orElse(null)))
     );
 
-    public static @NotNull List<ServerPlayer> collectTargets(@NotNull MentionContext context,
-                                                             @Nullable ResourceLocation dimensionId) {
+    public static @NotNull List<ServerPlayer> collectTargets(
+            @NotNull MentionContext context,
+            @Nullable ResourceLocation dimensionId
+    ) {
         ServerPlayer sender = context.sender();
         MinecraftServer server = sender.server;
 
