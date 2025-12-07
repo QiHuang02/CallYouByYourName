@@ -51,14 +51,6 @@ public abstract class MentionEvent extends Event {
         return context.mentionKey();
     }
 
-    public @NotNull List<String> getTargetPlayerNames() {
-        List<String> names = new ArrayList<>(targets.size());
-        for (ServerPlayer player : targets) {
-            names.add(player.getGameProfile().getName());
-        }
-        return names;
-    }
-
     public @Nullable String getSingleTargetPlayerName() {
         if (targets.size() != 1) {
             return null;

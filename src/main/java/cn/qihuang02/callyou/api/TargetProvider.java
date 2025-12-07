@@ -16,14 +16,7 @@ public interface TargetProvider {
                             TargetProviderType::mapCodec
                     );
 
-    /**
-     * The type info used for serialization and registry dispatch.
-     */
     TargetProviderType type();
 
-
-    /**
-     * Return the list of target players for this mention.
-     */
     List<ServerPlayer> getTargets(MentionContext context);
 }
