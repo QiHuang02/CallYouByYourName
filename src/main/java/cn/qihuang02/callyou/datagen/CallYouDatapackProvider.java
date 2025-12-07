@@ -8,10 +8,7 @@ import cn.qihuang02.callyou.core.impl.formatter.PlayerNameTextFormatter;
 import cn.qihuang02.callyou.core.impl.formatter.SimpleTextFormatter;
 import cn.qihuang02.callyou.core.impl.formatter.SpotTextFormatter;
 import cn.qihuang02.callyou.core.impl.notify.SoundNotificationRule;
-import cn.qihuang02.callyou.core.impl.target.NoneTargetProvider;
-import cn.qihuang02.callyou.core.impl.target.PlayerNameTargetProvider;
-import cn.qihuang02.callyou.core.impl.target.RadiusTargetProvider;
-import cn.qihuang02.callyou.core.impl.target.SameDimensionTargetProvider;
+import cn.qihuang02.callyou.core.impl.target.*;
 import cn.qihuang02.callyou.registry.CallYouMentionRegistries;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.HolderLookup;
@@ -47,6 +44,10 @@ public final class CallYouDatapackProvider extends DatapackBuiltinEntriesProvide
     private static final ResourceKey<MentionType> SPOT_MENTION = ResourceKey.create(
             CallYouMentionRegistries.MENTION_TYPE_REGISTRY_KEY,
             ResourceLocation.fromNamespaceAndPath(CallYouByYourName.MODID, "spot")
+    );
+    private static final ResourceKey<MentionType> FTB_TEAM_MENTION = ResourceKey.create(
+            CallYouMentionRegistries.MENTION_TYPE_REGISTRY_KEY,
+            ResourceLocation.fromNamespaceAndPath(CallYouByYourName.MODID, "ftb_team")
     );
     private static final RegistrySetBuilder BUILDER = new RegistrySetBuilder()
             .add(
@@ -128,5 +129,22 @@ public final class CallYouDatapackProvider extends DatapackBuiltinEntriesProvide
                 MentionRules.DEFAULT
         );
         context.register(SPOT_MENTION, spotMention);
+
+        MentionType ftbTeamMention = new MentionType(
+                new FTBTeamTargetProvider(),
+                new SimpleTextFormatter("@team", ChatFormatting.GOLD),
+                new SoundNotificationRule(
+                        SoundEvents.EXPERIENCE_ORB_PICKUP,
+                        1.0F,
+                        1.0F
+                ),
+                new MentionRules(
+                        0,
+                        "callyou.mention.team",
+                        true
+                )
+        );
+
+        context.register(FTB_TEAM_MENTION, ftbTeamMention);
     }
 }

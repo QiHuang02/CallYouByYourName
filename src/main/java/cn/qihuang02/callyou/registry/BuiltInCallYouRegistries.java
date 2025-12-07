@@ -8,6 +8,7 @@ import cn.qihuang02.callyou.core.impl.formatter.ItemTextFormatter;
 import cn.qihuang02.callyou.core.impl.formatter.PlayerNameTextFormatter;
 import cn.qihuang02.callyou.core.impl.formatter.SimpleTextFormatter;
 import cn.qihuang02.callyou.core.impl.formatter.SpotTextFormatter;
+import cn.qihuang02.callyou.core.impl.notify.ActionBarNotificationRule;
 import cn.qihuang02.callyou.core.impl.notify.SoundNotificationRule;
 import cn.qihuang02.callyou.core.impl.target.*;
 import net.neoforged.bus.api.IEventBus;
@@ -39,6 +40,9 @@ public final class BuiltInCallYouRegistries {
     public static final DeferredHolder<TargetProviderType, TargetProviderType> SAME_DIMENSION_TARGET_TYPE =
             TARGET_PROVIDER_TYPES.register("same_dimension", () -> new TargetProviderType(SameDimensionTargetProvider.MAP_CODEC));
 
+    public static final DeferredHolder<TargetProviderType, TargetProviderType> FTB_TEAM_TARGET_TYPE =
+            TARGET_PROVIDER_TYPES.register("ftb_team", () -> new TargetProviderType(FTBTeamTargetProvider.MAP_CODEC));
+
     public static final DeferredHolder<TextFormatterType, TextFormatterType> SIMPLE_FORMATTER_TYPE =
             TEXT_FORMATTER_TYPES.register("simple_formatter", () -> new TextFormatterType(SimpleTextFormatter.MAP_CODEC));
 
@@ -53,6 +57,9 @@ public final class BuiltInCallYouRegistries {
 
     public static final DeferredHolder<NotificationRuleType, NotificationRuleType> SOUND_TYPE =
             NOTIFICATION_RULE_TYPES.register("sound", () -> new NotificationRuleType(SoundNotificationRule.MAP_CODEC));
+
+    public static final DeferredHolder<NotificationRuleType, NotificationRuleType> ACTION_BAR_TYPE =
+            NOTIFICATION_RULE_TYPES.register("action_bar", () -> new NotificationRuleType(ActionBarNotificationRule.MAP_CODEC));
 
     public static void register(IEventBus modEventBus) {
         TARGET_PROVIDER_TYPES.register(modEventBus);
