@@ -26,7 +26,7 @@ public enum SpotTextFormatter implements TextFormatter {
     }
 
     @Override
-    public @NotNull Component format(MentionContext context) {
+    public @NotNull Component format(@NotNull MentionContext context) {
         BlockPos pos = context.sender().blockPosition();
 
         MutableComponent location = Component.translatable("message.callyou.spot", pos.getX(), pos.getY(), pos.getZ());
