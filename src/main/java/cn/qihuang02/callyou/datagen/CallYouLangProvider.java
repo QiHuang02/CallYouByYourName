@@ -29,5 +29,6 @@ public class CallYouLangProvider extends LanguageProvider {
         add("message.callyou.too_many_mentions", "Too many mentions in one message!");
         add("message.callyou.spot", "at X: %s Y: %s Z: %s");
         add("message.callyou.item.empty", "Cannot mention empty hand!");
+        add("message.callyou.ftbteams_missing", "FTB Teams is not installed; @team mention is unavailable.");
     }
 }

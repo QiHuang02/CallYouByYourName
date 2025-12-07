@@ -6,6 +6,7 @@ import cn.qihuang02.callyou.api.TargetProviderType;
 import cn.qihuang02.callyou.integration.ftbteams.FTBTeamsAPIWrapper;
 import cn.qihuang02.callyou.registry.BuiltInCallYouRegistries;
 import com.mojang.serialization.MapCodec;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.NotNull;
 
@@ -26,7 +27,8 @@ public class FTBTeamTargetProvider implements TargetProvider {
     public List<ServerPlayer> getTargets(@NotNull MentionContext context) {
         ServerPlayer sender = context.sender();
 
-        if (FTBTeamsAPIWrapper.isLoaded()) {
+        if (!FTBTeamsAPIWrapper.isLoaded()) {
+            sender.sendSystemMessage(Component.translatable("message.callyou.ftbteams_missing"));
             return Collections.emptyList();
         }
 
