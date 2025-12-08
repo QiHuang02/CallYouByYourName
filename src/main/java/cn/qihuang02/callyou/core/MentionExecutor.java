@@ -17,6 +17,10 @@ public final class MentionExecutor {
 
     private static final MentionGuard GUARD = new MentionGuard();
 
+    public static void handlePlayerLogout(@NotNull ServerPlayer player) {
+        GUARD.onPlayerLogout(player);
+    }
+
     public static void handleChatEvent(@NotNull ServerChatEvent event) {
         ServerPlayer sender = event.getPlayer();
 

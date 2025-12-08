@@ -1,6 +1,7 @@
 package cn.qihuang02.callyou.event;
 
 import cn.qihuang02.callyou.CallYouByYourName;
+import cn.qihuang02.callyou.core.MentionExecutor;
 import cn.qihuang02.callyou.util.OnlinePlayerList;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -39,6 +40,7 @@ public final class OnlinePlayersHandler {
     public static void onPlayerLogout(@NotNull PlayerEvent.PlayerLoggedOutEvent event) {
         if (event.getEntity() instanceof ServerPlayer player) {
             ONLINE_PLAYERS.onPlayerLoggedOut(player);
+            MentionExecutor.handlePlayerLogout(player);
         }
     }
 }

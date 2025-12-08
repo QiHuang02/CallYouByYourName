@@ -114,4 +114,8 @@ public final class MentionGuard {
     ) {
         limiter.record(sender, hitTargets, nowTick);
     }
+
+    public void onPlayerLogout(@NotNull ServerPlayer player) {
+        limiter.onPlayerLogout(player.getUUID());
+    }
 }

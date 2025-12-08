@@ -8,11 +8,15 @@ import java.util.Map;
 import java.util.UUID;
 
 public final class MentionRateLimiter {
+    private static final long CLEANUP_INTERVAL_TICKS = 20 * 60;
+    private static final long STALE_ENTRY_TICKS = 20 * 60 * 5;
 
     private final Map<UUID, Long> lastMessageTick = new HashMap<>();
     private final Map<UUID, Map<UUID, Long>> lastSenderToTargetTick = new HashMap<>();
+    private long lastCleanupTick;
 
     public boolean canSendMessage(ServerPlayer sender, long nowTick, int cooldownTicks) {
+        cleanup(nowTick);
         if (cooldownTicks <= 0) {
             return true;
         }
@@ -30,6 +34,7 @@ public final class MentionRateLimiter {
             long nowTick,
             int cooldownTicks
     ) {
+        cleanup(nowTick);
         if (cooldownTicks <= 0) {
             return true;
         }
@@ -55,5 +60,28 @@ public final class MentionRateLimiter {
         for (ServerPlayer target : targets) {
             map.put(target.getUUID(), nowTick);
         }
+    }
+
+    public void onPlayerLogout(@NotNull UUID playerId) {
+        lastMessageTick.remove(playerId);
+        lastSenderToTargetTick.remove(playerId);
+        for (Map<UUID, Long> map : lastSenderToTargetTick.values()) {
+            map.remove(playerId);
+        }
+    }
+
+    public void cleanup(long nowTick) {
+        if (nowTick - lastCleanupTick < CLEANUP_INTERVAL_TICKS && lastCleanupTick != 0) {
+            return;
+        }
+        lastCleanupTick = nowTick;
+
+        lastMessageTick.entrySet().removeIf(entry -> nowTick - entry.getValue() > STALE_ENTRY_TICKS);
+
+        lastSenderToTargetTick.entrySet().removeIf(entry -> {
+            Map<UUID, Long> map = entry.getValue();
+            map.entrySet().removeIf(targetEntry -> nowTick - targetEntry.getValue() > STALE_ENTRY_TICKS);
+            return map.isEmpty();
+        });
     }
 }
