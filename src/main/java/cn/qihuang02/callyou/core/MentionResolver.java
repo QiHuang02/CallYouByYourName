@@ -1,12 +1,10 @@
 package cn.qihuang02.callyou.core;
 
-import cn.qihuang02.callyou.CallYouByYourName;
 import cn.qihuang02.callyou.api.MentionType;
 import cn.qihuang02.callyou.event.OnlinePlayersHandler;
 import cn.qihuang02.callyou.registry.CallYouMentionRegistries;
 import cn.qihuang02.callyou.util.OnlinePlayerList;
 import net.minecraft.core.Registry;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.NotNull;

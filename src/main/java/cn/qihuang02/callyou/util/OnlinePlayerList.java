@@ -12,6 +12,11 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class OnlinePlayerList {
+    private static ClientPacketListener cachedClientConnection;
+    private static List<String> cachedClientNames = List.of();
+    private static int cachedOnlinePlayerCount = -1;
+    private static String cachedSelfName = "";
+
     private final List<UUID> onlinePlayerUUIDs = new ArrayList<>();
     private final Map<UUID, String> nameCache = new HashMap<>();
 
@@ -19,11 +24,25 @@ public class OnlinePlayerList {
         ClientPacketListener connection = minecraft.getConnection();
         LocalPlayer localPlayer = minecraft.player;
         if (connection == null || localPlayer == null) {
+            resetClientCache();
             return List.of();
         }
 
+        if (connection != cachedClientConnection) {
+            resetClientCache();
+            cachedClientConnection = connection;
+        }
+
         String selfName = localPlayer.getGameProfile().getName();
-        List<String> result = new ArrayList<>();
+        int onlinePlayerCount = connection.getOnlinePlayers().size();
+
+        if (!cachedClientNames.isEmpty()
+                && onlinePlayerCount == cachedOnlinePlayerCount
+                && selfName.equals(cachedSelfName)) {
+            return cachedClientNames;
+        }
+
+        List<String> result = new ArrayList<>(onlinePlayerCount);
 
         for (PlayerInfo info : connection.getOnlinePlayers()) {
             String name = info.getProfile().getName();
@@ -36,10 +55,22 @@ public class OnlinePlayerList {
             result.add(name);
         }
 
-        return result.stream()
+        cachedClientNames = result.stream()
                 .distinct()
                 .sorted(String.CASE_INSENSITIVE_ORDER)
                 .toList();
+
+        cachedOnlinePlayerCount = onlinePlayerCount;
+        cachedSelfName = selfName;
+
+        return cachedClientNames;
+    }
+
+    private static void resetClientCache() {
+        cachedClientNames = List.of();
+        cachedClientConnection = null;
+        cachedOnlinePlayerCount = -1;
+        cachedSelfName = "";
     }
 
     public void clear() {
