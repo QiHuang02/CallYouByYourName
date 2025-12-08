@@ -15,6 +15,33 @@ public class OnlinePlayerList {
     private final List<UUID> onlinePlayerUUIDs = new ArrayList<>();
     private final Map<UUID, String> nameCache = new HashMap<>();
 
+    public static @NotNull List<String> getClientOnlinePlayerNames(@NotNull Minecraft minecraft) {
+        ClientPacketListener connection = minecraft.getConnection();
+        LocalPlayer localPlayer = minecraft.player;
+        if (connection == null || localPlayer == null) {
+            return List.of();
+        }
+
+        String selfName = localPlayer.getGameProfile().getName();
+        List<String> result = new ArrayList<>();
+
+        for (PlayerInfo info : connection.getOnlinePlayers()) {
+            String name = info.getProfile().getName();
+            if (name == null || name.isEmpty()) {
+                continue;
+            }
+            if (name.equals(selfName)) {
+                continue;
+            }
+            result.add(name);
+        }
+
+        return result.stream()
+                .distinct()
+                .sorted(String.CASE_INSENSITIVE_ORDER)
+                .toList();
+    }
+
     public void clear() {
         onlinePlayerUUIDs.clear();
         nameCache.clear();
@@ -88,33 +115,6 @@ public class OnlinePlayerList {
     public List<String> getOnlinePlayerNamesSorted(@NotNull MinecraftServer server) {
         return getOnlinePlayersSorted(server).stream()
                 .map(uuid -> getPlayerName(server, uuid))
-                .toList();
-    }
-
-    public static @NotNull List<String> getClientOnlinePlayerNames(@NotNull Minecraft minecraft) {
-        ClientPacketListener connection = minecraft.getConnection();
-        LocalPlayer localPlayer = minecraft.player;
-        if (connection == null || localPlayer == null) {
-            return List.of();
-        }
-
-        String selfName = localPlayer.getGameProfile().getName();
-        List<String> result = new ArrayList<>();
-
-        for (PlayerInfo info : connection.getOnlinePlayers()) {
-            String name = info.getProfile().getName();
-            if (name == null || name.isEmpty()) {
-                continue;
-            }
-            if (name.equals(selfName)) {
-                continue;
-            }
-            result.add(name);
-        }
-
-        return result.stream()
-                .distinct()
-                .sorted(String.CASE_INSENSITIVE_ORDER)
                 .toList();
     }
 }

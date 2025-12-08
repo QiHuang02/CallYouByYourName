@@ -5,7 +5,10 @@ import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.fml.ModList;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
 
 public class FTBTeamsAPIWrapper {
     public static final String MOD_ID = "ftbteams";
