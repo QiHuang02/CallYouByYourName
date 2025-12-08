@@ -1,7 +1,6 @@
 package cn.qihuang02.callyou.mixin;
 
 import cn.qihuang02.callyou.client.chat.ClientMentionContext;
-import cn.qihuang02.callyou.client.chat.MentionCandidateProvider;
 import cn.qihuang02.callyou.client.chat.MentionSuggestions;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -38,15 +37,13 @@ public abstract class ChatScreenMixin extends Screen {
         ChatScreen self = (ChatScreen) (Object) this;
 
         ClientMentionContext mentionContext = ClientMentionContext.create(minecraft);
-        MentionCandidateProvider candidateProvider = new MentionCandidateProvider(minecraft);
 
         this.callyou$mentionSuggestions = new MentionSuggestions(
                 minecraft,
                 self,
                 this.input,
                 font,
-                mentionContext,
-                candidateProvider
+                mentionContext
         );
     }
 

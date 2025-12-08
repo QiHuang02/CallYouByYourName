@@ -1,6 +1,7 @@
 package cn.qihuang02.callyou.client.chat;
 
 import cn.qihuang02.callyou.core.MentionTokens;
+import cn.qihuang02.callyou.util.OnlinePlayerList;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import net.minecraft.client.Minecraft;
@@ -17,9 +18,9 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public class MentionSuggestions extends CommandSuggestions {
+    private final Minecraft minecraft;
     private final EditBox input;
     private final ClientMentionContext mentionContext;
-    private final MentionCandidateProvider candidateProvider;
 
     @Nullable
     private MentionTokens.Token currentToken;
@@ -29,8 +30,7 @@ public class MentionSuggestions extends CommandSuggestions {
             ChatScreen screen,
             EditBox input,
             Font font,
-            ClientMentionContext mentionContext,
-            MentionCandidateProvider candidateProvider
+            ClientMentionContext mentionContext
     ) {
         super(minecraft, screen, input, font,
                 false,
@@ -40,9 +40,9 @@ public class MentionSuggestions extends CommandSuggestions {
                 true,
                 0xC0101010);
 
+        this.minecraft = minecraft;
         this.input = input;
         this.mentionContext = mentionContext;
-        this.candidateProvider = candidateProvider;
 
         this.setAllowSuggestions(false);
         this.setAllowHiding(true);
@@ -100,7 +100,7 @@ public class MentionSuggestions extends CommandSuggestions {
                 if ("player".equals(typeKey)) continue;
                 result.add(typeKey);
             }
-            result.addAll(this.candidateProvider.getPlayerCandidates());
+            result.addAll(OnlinePlayerList.getClientOnlinePlayerNames(this.minecraft));
             return result;
         }
 
@@ -112,7 +112,7 @@ public class MentionSuggestions extends CommandSuggestions {
             }
         }
 
-        for (String playerName : this.candidateProvider.getPlayerCandidates()) {
+        for (String playerName : OnlinePlayerList.getClientOnlinePlayerNames(this.minecraft)) {
             if (playerName.regionMatches(true, 0, prefix, 0, prefix.length())) {
                 result.add(playerName);
             }

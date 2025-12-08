@@ -2,7 +2,9 @@ package cn.qihuang02.callyou.core;
 
 import cn.qihuang02.callyou.CallYouByYourName;
 import cn.qihuang02.callyou.api.MentionType;
+import cn.qihuang02.callyou.event.OnlinePlayersHandler;
 import cn.qihuang02.callyou.registry.CallYouMentionRegistries;
+import cn.qihuang02.callyou.util.OnlinePlayerList;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
@@ -10,10 +12,7 @@ import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Optional;
+import java.util.*;
 
 public final class MentionResolver {
     public static @NotNull List<ResolvedMention> resolve(
@@ -32,6 +31,8 @@ public final class MentionResolver {
         if (registry != null) {
             playerMentionType = registry.get(ResourceLocation.fromNamespaceAndPath(CallYouByYourName.MODID, "player"));
         }
+
+        OnlinePlayerList onlinePlayers = OnlinePlayersHandler.getOnlinePlayers();
 
         for (MentionTokens.Token token : MentionTokens.scan(rawText)) {
             String key = token.key();
@@ -53,10 +54,13 @@ public final class MentionResolver {
             }
 
             if (type == null) {
-                ServerPlayer candidate = server.getPlayerList().getPlayerByName(key);
-                if (candidate != null) {
-                    playerTarget = candidate;
-                    type = playerMentionType;
+                UUID targetID = onlinePlayers.findOnlinePlayerByExactName(server, key);
+                if (targetID != null) {
+                    ServerPlayer candidate = server.getPlayerList().getPlayer(targetID);
+                    if (candidate != null) {
+                        playerTarget = candidate;
+                        type = playerMentionType;
+                    }
                 }
             }
 
