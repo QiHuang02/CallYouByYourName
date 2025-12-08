@@ -13,8 +13,11 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public final class MentionResolver {
+    private static final Map<Registry<MentionType>, Map<String, MentionType>> LOOKUP_CACHE = new ConcurrentHashMap<>();
+
     public static @NotNull List<ResolvedMention> resolve(
             @NotNull MinecraftServer server,
             @NotNull ServerPlayer sender,
@@ -27,10 +30,7 @@ public final class MentionResolver {
                 access.registry(CallYouMentionRegistries.MENTION_TYPE_REGISTRY_KEY);
         Registry<MentionType> registry = optionalRegistry.orElse(null);
 
-        MentionType playerMentionType = null;
-        if (registry != null) {
-            playerMentionType = registry.get(ResourceLocation.fromNamespaceAndPath(CallYouByYourName.MODID, "player"));
-        }
+        MentionType playerMentionType = registry != null ? getLookup(registry).get("player") : null;
 
         OnlinePlayerList onlinePlayers = OnlinePlayersHandler.getOnlinePlayers();
 
@@ -44,13 +44,7 @@ public final class MentionResolver {
 
             if (registry != null) {
                 String lowered = key.toLowerCase(Locale.ROOT);
-                for (var entry : registry.entrySet()) {
-                    ResourceLocation id = registry.getKey(entry.getValue());
-                    if (id != null && id.getPath().equals(lowered)) {
-                        type = entry.getValue();
-                        break;
-                    }
-                }
+                type = getLookup(registry).get(lowered);
             }
 
             if (type == null) {
@@ -68,6 +62,24 @@ public final class MentionResolver {
         }
 
         return result;
+    }
+
+    private static @NotNull Map<String, MentionType> getLookup(@NotNull Registry<MentionType> registry) {
+        Map<String, MentionType> cached = LOOKUP_CACHE.get(registry);
+        if (cached != null && cached.size() == registry.size()) {
+            return cached;
+        }
+
+        Map<String, MentionType> map = new HashMap<>();
+        for (var entry : registry.entrySet()) {
+            var id = registry.getKey(entry.getValue());
+            if (id != null) {
+                map.put(id.getPath().toLowerCase(Locale.ROOT), entry.getValue());
+            }
+        }
+
+        LOOKUP_CACHE.put(registry, map);
+        return map;
     }
 
     public record ResolvedMention(
