@@ -15,6 +15,10 @@ public final class MentionTokens {
             return List.of();
         }
 
+        if (text.indexOf('@') < 0) {
+            return List.of();
+        }
+
         List<Token> tokens = new ArrayList<>();
         Matcher matcher = PATTERN.matcher(text);
         while (matcher.find()) {

@@ -63,8 +63,11 @@ public abstract class ChatComponentMixin {
             return;
         }
 
-        Minecraft mc = Minecraft.getInstance();
-        if (mc == null) {
+        if (Minecraft.getInstance() == null) {
+            return;
+        }
+
+        if (!callyou$hasItemPlaceholder(line)) {
             return;
         }
 
@@ -88,6 +91,27 @@ public abstract class ChatComponentMixin {
             before.appendCodePoint(codePoint);
             return true;
         });
+    }
+
+    @Unique
+    private boolean callyou$hasItemPlaceholder(@NotNull FormattedCharSequence line) {
+        boolean[] found = {false};
+        boolean[] prevSpace = {false};
+
+        line.accept((index, style, codePoint) -> {
+            if (codePoint == ' ') {
+                if (prevSpace[0]) {
+                    found[0] = true;
+                    return false;
+                }
+                prevSpace[0] = true;
+            } else {
+                prevSpace[0] = false;
+            }
+            return true;
+        });
+
+        return found[0];
     }
 
     @Unique
