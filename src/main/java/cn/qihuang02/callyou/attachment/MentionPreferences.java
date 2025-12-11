@@ -113,6 +113,25 @@ public final class MentionPreferences {
         this.blockedSenders.clear();
     }
 
+    public void copyFrom(@NotNull MentionPreferences other) {
+        this.allowMentions = other.allowMentions;
+        this.allowMassMentions = other.allowMassMentions;
+
+        this.blockedTypes.clear();
+        for (ResourceLocation id : other.blockedTypes) {
+            if (id != null) {
+                this.blockedTypes.add(id);
+            }
+        }
+
+        this.blockedSenders.clear();
+        for (UUID uuid : other.blockedSenders) {
+            if (uuid != null) {
+                this.blockedSenders.add(uuid);
+            }
+        }
+    }
+
     public boolean isMentionAllowed(
             @NotNull MentionType type,
             @Nullable ResourceLocation typeId,

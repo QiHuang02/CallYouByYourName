@@ -1,4 +1,4 @@
-package cn.qihuang02.callyou.handler.command;
+package cn.qihuang02.callyou.command;
 
 import cn.qihuang02.callyou.CallYouByYourName;
 import cn.qihuang02.callyou.attachment.CallYouAttachments;
@@ -206,7 +206,6 @@ public final class CallYouCommands {
                                             prefs.isAllowMassMentions()),
                                     false
                             );
-                            // 简单一点：只显示 key 的数量和 sender 的数量
                             ctx.getSource().sendSuccess(
                                     () -> Component.translatable(
                                             "command.callyou.prefs.show.blocked_types",
