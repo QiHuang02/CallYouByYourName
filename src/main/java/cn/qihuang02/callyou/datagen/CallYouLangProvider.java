@@ -30,5 +30,34 @@ public class CallYouLangProvider extends LanguageProvider {
         add("message.callyou.spot", "at X: %s Y: %s Z: %s");
         add("message.callyou.item.empty", "Cannot mention empty hand!");
         add("message.callyou.ftbteams_missing", "FTB Teams is not installed; @team mention is unavailable.");
+
+        // Keybinds
+        add("key.callyou.mention_preferences", "Mention Preferences");
+
+        // Mention preference screen
+        add("screen.callyou.mention_preferences.title", "Mention Preferences");
+        add("screen.callyou.mention_preferences.allow_all", "Allow Mentions");
+        add("screen.callyou.mention_preferences.allow_all.tooltip", "Whether other players may mention you.");
+        add("screen.callyou.mention_preferences.allow_mass", "Allow Mass Mentions");
+        add("screen.callyou.mention_preferences.allow_mass.tooltip", "Whether mass mention types (e.g., @here) may ping you.");
+        add("screen.callyou.mention_preferences.type_label", "Mention Types");
+        add("screen.callyou.mention_preferences.manage_blocked", "Manage Blocked Players");
+        add("screen.callyou.mention_preferences.blocked.none", "No blocked players yet.");
+        add("screen.callyou.mention_preferences.status.loading", "Loading preferences from server...");
+        add("screen.callyou.mention_preferences.status.pending", "Pending sync...");
+        add("screen.callyou.mention_preferences.status.synced", "Preferences synced.");
+        add("screen.callyou.mention_preferences.status.unknown", "Preferences unavailable.");
+
+        // Blocked players screen
+        add("screen.callyou.blocked_senders.title", "Blocked Players");
+        add("screen.callyou.blocked_senders.unblock", "Unblock");
+
+        // Mention type labels
+        add("mention_type.callyou.near", "Nearby Players (@near)");
+        add("mention_type.callyou.player", "Player (@player)");
+        add("mention_type.callyou.item", "Item (@item)");
+        add("mention_type.callyou.here", "Here (@here)");
+        add("mention_type.callyou.spot", "Location (@spot)");
+        add("mention_type.callyou.ftb_team", "FTB Team (@team)");
     }
 }
