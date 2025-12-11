@@ -1,4 +1,4 @@
-package cn.qihuang02.callyou.core;
+package cn.qihuang02.callyou.attachment;
 
 import cn.qihuang02.callyou.api.MentionRules;
 import cn.qihuang02.callyou.api.MentionType;

@@ -1,7 +1,7 @@
 package cn.qihuang02.callyou.command;
 
 import cn.qihuang02.callyou.CallYouByYourName;
-import cn.qihuang02.callyou.core.CallYouAttachments;
+import cn.qihuang02.callyou.attachment.CallYouAttachments;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;

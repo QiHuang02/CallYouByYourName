@@ -1,20 +1,26 @@
 package cn.qihuang02.callyou.core;
 
+import cn.qihuang02.callyou.CallYouByYourName;
 import cn.qihuang02.callyou.api.MentionContext;
 import cn.qihuang02.callyou.api.MentionRules;
 import cn.qihuang02.callyou.api.MentionType;
+import cn.qihuang02.callyou.attachment.CallYouAttachments;
+import cn.qihuang02.callyou.attachment.MentionPreferences;
 import cn.qihuang02.callyou.config.CallYouConfig;
+import cn.qihuang02.callyou.handler.PermissionsHandler;
+import cn.qihuang02.callyou.registry.CallYouMentionRegistries;
+import net.minecraft.core.Registry;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
 public final class MentionGuard {
 
     private final MentionRateLimiter limiter = new MentionRateLimiter();
-
-    public MentionGuard() {
-    }
 
     public boolean canUseMentionType(
             @NotNull ServerPlayer sender,
@@ -28,23 +34,35 @@ public final class MentionGuard {
         }
 
         if (rules.isMass()) {
-            if (!CallYouPermissions.canUseMassMention(sender)) {
+            if (!PermissionsHandler.canUseMassMention(sender)) {
                 return false;
             }
         } else {
-            if (!CallYouPermissions.canUseMention(sender)) {
+            if (!PermissionsHandler.canUseMention(sender)) {
                 return false;
             }
         }
 
-        String permission = rules.permission();
-        if (permission != null && !permission.isEmpty()) {
-            if (!CallYouPermissions.checkLogicalPermission(sender, permission)) {
-                return false;
-            }
+        ResourceLocation mentionID = resolveMentionTypeID(sender, type);
+        if (mentionID != null && !PermissionsHandler.canUseMentionType(sender, mentionID)) {
+            return false;
         }
 
         return true;
+    }
+
+    private static @Nullable ResourceLocation resolveMentionTypeID(@NotNull ServerPlayer sender, @NotNull MentionType type) {
+        var access = sender.server.registryAccess();
+        Optional<Registry<MentionType>> optionalRegistry = access.registry(CallYouMentionRegistries.MENTION_TYPE_REGISTRY_KEY);
+
+        if (optionalRegistry.isEmpty()) {
+            return null;
+        }
+
+        Registry<MentionType> registry = optionalRegistry.get();
+        PermissionsHandler.refreshMentionPermissions(registry);
+
+        return registry.getResourceKey(type).map(ResourceKey::location).orElse(null);
     }
 
     public boolean checkMessageRate(

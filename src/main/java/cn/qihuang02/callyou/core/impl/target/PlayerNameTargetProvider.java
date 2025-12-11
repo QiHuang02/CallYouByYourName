@@ -3,7 +3,7 @@ package cn.qihuang02.callyou.core.impl.target;
 import cn.qihuang02.callyou.api.MentionContext;
 import cn.qihuang02.callyou.api.TargetProvider;
 import cn.qihuang02.callyou.api.TargetProviderType;
-import cn.qihuang02.callyou.event.OnlinePlayersHandler;
+import cn.qihuang02.callyou.handler.OnlinePlayersHandler;
 import cn.qihuang02.callyou.registry.BuiltInCallYouRegistries;
 import cn.qihuang02.callyou.util.OnlinePlayerList;
 import com.mojang.serialization.MapCodec;

@@ -1,4 +1,4 @@
-package cn.qihuang02.callyou.core;
+package cn.qihuang02.callyou.attachment;
 
 import cn.qihuang02.callyou.CallYouByYourName;
 import net.neoforged.neoforge.attachment.AttachmentType;
@@ -21,7 +21,4 @@ public final class CallYouAttachments {
                             .copyOnDeath()
                             .build()
             );
-
-    private CallYouAttachments() {
-    }
 }

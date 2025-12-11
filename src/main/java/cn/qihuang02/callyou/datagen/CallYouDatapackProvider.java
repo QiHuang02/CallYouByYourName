@@ -70,7 +70,6 @@ public final class CallYouDatapackProvider extends DatapackBuiltinEntriesProvide
                 ),
                 new MentionRules(
                         0,
-                        null,
                         true
                 )
         );
@@ -112,7 +111,6 @@ public final class CallYouDatapackProvider extends DatapackBuiltinEntriesProvide
                 ),
                 new MentionRules(
                         0,
-                        null,
                         true
                 )
         );
@@ -140,7 +138,6 @@ public final class CallYouDatapackProvider extends DatapackBuiltinEntriesProvide
                 ),
                 new MentionRules(
                         0,
-                        "callyou.mention.team",
                         true
                 )
         );

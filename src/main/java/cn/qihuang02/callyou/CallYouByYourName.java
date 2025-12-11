@@ -1,7 +1,7 @@
 package cn.qihuang02.callyou;
 
 import cn.qihuang02.callyou.config.CallYouConfig;
-import cn.qihuang02.callyou.core.CallYouAttachments;
+import cn.qihuang02.callyou.attachment.CallYouAttachments;
 import cn.qihuang02.callyou.registry.BuiltInCallYouRegistries;
 import com.mojang.logging.LogUtils;
 import net.neoforged.bus.api.IEventBus;
