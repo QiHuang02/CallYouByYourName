@@ -1,13 +1,21 @@
-package cn.qihuang02.callyou.command;
+package cn.qihuang02.callyou.handler.command;
 
 import cn.qihuang02.callyou.CallYouByYourName;
 import cn.qihuang02.callyou.attachment.CallYouAttachments;
+import cn.qihuang02.callyou.registry.CallYouMentionRegistries;
 import com.mojang.brigadier.CommandDispatcher;
-import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
+import com.mojang.brigadier.suggestion.Suggestions;
 import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.EntityArgument;
+import net.minecraft.commands.arguments.ResourceLocationArgument;
+import net.minecraft.core.Registry;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -15,12 +23,17 @@ import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 import static net.minecraft.commands.Commands.argument;
 import static net.minecraft.commands.Commands.literal;
 
 @EventBusSubscriber(modid = CallYouByYourName.MODID)
 public final class CallYouCommands {
+    private static final DynamicCommandExceptionType UNKNOWN_MENTION_TYPE = new DynamicCommandExceptionType(
+            id -> Component.translatable("command.callyou.error.unknown_type", id)
+    );
+
     @SubscribeEvent
     public static void onRegisterCommands(@NotNull RegisterCommandsEvent event) {
         CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
@@ -61,15 +74,16 @@ public final class CallYouCommands {
                             return 1;
                         }))
                 // /callyou ignore key <key>
-                .then(literal("key")
-                        .then(argument("key", StringArgumentType.word())
+                .then(literal("type")
+                        .then(argument("type", ResourceLocationArgument.id())
+                                .suggests(CallYouCommands::suggestMentionTypes)
                                 .executes(ctx -> {
                                     ServerPlayer player = ctx.getSource().getPlayerOrException();
-                                    String key = StringArgumentType.getString(ctx, "key");
                                     var prefs = player.getData(CallYouAttachments.MENTION_PREFERENCES.get());
-                                    prefs.blockMentionKey(key);
+                                    var typeID = getMentionTypeID(ctx);
+                                    prefs.blockMentionType(typeID);
                                     ctx.getSource().sendSuccess(
-                                            () -> Component.translatable("command.callyou.ignore.key", key),
+                                            () -> Component.translatable("command.callyou.ingore.type", typeID),
                                             false
                                     );
                                     return 1;
@@ -121,15 +135,16 @@ public final class CallYouCommands {
                             return 1;
                         }))
                 // /callyou unignore key <key>
-                .then(literal("key")
-                        .then(argument("key", StringArgumentType.word())
+                .then(literal("type")
+                        .then(argument("type", ResourceLocationArgument.id())
+                                .suggests(CallYouCommands::suggestMentionTypes)
                                 .executes(ctx -> {
                                     ServerPlayer player = ctx.getSource().getPlayerOrException();
-                                    String key = StringArgumentType.getString(ctx, "key");
                                     var prefs = player.getData(CallYouAttachments.MENTION_PREFERENCES.get());
-                                    prefs.unblockMentionKey(key);
+                                    var typeID = getMentionTypeID(ctx);
+                                    prefs.unblockMentionType(typeID);
                                     ctx.getSource().sendSuccess(
-                                            () -> Component.translatable("command.callyou.unignore.key", key),
+                                            () -> Component.translatable("command.callyou.unignore.type", typeID),
                                             false
                                     );
                                     return 1;
@@ -194,8 +209,8 @@ public final class CallYouCommands {
                             // 简单一点：只显示 key 的数量和 sender 的数量
                             ctx.getSource().sendSuccess(
                                     () -> Component.translatable(
-                                            "command.callyou.prefs.show.blocked_keys",
-                                            prefs.getBlockedKeys().size()),
+                                            "command.callyou.prefs.show.blocked_types",
+                                            prefs.getBlockedTypes().size()),
                                     false
                             );
                             ctx.getSource().sendSuccess(
@@ -206,5 +221,30 @@ public final class CallYouCommands {
                             );
                             return 1;
                         }));
+    }
+
+    private static @NotNull ResourceLocation getMentionTypeID(
+            CommandContext<CommandSourceStack> ctx
+    ) throws CommandSyntaxException {
+        ResourceLocation id = ResourceLocationArgument.getId(ctx, "type");
+        Registry<?> registry = ctx.getSource().registryAccess()
+                .registry(CallYouMentionRegistries.MENTION_TYPE_REGISTRY_KEY)
+                .orElse(null);
+
+        if (registry == null || !registry.containsKey(id)) {
+            throw UNKNOWN_MENTION_TYPE.create(id);
+        }
+
+        return id;
+    }
+
+    private static CompletableFuture<Suggestions> suggestMentionTypes(
+            @NotNull CommandContext<CommandSourceStack> ctx,
+            com.mojang.brigadier.suggestion.@NotNull SuggestionsBuilder builder
+    ) {
+        return ctx.getSource().registryAccess()
+                .registry(CallYouMentionRegistries.MENTION_TYPE_REGISTRY_KEY)
+                .map(registry -> SharedSuggestionProvider.suggestResource(registry.keySet(), builder))
+                .orElseGet(builder::buildFuture);
     }
 }

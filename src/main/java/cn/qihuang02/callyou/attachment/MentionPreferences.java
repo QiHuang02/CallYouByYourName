@@ -4,8 +4,10 @@ import cn.qihuang02.callyou.api.MentionRules;
 import cn.qihuang02.callyou.api.MentionType;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnmodifiableView;
 
 import java.util.*;
@@ -19,8 +21,8 @@ public final class MentionPreferences {
                             .forGetter(MentionPreferences::isAllowMentions),
                     Codec.BOOL.optionalFieldOf("allow_mass_mentions", true)
                             .forGetter(MentionPreferences::isAllowMassMentions),
-                    Codec.STRING.listOf().optionalFieldOf("blocked_keys", List.of())
-                            .forGetter(p -> new ArrayList<>(p.blockedKeys)),
+                    ResourceLocation.CODEC.listOf().optionalFieldOf("blocked_types", List.of())
+                            .forGetter(p -> new ArrayList<>(p.blockedTypes)),
                     Codec.STRING.listOf().optionalFieldOf("blocked_senders", List.of())
                             .forGetter(p -> p.blockedSenders.stream()
                                     .map(UUID::toString)
@@ -28,22 +30,22 @@ public final class MentionPreferences {
             ).apply(instance, MentionPreferences::fromCodec)
     );
     final Set<UUID> blockedSenders = new HashSet<>();
-    private final Set<String> blockedKeys = new HashSet<>();
+    private final Set<ResourceLocation> blockedTypes = new HashSet<>();
     private boolean allowMentions = true;
     private boolean allowMassMentions = true;
 
     private static @NotNull MentionPreferences fromCodec(
             boolean allowMentions,
             boolean allowMassMentions,
-            @NotNull List<String> blockedKeys,
+            @NotNull List<ResourceLocation> blockedTypes,
             List<String> blockedSenderStrings
     ) {
         MentionPreferences prefs = new MentionPreferences();
         prefs.allowMentions = allowMentions;
         prefs.allowMassMentions = allowMassMentions;
 
-        for (String key : blockedKeys) {
-            prefs.blockMentionKey(key);
+        for (ResourceLocation id : blockedTypes) {
+            prefs.blockMentionType(id);
         }
         for (String s : blockedSenderStrings) {
             try {
@@ -52,11 +54,6 @@ public final class MentionPreferences {
             }
         }
         return prefs;
-    }
-
-    @Contract(pure = true)
-    private static @NotNull String normalizeKey(@NotNull String key) {
-        return key.toLowerCase(Locale.ROOT);
     }
 
     public boolean isAllowMentions() {
@@ -76,8 +73,8 @@ public final class MentionPreferences {
     }
 
     @Contract(pure = true)
-    public @NotNull @UnmodifiableView Set<String> getBlockedKeys() {
-        return Collections.unmodifiableSet(blockedKeys);
+    public @NotNull @UnmodifiableView Set<ResourceLocation> getBlockedTypes() {
+        return Collections.unmodifiableSet(blockedTypes);
     }
 
     @Contract(pure = true)
@@ -85,14 +82,16 @@ public final class MentionPreferences {
         return Collections.unmodifiableSet(blockedSenders);
     }
 
-    public void blockMentionKey(String rawKey) {
-        if (rawKey == null || rawKey.isEmpty()) return;
-        blockedKeys.add(normalizeKey(rawKey));
+    public void blockMentionType(ResourceLocation typeId) {
+        if (typeId != null) {
+            blockedTypes.add(typeId);
+        }
     }
 
-    public void unblockMentionKey(String rawKey) {
-        if (rawKey == null || rawKey.isEmpty()) return;
-        blockedKeys.remove(normalizeKey(rawKey));
+    public void unblockMentionType(ResourceLocation typeId) {
+        if (typeId != null) {
+            blockedTypes.remove(typeId);
+        }
     }
 
     public void blockSender(UUID senderId) {
@@ -110,13 +109,13 @@ public final class MentionPreferences {
     public void resetAll() {
         this.allowMentions = true;
         this.allowMassMentions = true;
-        this.blockedKeys.clear();
+        this.blockedTypes.clear();
         this.blockedSenders.clear();
     }
 
     public boolean isMentionAllowed(
             @NotNull MentionType type,
-            @NotNull String key,
+            @Nullable ResourceLocation typeId,
             @NotNull UUID senderId
     ) {
         if (!allowMentions) {
@@ -127,7 +126,7 @@ public final class MentionPreferences {
             return false;
         }
 
-        if (blockedKeys.contains(normalizeKey(key))) {
+        if (typeId != null && blockedTypes.contains(typeId)) {
             return false;
         }
 

@@ -1,6 +1,5 @@
 package cn.qihuang02.callyou.core;
 
-import cn.qihuang02.callyou.CallYouByYourName;
 import cn.qihuang02.callyou.api.MentionContext;
 import cn.qihuang02.callyou.api.MentionRules;
 import cn.qihuang02.callyou.api.MentionType;
@@ -21,6 +20,20 @@ import java.util.*;
 public final class MentionGuard {
 
     private final MentionRateLimiter limiter = new MentionRateLimiter();
+
+    private static @Nullable ResourceLocation resolveMentionTypeID(@NotNull ServerPlayer sender, @NotNull MentionType type) {
+        var access = sender.server.registryAccess();
+        Optional<Registry<MentionType>> optionalRegistry = access.registry(CallYouMentionRegistries.MENTION_TYPE_REGISTRY_KEY);
+
+        if (optionalRegistry.isEmpty()) {
+            return null;
+        }
+
+        Registry<MentionType> registry = optionalRegistry.get();
+        PermissionsHandler.refreshMentionPermissions(registry);
+
+        return registry.getResourceKey(type).map(ResourceKey::location).orElse(null);
+    }
 
     public boolean canUseMentionType(
             @NotNull ServerPlayer sender,
@@ -44,25 +57,7 @@ public final class MentionGuard {
         }
 
         ResourceLocation mentionID = resolveMentionTypeID(sender, type);
-        if (mentionID != null && !PermissionsHandler.canUseMentionType(sender, mentionID)) {
-            return false;
-        }
-
-        return true;
-    }
-
-    private static @Nullable ResourceLocation resolveMentionTypeID(@NotNull ServerPlayer sender, @NotNull MentionType type) {
-        var access = sender.server.registryAccess();
-        Optional<Registry<MentionType>> optionalRegistry = access.registry(CallYouMentionRegistries.MENTION_TYPE_REGISTRY_KEY);
-
-        if (optionalRegistry.isEmpty()) {
-            return null;
-        }
-
-        Registry<MentionType> registry = optionalRegistry.get();
-        PermissionsHandler.refreshMentionPermissions(registry);
-
-        return registry.getResourceKey(type).map(ResourceKey::location).orElse(null);
+        return mentionID == null || PermissionsHandler.canUseMentionType(sender, mentionID);
     }
 
     public boolean checkMessageRate(
@@ -78,11 +73,7 @@ public final class MentionGuard {
         }
 
         int globalCooldown = cfg.globalCooldownTicks.get();
-        if (globalCooldown > 0 && !limiter.canSendMessage(sender, nowTick, globalCooldown)) {
-            return false;
-        }
-
-        return true;
+        return globalCooldown <= 0 || limiter.canSendMessage(sender, nowTick, globalCooldown);
     }
 
     public @NotNull List<ServerPlayer> filterTargets(
@@ -99,7 +90,7 @@ public final class MentionGuard {
 
         CallYouConfig.Common cfg = CallYouConfig.COMMON;
 
-        String key = context.mentionKey().toLowerCase(Locale.ROOT);
+        ResourceLocation mentionID = resolveMentionTypeID(sender, type);
         int maxTargets = cfg.maxTargetsPerMention.get();
         int perTargetCooldown = cfg.perTargetCooldownTicks.get();
         UUID senderId = sender.getUUID();
@@ -110,7 +101,7 @@ public final class MentionGuard {
             }
 
             MentionPreferences prefs = target.getData(CallYouAttachments.MENTION_PREFERENCES.get());
-            if (!prefs.isMentionAllowed(type, key, senderId)) {
+            if (!prefs.isMentionAllowed(type, mentionID, senderId)) {
                 continue;
             }
 
