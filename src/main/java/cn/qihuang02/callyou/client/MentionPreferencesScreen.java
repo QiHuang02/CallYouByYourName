@@ -27,13 +27,14 @@ public class MentionPreferencesScreen extends Screen {
     private static final Component ALLOW_MENTIONS = Component.translatable("screen.callyou.mention_preferences.allow_all");
     private static final Component ALLOW_MASS = Component.translatable("screen.callyou.mention_preferences.allow_mass");
     private static final Component TYPE_LABEL = Component.translatable("screen.callyou.mention_preferences.type_label");
-    private static final Component BLOCKED_SENDERS = Component.translatable("screen.callyou.mention_preferences.blocked_senders");
+    private static final Component MANAGE_BLOCKED = Component.translatable("screen.callyou.mention_preferences.manage_blocked");
 
     private final Screen parent;
     private MentionPreferences workingCopy;
     private MentionTypeList mentionTypeList;
     private CycleButton<Boolean> allowMentionsButton;
     private CycleButton<Boolean> allowMassMentionsButton;
+    private Button manageBlockedSendersButton;
     private Component statusMessage = Component.empty();
     private int statusColor = 0xAAAAAA;
     private long lastSeenSyncMillis;
@@ -86,8 +87,17 @@ public class MentionPreferencesScreen extends Screen {
         this.mentionTypeList = addRenderableWidget(new MentionTypeList(this.minecraft, this.width, this.height - LIST_TOP_OFFSET - LIST_BOTTOM_OFFSET, LIST_TOP_OFFSET, 26));
         this.populateMentionTypeList();
 
+        this.manageBlockedSendersButton = addRenderableWidget(Button.builder(MANAGE_BLOCKED, button -> {
+                    if (this.minecraft != null && this.controlsActive) {
+                        this.minecraft.setScreen(new BlockedSendersScreen(this, this.workingCopy, this.controlsActive));
+                    }
+                })
+                .bounds(centerX - 155, this.height - 40, 150, 20)
+                .build());
+        this.manageBlockedSendersButton.active = this.controlsActive;
+
         addRenderableWidget(Button.builder(CommonComponents.GUI_DONE, button -> onClose())
-                .bounds(centerX - 50, this.height - 40, 100, 20)
+                .bounds(centerX + 5, this.height - 40, 100, 20)
                 .build());
 
         this.updateStatus();
@@ -132,14 +142,6 @@ public class MentionPreferencesScreen extends Screen {
         super.render(graphics, mouseX, mouseY, partialTick);
 
         graphics.drawString(this.font, TYPE_LABEL, this.width / 2 - 100, LIST_TOP_OFFSET - 12, 0xFFFFFF, false);
-
-        graphics.drawString(this.font, BLOCKED_SENDERS, 20, this.height - 60, 0xFFFFFF, false);
-        List<String> blocked = this.formatBlockedSenders();
-        int y = this.height - 48;
-        for (String line : blocked) {
-            graphics.drawString(this.font, line, 24, y, 0xCCCCCC, false);
-            y += 10;
-        }
 
         graphics.drawString(this.font, this.statusMessage, 20, this.height - 20, this.statusColor, false);
     }
@@ -189,19 +191,6 @@ public class MentionPreferencesScreen extends Screen {
         this.updateStatus();
     }
 
-    private @NotNull List<String> formatBlockedSenders() {
-        List<String> lines = new ArrayList<>();
-        if (this.workingCopy.getBlockedSenders().isEmpty()) {
-            lines.add(Component.translatable("screen.callyou.mention_preferences.blocked.none").getString());
-            return lines;
-        }
-        lines.add(Component.translatable("screen.callyou.mention_preferences.blocked.header", this.workingCopy.getBlockedSenders().size()).getString());
-        for (UUID id : this.workingCopy.getBlockedSenders()) {
-            lines.add("- " + id);
-        }
-        return lines;
-    }
-
     private void updateStatus() {
         if (this.awaitingSync && this.lastSeenSyncMillis == 0) {
             this.statusMessage = Component.translatable("screen.callyou.mention_preferences.status.loading").withStyle(ChatFormatting.YELLOW);
@@ -229,12 +218,24 @@ public class MentionPreferencesScreen extends Screen {
         }
     }
 
+    void onBlockedSendersChanged() {
+        this.sendUpdate();
+        this.updateStatus();
+    }
+
+    boolean areControlsActive() {
+        return this.controlsActive;
+    }
+
     private void updateControlState() {
         if (this.allowMentionsButton != null) {
             this.allowMentionsButton.active = this.controlsActive;
         }
         if (this.allowMassMentionsButton != null) {
             this.allowMassMentionsButton.active = this.controlsActive;
+        }
+        if (this.manageBlockedSendersButton != null) {
+            this.manageBlockedSendersButton.active = this.controlsActive;
         }
         this.refreshTypeButtons();
     }
