@@ -11,6 +11,7 @@ import net.minecraft.client.gui.components.CycleButton;
 import net.minecraft.client.gui.components.ObjectSelectionList;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -47,7 +48,8 @@ public class MentionPreferencesScreen extends Screen {
         this.parent = parent;
     }
 
-    public static MentionPreferencesScreen createWithRefresh(@Nullable Screen parent) {
+    @Contract("_ -> new")
+    public static @NotNull MentionPreferencesScreen createWithRefresh(@Nullable Screen parent) {
         ClientMentionPreferences.markAwaitingSync();
         CallYouNetwork.requestPreferencesSync();
         return new MentionPreferencesScreen(parent);
@@ -255,7 +257,7 @@ public class MentionPreferencesScreen extends Screen {
             boolean enabled = !workingCopy.getBlockedTypes().contains(id);
             this.toggle = CycleButton.onOffBuilder(enabled)
                     .displayOnlyValue()
-                    .create(0, 0, 80, 20, Component.literal(id.toString()), (button, value) -> {
+                    .create(0, 0, 80, 20, this.buildComponent(), (button, value) -> {
                         if (value) {
                             workingCopy.unblockMentionType(this.id);
                         } else {
@@ -270,6 +272,14 @@ public class MentionPreferencesScreen extends Screen {
             this.toggle.setValue(enabled);
         }
 
+        private @NotNull Component buildComponent() {
+            String key = "mention_type." + this.id.getNamespace() + "." + this.id.getPath();
+            if (I18n.exists(key)) {
+                return Component.translatable(key);
+            }
+            return Component.literal(this.id.toString());
+        }
+
         @Override
         public boolean mouseClicked(double mouseX, double mouseY, int button) {
             return this.toggle.mouseClicked(mouseX, mouseY, button);
@@ -282,12 +292,12 @@ public class MentionPreferencesScreen extends Screen {
 
         @Override
         public @NotNull Component getNarration() {
-            return Component.literal(this.id.toString());
+            return this.buildComponent();
         }
 
         @Override
         public void render(@NotNull GuiGraphics graphics, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float partialTick) {
-            graphics.drawString(MentionPreferencesScreen.this.font, this.id.toString(), x + 4, y + 6, 0xFFFFFF, false);
+            graphics.drawString(MentionPreferencesScreen.this.font, this.buildComponent(), x + 4, y + 6, 0xFFFFFF, false);
             this.toggle.setX(x + entryWidth - 90);
             this.toggle.setY(y + (entryHeight - 20) / 2);
             this.toggle.render(graphics, mouseX, mouseY, partialTick);
