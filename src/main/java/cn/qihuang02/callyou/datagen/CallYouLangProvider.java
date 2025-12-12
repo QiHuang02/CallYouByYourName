@@ -51,6 +51,12 @@ public class CallYouLangProvider extends LanguageProvider {
         // Blocked players screen
         add("screen.callyou.blocked_senders.title", "Blocked Players");
         add("screen.callyou.blocked_senders.unblock", "Unblock");
+        add("screen.callyou.blocked_senders.block_label", "Block Player");
+        add("screen.callyou.blocked_senders.block_input.tooltip", "Enter the name of an online player to block mentions from them.");
+        add("screen.callyou.blocked_senders.block_action", "Block");
+        add("screen.callyou.blocked_senders.block_action.tooltip", "Block the specified player.");
+        add("screen.callyou.blocked_senders.error.not_found", "Player not found online.");
+        add("screen.callyou.blocked_senders.error.already_blocked", "Player is already blocked.");
 
         // Mention type labels
         add("mention_type.callyou.near", "Nearby Players (@near)");
