@@ -26,7 +26,7 @@ public record RadiusTargetProvider(double range) implements TargetProvider {
     @Override
     public @NotNull List<ServerPlayer> getTargets(@NotNull MentionContext context) {
         ServerPlayer sender = context.sender();
-        ServerLevel level = sender.serverLevel();
+        ServerLevel level = context.level();
 
         List<ServerPlayer> result = new ArrayList<>();
         for (ServerPlayer player : level.players()) {

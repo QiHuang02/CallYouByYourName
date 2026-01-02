@@ -1,4 +1,4 @@
-package cn.qihuang02.callyou.client;
+package cn.qihuang02.callyou.client.screen;
 
 import cn.qihuang02.callyou.core.attachment.MentionPreferences;
 import net.minecraft.client.Minecraft;

@@ -29,10 +29,10 @@ public record DimensionTargetProvider(@Nullable ResourceLocation dimensionId) im
             @Nullable ResourceLocation dimensionId
     ) {
         ServerPlayer sender = context.sender();
-        MinecraftServer server = sender.server;
+        MinecraftServer server = context.server();
 
         if (dimensionId == null) {
-            ServerLevel level = sender.serverLevel();
+            ServerLevel level = context.level();
             List<ServerPlayer> result = new ArrayList<>();
             for (ServerPlayer p : level.players()) {
                 if (p != sender) {

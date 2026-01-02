@@ -82,7 +82,7 @@ public record ToastNotifier(
 
     private @NotNull Component buildComponent(String key, MentionContext context) {
         if (useSenderName) {
-            return Component.translatable(key, context.sender().getDisplayName());
+            return Component.translatable(key, context.senderDisplayName());
         }
         return Component.translatable(key);
     }

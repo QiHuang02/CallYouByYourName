@@ -93,7 +93,7 @@ public final class MentionGuard {
         ResourceLocation mentionID = resolveMentionTypeID(sender, type);
         int maxTargets = cfg.maxTargetsPerMention.get();
         int perTargetCooldown = cfg.perTargetCooldownTicks.get();
-        UUID senderId = sender.getUUID();
+        UUID senderId = context.senderId();
 
         for (ServerPlayer target : rawTargets) {
             if (maxTargets > 0 && result.size() >= maxTargets) {

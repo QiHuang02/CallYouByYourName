@@ -95,8 +95,9 @@ public class MentionSuggestions extends CommandSuggestions {
 
     private @NotNull List<String> collectCandidates(@NotNull String prefix) {
         List<String> result = new ArrayList<>();
+        List<String> typeKeys = this.mentionContext.getMentionTypeKeysSorted();
         if (prefix.isEmpty()) {
-            for (String typeKey : this.mentionContext.getMentionTypeKeys()) {
+            for (String typeKey : typeKeys) {
                 if ("player".equals(typeKey)) continue;
                 result.add(typeKey);
             }
@@ -104,7 +105,7 @@ public class MentionSuggestions extends CommandSuggestions {
             return result;
         }
 
-        for (String typeKey : this.mentionContext.getMentionTypeKeys()) {
+        for (String typeKey : typeKeys) {
             if ("player".equals(typeKey)) continue;
 
             if (typeKey.regionMatches(true, 0, prefix, 0, prefix.length())) {

@@ -12,14 +12,17 @@ import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.*;
 
-public final class ClientMentionContext {
-    private final Set<String> mentionTypeKeys;
-
-    public ClientMentionContext(@NotNull Set<String> keys, @NotNull Map<String, Style> styles) {
-        this.mentionTypeKeys = Set.copyOf(keys);
+public record ClientMentionContext(
+        @NotNull Set<String> mentionTypeKeys,
+        @NotNull Map<String, Style> mentionTypeStyles
+) {
+    public ClientMentionContext {
+        mentionTypeKeys = Set.copyOf(mentionTypeKeys);
+        mentionTypeStyles = Collections.unmodifiableMap(new LinkedHashMap<>(mentionTypeStyles));
     }
 
     public static @NotNull ClientMentionContext create(@NotNull Minecraft minecraft) {
@@ -65,5 +68,40 @@ public final class ClientMentionContext {
 
     public @NotNull Set<String> getMentionTypeKeys() {
         return mentionTypeKeys;
+    }
+
+    public @NotNull @Unmodifiable List<String> getMentionTypeKeysSorted() {
+        List<String> result = new ArrayList<>(mentionTypeKeys);
+        result.sort(String.CASE_INSENSITIVE_ORDER);
+        return List.copyOf(result);
+    }
+
+    public @NotNull Map<String, Style> getMentionTypeStyles() {
+        return mentionTypeStyles;
+    }
+
+    public boolean hasMentionType(@NotNull String key) {
+        if (key.isEmpty()) {
+            return false;
+        }
+        return mentionTypeStyles.containsKey(normalizeKey(key));
+    }
+
+    public @NotNull Optional<Style> findStyle(@NotNull String key) {
+        if (key.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.ofNullable(mentionTypeStyles.get(normalizeKey(key)));
+    }
+
+    public @NotNull Style getStyleOrEmpty(@NotNull String key) {
+        if (key.isEmpty()) {
+            return Style.EMPTY;
+        }
+        return mentionTypeStyles.getOrDefault(normalizeKey(key), Style.EMPTY);
+    }
+
+    private static @NotNull String normalizeKey(@NotNull String key) {
+        return key.toLowerCase(Locale.ROOT);
     }
 }

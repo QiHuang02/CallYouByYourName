@@ -1,5 +1,6 @@
-package cn.qihuang02.callyou.client;
+package cn.qihuang02.callyou.client.screen;
 
+import cn.qihuang02.callyou.client.ClientMentionPreferences;
 import cn.qihuang02.callyou.core.attachment.MentionPreferences;
 import cn.qihuang02.callyou.network.CallYouNetwork;
 import cn.qihuang02.callyou.registry.CallYouMentionRegistries;

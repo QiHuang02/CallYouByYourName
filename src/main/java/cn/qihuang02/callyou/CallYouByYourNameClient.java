@@ -1,6 +1,6 @@
 package cn.qihuang02.callyou;
 
-import cn.qihuang02.callyou.client.MentionPreferencesScreen;
+import cn.qihuang02.callyou.client.screen.MentionPreferencesScreen;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
@@ -37,7 +37,7 @@ public class CallYouByYourNameClient {
     }
 
     @SubscribeEvent
-    static void registerKeyMappings(RegisterKeyMappingsEvent event) {
+    static void registerKeyMappings(@NotNull RegisterKeyMappingsEvent event) {
         event.register(MENTION_PREFS_KEY);
     }
 

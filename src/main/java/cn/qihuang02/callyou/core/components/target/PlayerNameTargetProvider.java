@@ -31,7 +31,7 @@ public final class PlayerNameTargetProvider implements TargetProvider {
         }
 
         ServerPlayer sender = context.sender();
-        MinecraftServer server = sender.getServer();
+        MinecraftServer server = context.server();
         if (server == null) {
             return List.of();
         }

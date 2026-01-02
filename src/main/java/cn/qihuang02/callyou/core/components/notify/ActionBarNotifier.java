@@ -28,7 +28,7 @@ public record ActionBarNotifier(String messageKey, boolean useSenderName) implem
     public void apply(MentionContext context, List<ServerPlayer> targets) {
         Component text;
         if (useSenderName) {
-            text = Component.translatable(messageKey, context.sender().getDisplayName()).withStyle(ChatFormatting.GOLD);
+            text = Component.translatable(messageKey, context.senderDisplayName()).withStyle(ChatFormatting.GOLD);
         } else {
             text = Component.translatable(messageKey).withStyle(ChatFormatting.GOLD);
         }

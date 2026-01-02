@@ -6,6 +6,7 @@ import cn.qihuang02.callyou.integration.ftbteams.FTBTeamsAPIWrapper;
 import cn.qihuang02.callyou.registry.BuiltInCallYouRegistries;
 import com.mojang.serialization.MapCodec;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.NotNull;
 
@@ -37,12 +38,14 @@ public class FTBTeamTargetProvider implements TargetProvider {
             return Collections.emptyList();
         }
 
+        MinecraftServer server = context.server();
         List<ServerPlayer> targets = new ArrayList<>();
+        UUID senderId = context.senderId();
         for (UUID uuid : memberUUIDs) {
-            if (uuid.equals(sender.getUUID())) {
+            if (uuid.equals(senderId)) {
                 continue;
             }
-            ServerPlayer target = sender.server.getPlayerList().getPlayer(uuid);
+            ServerPlayer target = server.getPlayerList().getPlayer(uuid);
             if (target != null) {
                 targets.add(target);
             }

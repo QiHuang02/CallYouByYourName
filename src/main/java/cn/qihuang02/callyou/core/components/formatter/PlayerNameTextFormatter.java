@@ -30,10 +30,8 @@ public record PlayerNameTextFormatter(ChatFormatting color) implements TextForma
     @Override
     public @NotNull Component format(@NotNull MentionContext context) {
         String key = context.mentionKey();
-        if (key == null || key.isEmpty()) {
-            key = "player";
-        }
-        return Component.literal("@" + key).withStyle(this.color);
+        String token = key == null || key.isEmpty() ? "@player" : context.mentionToken();
+        return Component.literal(token).withStyle(this.color);
     }
 
     @Override
@@ -47,6 +45,6 @@ public record PlayerNameTextFormatter(ChatFormatting color) implements TextForma
         if (name == null || name.isEmpty()) {
             return "";
         }
-        return "@" + name + " ";
+        return context.mentionToken() + " ";
     }
 }
