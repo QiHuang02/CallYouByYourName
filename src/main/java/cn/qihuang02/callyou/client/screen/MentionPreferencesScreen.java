@@ -4,7 +4,6 @@ import cn.qihuang02.callyou.client.ClientMentionPreferences;
 import cn.qihuang02.callyou.core.attachment.MentionPreferences;
 import cn.qihuang02.callyou.network.CallYouNetwork;
 import cn.qihuang02.callyou.registry.CallYouMentionRegistries;
-import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -36,13 +35,6 @@ public class MentionPreferencesScreen extends Screen {
     private MentionTypeList mentionTypeList;
     private CycleButton<Boolean> allowMentionsButton;
     private CycleButton<Boolean> allowMassMentionsButton;
-    private Button manageBlockedSendersButton;
-    private Component statusMessage = Component.empty();
-    private int statusColor = 0xAAAAAA;
-    private long lastSeenSyncMillis;
-    private boolean lastPendingState;
-    private boolean awaitingSync;
-    private boolean controlsActive;
 
     public MentionPreferencesScreen(@Nullable Screen parent) {
         super(TITLE);
@@ -60,10 +52,6 @@ public class MentionPreferencesScreen extends Screen {
     protected void init() {
         this.requestLatestPreferences();
         this.workingCopy = ClientMentionPreferences.copy();
-        this.lastSeenSyncMillis = ClientMentionPreferences.getLastSyncMillis();
-        this.lastPendingState = ClientMentionPreferences.isSyncPending();
-        this.awaitingSync = ClientMentionPreferences.isAwaitingSync() && this.lastSeenSyncMillis == 0;
-        this.controlsActive = this.lastSeenSyncMillis > 0;
 
         int centerX = this.width / 2;
         int y = 30;
@@ -75,7 +63,6 @@ public class MentionPreferencesScreen extends Screen {
                     this.refreshTypeButtons();
                     this.sendUpdate();
                 }));
-        this.allowMentionsButton.active = this.controlsActive;
 
         y += 28;
 
@@ -85,57 +72,34 @@ public class MentionPreferencesScreen extends Screen {
                     this.workingCopy.setAllowMassMentions(value);
                     this.sendUpdate();
                 }));
-        this.allowMassMentionsButton.active = this.controlsActive;
 
         this.mentionTypeList = addRenderableWidget(new MentionTypeList(this.minecraft, this.width, this.height - LIST_TOP_OFFSET - LIST_BOTTOM_OFFSET, LIST_TOP_OFFSET, 26));
         this.populateMentionTypeList();
 
-        this.manageBlockedSendersButton = addRenderableWidget(Button.builder(MANAGE_BLOCKED, button -> {
-                    if (this.minecraft != null && this.controlsActive) {
-                        this.minecraft.setScreen(new BlockedSendersScreen(this, this.workingCopy, this.controlsActive));
+        addRenderableWidget(Button.builder(MANAGE_BLOCKED, button -> {
+                    if (this.minecraft != null) {
+                        this.minecraft.setScreen(new BlockedSendersScreen(this, this.workingCopy, true));
                     }
                 })
                 .bounds(centerX - 155, this.height - 40, 150, 20)
                 .build());
-        this.manageBlockedSendersButton.active = this.controlsActive;
 
         addRenderableWidget(Button.builder(CommonComponents.GUI_DONE, button -> onClose())
                 .bounds(centerX + 5, this.height - 40, 100, 20)
                 .build());
 
-        this.updateStatus();
     }
 
     @Override
     public void tick() {
         super.tick();
-        long previousSync = this.lastSeenSyncMillis;
-        long currentSync = ClientMentionPreferences.getLastSyncMillis();
-        boolean pending = ClientMentionPreferences.isSyncPending();
-
-        if (currentSync > previousSync) {
-            this.lastSeenSyncMillis = currentSync;
-            this.workingCopy = ClientMentionPreferences.copy();
-            this.refreshTypeButtons();
-            this.allowMentionsButton.setValue(this.workingCopy.isAllowMentions());
-            this.allowMassMentionsButton.setValue(this.workingCopy.isAllowMassMentions());
-            this.awaitingSync = false;
-            this.controlsActive = true;
-            this.updateControlState();
+        if (ClientMentionPreferences.isSyncPending()) {
+            return;
         }
-
-        if (pending != this.lastPendingState || currentSync > previousSync) {
-            this.lastPendingState = pending;
-            this.updateStatus();
-        }
-
-        boolean awaiting = ClientMentionPreferences.isAwaitingSync() && currentSync == 0;
-        if (this.awaitingSync != awaiting) {
-            this.awaitingSync = awaiting;
-            this.controlsActive = currentSync > 0;
-            this.updateControlState();
-            this.updateStatus();
-        }
+        this.workingCopy = ClientMentionPreferences.copy();
+        this.refreshTypeButtons();
+        this.allowMentionsButton.setValue(this.workingCopy.isAllowMentions());
+        this.allowMassMentionsButton.setValue(this.workingCopy.isAllowMassMentions());
     }
 
     @Override
@@ -145,8 +109,6 @@ public class MentionPreferencesScreen extends Screen {
         super.render(graphics, mouseX, mouseY, partialTick);
 
         graphics.drawString(this.font, TYPE_LABEL, this.width / 2 - 100, LIST_TOP_OFFSET - 12, 0xFFFFFF, false);
-
-        graphics.drawString(this.font, this.statusMessage, 20, this.height - 20, this.statusColor, false);
     }
 
     @Override
@@ -182,7 +144,7 @@ public class MentionPreferencesScreen extends Screen {
         }
         boolean allowMentions = this.workingCopy.isAllowMentions();
         for (MentionTypeEntry entry : this.mentionTypeList.children()) {
-            entry.updateState(this.controlsActive && allowMentions, !this.workingCopy.getBlockedTypes().contains(entry.id));
+            entry.updateState(allowMentions, !this.workingCopy.getBlockedTypes().contains(entry.id));
         }
     }
 
@@ -191,27 +153,6 @@ public class MentionPreferencesScreen extends Screen {
         payload.copyFrom(this.workingCopy);
         ClientMentionPreferences.markPending(payload);
         CallYouNetwork.sendPreferenceUpdate(payload);
-        this.updateStatus();
-    }
-
-    private void updateStatus() {
-        if (this.awaitingSync && this.lastSeenSyncMillis == 0) {
-            this.statusMessage = Component.translatable("screen.callyou.mention_preferences.status.loading").withStyle(ChatFormatting.YELLOW);
-            this.statusColor = colorOf(ChatFormatting.YELLOW);
-            return;
-        }
-        if (ClientMentionPreferences.isSyncPending()) {
-            this.statusMessage = Component.translatable("screen.callyou.mention_preferences.status.pending").withStyle(ChatFormatting.GOLD);
-            this.statusColor = colorOf(ChatFormatting.GOLD);
-            return;
-        }
-        if (ClientMentionPreferences.getLastSyncMillis() > 0) {
-            this.statusMessage = Component.translatable("screen.callyou.mention_preferences.status.synced").withStyle(ChatFormatting.GREEN);
-            this.statusColor = colorOf(ChatFormatting.GREEN);
-            return;
-        }
-        this.statusMessage = Component.translatable("screen.callyou.mention_preferences.status.unknown").withStyle(ChatFormatting.RED);
-        this.statusColor = colorOf(ChatFormatting.RED);
     }
 
     private void requestLatestPreferences() {
@@ -223,30 +164,6 @@ public class MentionPreferencesScreen extends Screen {
 
     void onBlockedSendersChanged() {
         this.sendUpdate();
-        this.updateStatus();
-    }
-
-    boolean areControlsActive() {
-        return this.controlsActive;
-    }
-
-    private void updateControlState() {
-        if (this.allowMentionsButton != null) {
-            this.allowMentionsButton.active = this.controlsActive;
-        }
-        if (this.allowMassMentionsButton != null) {
-            this.allowMassMentionsButton.active = this.controlsActive;
-        }
-        if (this.manageBlockedSendersButton != null) {
-            this.manageBlockedSendersButton.active = this.controlsActive;
-        }
-        this.refreshTypeButtons();
-    }
-
-    @Contract(pure = true)
-    private static int colorOf(@NotNull ChatFormatting formatting) {
-        Integer color = formatting.getColor();
-        return color != null ? color : 0xFFFFFF;
     }
 
     class MentionTypeEntry extends ObjectSelectionList.Entry<MentionTypeEntry> {

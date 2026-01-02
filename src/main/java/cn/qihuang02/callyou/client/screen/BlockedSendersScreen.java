@@ -83,10 +83,6 @@ public class BlockedSendersScreen extends Screen {
             int labelX = this.blockInput.getX();
             int labelY = this.blockInput.getY() - 12;
             graphics.drawString(this.font, BLOCK_LABEL, labelX, labelY, 0xFFFFFF, false);
-
-            if (!this.blockStatus.getString().isEmpty()) {
-                graphics.drawString(this.font, this.blockStatus, labelX, labelY + 30, this.blockStatusColor, false);
-            }
         }
 
         super.render(graphics, mouseX, mouseY, partialTick);

@@ -45,10 +45,6 @@ public class CallYouLangProvider extends LanguageProvider {
         add("screen.callyou.mention_preferences.type_label", "Mention Types");
         add("screen.callyou.mention_preferences.manage_blocked", "Manage Blocked Players");
         add("screen.callyou.mention_preferences.blocked.none", "No blocked players yet.");
-        add("screen.callyou.mention_preferences.status.loading", "Loading preferences from server...");
-        add("screen.callyou.mention_preferences.status.pending", "Pending sync...");
-        add("screen.callyou.mention_preferences.status.synced", "Preferences synced.");
-        add("screen.callyou.mention_preferences.status.unknown", "Preferences unavailable.");
 
         // Blocked players screen
         add("screen.callyou.blocked_senders.title", "Blocked Players");
