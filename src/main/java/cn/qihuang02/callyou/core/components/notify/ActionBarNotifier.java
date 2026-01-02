@@ -1,8 +1,7 @@
-package cn.qihuang02.callyou.core.impl.notify;
+package cn.qihuang02.callyou.core.components.notify;
 
 import cn.qihuang02.callyou.api.MentionContext;
 import cn.qihuang02.callyou.api.Notifier;
-import cn.qihuang02.callyou.api.NotifierType;
 import cn.qihuang02.callyou.registry.BuiltInCallYouRegistries;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;

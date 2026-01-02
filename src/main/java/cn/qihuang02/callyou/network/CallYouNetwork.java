@@ -1,12 +1,15 @@
 package cn.qihuang02.callyou.network;
 
 import cn.qihuang02.callyou.CallYouByYourName;
-import cn.qihuang02.callyou.attachment.CallYouAttachments;
-import cn.qihuang02.callyou.attachment.MentionPreferences;
+import cn.qihuang02.callyou.core.attachment.CallYouAttachments;
+import cn.qihuang02.callyou.core.attachment.MentionPreferences;
 import cn.qihuang02.callyou.client.ClientMentionPreferences;
+import cn.qihuang02.callyou.client.ToastNotifierClient;
 import cn.qihuang02.callyou.network.payload.MentionPreferencesRequestPayload;
 import cn.qihuang02.callyou.network.payload.MentionPreferencesSyncPayload;
 import cn.qihuang02.callyou.network.payload.MentionPreferencesUpdatePayload;
+import cn.qihuang02.callyou.network.payload.MentionToastPayload;
+import net.minecraft.advancements.AdvancementHolder;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -41,12 +44,22 @@ public final class CallYouNetwork {
                 MentionPreferencesRequestPayload.STREAM_CODEC,
                 CallYouNetwork::handleRequest
         );
+
+        registrar.playToClient(
+                MentionToastPayload.TYPE,
+                MentionToastPayload.STREAM_CODEC,
+                CallYouNetwork::handleToast
+        );
     }
 
     public static void syncPreferences(@NotNull ServerPlayer player) {
         MentionPreferences preferences = player.getData(CallYouAttachments.MENTION_PREFERENCES.get());
 
         PacketDistributor.sendToPlayer(player, new MentionPreferencesSyncPayload(preferences));
+    }
+
+    public static void sendToast(@NotNull ServerPlayer player, @NotNull AdvancementHolder advancement) {
+        PacketDistributor.sendToPlayer(player, new MentionToastPayload(advancement));
     }
 
     public static void sendPreferenceUpdate(MentionPreferences preferences) {
@@ -77,5 +90,9 @@ public final class CallYouNetwork {
                 syncPreferences(player);
             }
         });
+    }
+
+    private static void handleToast(MentionToastPayload payload, @NotNull IPayloadContext context) {
+        context.enqueueWork(() -> ToastNotifierClient.showToast(payload.advancement()));
     }
 }

@@ -84,8 +84,6 @@ public abstract class ChatComponentMixin {
 
                 callyou$renderSingleItemIcon(guiGraphics, font, beforeText,
                         extraShift, baseX, baseY, style, color);
-
-                return false;
             }
 
             before.appendCodePoint(codePoint);

@@ -1,7 +1,8 @@
-package cn.qihuang02.callyou.handler;
+package cn.qihuang02.callyou.core.handler;
 
 import cn.qihuang02.callyou.CallYouByYourName;
 import cn.qihuang02.callyou.api.MentionType;
+import cn.qihuang02.callyou.registry.CallYouMentionRegistries;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
@@ -12,7 +13,7 @@ import net.neoforged.neoforge.server.permission.events.PermissionGatherEvent;
 import net.neoforged.neoforge.server.permission.nodes.PermissionDynamicContext;
 import net.neoforged.neoforge.server.permission.nodes.PermissionNode;
 import net.neoforged.neoforge.server.permission.nodes.PermissionTypes;
-import org.checkerframework.checker.units.qual.N;
+import net.neoforged.neoforge.server.ServerLifecycleHooks;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
@@ -39,12 +40,16 @@ public final class PermissionsHandler {
                             player != null && player.hasPermissions(2)
             );
 
-    private PermissionsHandler() {
-    }
-
     @SubscribeEvent
     public static void onGatherPermissionNodes(PermissionGatherEvent.@NotNull Nodes event) {
         event.addNodes(USE_MENTION, USE_MASS_MENTION);
+
+        var server = ServerLifecycleHooks.getCurrentServer();
+        if (server != null) {
+            server.registryAccess()
+                    .registry(CallYouMentionRegistries.MENTION_TYPE_REGISTRY_KEY)
+                    .ifPresent(PermissionsHandler::refreshMentionPermissions);
+        }
 
         for (PermissionNode<Boolean> node : MENTION_PERMISSIONS.values()) {
             event.addNodes(node);
@@ -65,10 +70,6 @@ public final class PermissionsHandler {
     }
 
     public static void refreshMentionPermissions(@NotNull Registry<MentionType> registry) {
-        if (MENTION_PERMISSIONS.size() == registry.size()) {
-            return;
-        }
-
         for (var entry : registry.entrySet()) {
             getMentionPermissionNode(entry.getKey().location());
         }

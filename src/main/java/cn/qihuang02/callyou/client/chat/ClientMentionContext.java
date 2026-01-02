@@ -2,8 +2,8 @@ package cn.qihuang02.callyou.client.chat;
 
 import cn.qihuang02.callyou.CallYouByYourName;
 import cn.qihuang02.callyou.api.MentionType;
-import cn.qihuang02.callyou.core.impl.formatter.PlayerNameTextFormatter;
-import cn.qihuang02.callyou.core.impl.formatter.SimpleTextFormatter;
+import cn.qihuang02.callyou.core.components.formatter.PlayerNameTextFormatter;
+import cn.qihuang02.callyou.core.components.formatter.SimpleTextFormatter;
 import cn.qihuang02.callyou.registry.CallYouMentionRegistries;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;

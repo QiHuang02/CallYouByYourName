@@ -1,8 +1,7 @@
-package cn.qihuang02.callyou.core.impl.formatter;
+package cn.qihuang02.callyou.core.components.formatter;
 
 import cn.qihuang02.callyou.api.MentionContext;
 import cn.qihuang02.callyou.api.TextFormatter;
-import cn.qihuang02.callyou.api.TextFormatterType;
 import cn.qihuang02.callyou.config.CallYouConfig;
 import cn.qihuang02.callyou.core.MentionCancelException;
 import cn.qihuang02.callyou.registry.BuiltInCallYouRegistries;

@@ -30,6 +30,8 @@ public class CallYouLangProvider extends LanguageProvider {
         add("message.callyou.spot", "at X: %s Y: %s Z: %s");
         add("message.callyou.item.empty", "Cannot mention empty hand!");
         add("message.callyou.ftbteams_missing", "FTB Teams is not installed; @team mention is unavailable.");
+        add("message.callyou.notify.toast.title", "You were mentioned by %s");
+        add("message.callyou.notify.toast.description", "Mentioned by %s in chat.");
 
         // Keybinds
         add("key.callyou.mention_preferences", "Mention Preferences");

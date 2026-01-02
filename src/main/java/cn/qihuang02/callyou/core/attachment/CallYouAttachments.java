@@ -1,4 +1,4 @@
-package cn.qihuang02.callyou.attachment;
+package cn.qihuang02.callyou.core.attachment;
 
 import cn.qihuang02.callyou.CallYouByYourName;
 import net.neoforged.neoforge.attachment.AttachmentType;

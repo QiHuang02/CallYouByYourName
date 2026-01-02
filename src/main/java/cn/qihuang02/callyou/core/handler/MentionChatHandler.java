@@ -1,4 +1,4 @@
-package cn.qihuang02.callyou.handler;
+package cn.qihuang02.callyou.core.handler;
 
 import cn.qihuang02.callyou.CallYouByYourName;
 import cn.qihuang02.callyou.core.MentionExecutor;

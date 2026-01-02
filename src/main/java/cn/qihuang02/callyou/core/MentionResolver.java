@@ -1,7 +1,7 @@
 package cn.qihuang02.callyou.core;
 
 import cn.qihuang02.callyou.api.MentionType;
-import cn.qihuang02.callyou.handler.OnlinePlayersHandler;
+import cn.qihuang02.callyou.core.handler.OnlinePlayersHandler;
 import cn.qihuang02.callyou.registry.CallYouMentionRegistries;
 import cn.qihuang02.callyou.util.OnlinePlayerList;
 import net.minecraft.core.Registry;

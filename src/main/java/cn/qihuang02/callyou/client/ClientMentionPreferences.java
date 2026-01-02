@@ -1,6 +1,6 @@
 package cn.qihuang02.callyou.client;
 
-import cn.qihuang02.callyou.attachment.MentionPreferences;
+import cn.qihuang02.callyou.core.attachment.MentionPreferences;
 import org.jetbrains.annotations.NotNull;
 
 public final class ClientMentionPreferences {

@@ -1,7 +1,7 @@
 package cn.qihuang02.callyou.network.payload;
 
 import cn.qihuang02.callyou.CallYouByYourName;
-import cn.qihuang02.callyou.attachment.MentionPreferences;
+import cn.qihuang02.callyou.core.attachment.MentionPreferences;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;

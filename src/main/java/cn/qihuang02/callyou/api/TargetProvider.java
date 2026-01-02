@@ -2,6 +2,7 @@ package cn.qihuang02.callyou.api;
 
 import cn.qihuang02.callyou.registry.CallYouRegistries;
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
 import net.minecraft.server.level.ServerPlayer;
 
 import java.util.List;
@@ -19,4 +20,11 @@ public interface TargetProvider {
     TargetProviderType type();
 
     List<ServerPlayer> getTargets(MentionContext context);
+
+    record TargetProviderType(MapCodec<? extends TargetProvider> mapCodec) {
+        @SuppressWarnings("unchecked")
+        public Codec<TargetProvider> codec() {
+            return (Codec<TargetProvider>) mapCodec.codec();
+        }
+    }
 }

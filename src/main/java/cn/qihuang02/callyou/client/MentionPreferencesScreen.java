@@ -1,6 +1,6 @@
 package cn.qihuang02.callyou.client;
 
-import cn.qihuang02.callyou.attachment.MentionPreferences;
+import cn.qihuang02.callyou.core.attachment.MentionPreferences;
 import cn.qihuang02.callyou.network.CallYouNetwork;
 import cn.qihuang02.callyou.registry.CallYouMentionRegistries;
 import net.minecraft.ChatFormatting;

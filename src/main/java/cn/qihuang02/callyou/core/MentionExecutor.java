@@ -1,6 +1,7 @@
 package cn.qihuang02.callyou.core;
 
 import cn.qihuang02.callyou.api.*;
+import cn.qihuang02.callyou.core.components.formatter.ItemTextFormatter;
 import cn.qihuang02.callyou.api.event.MentionEvent;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
@@ -35,11 +36,18 @@ public final class MentionExecutor {
             }
 
             int effectiveMentionCount = 0;
+            boolean itemMentionUsed = false;
 
             for (MentionResolver.ResolvedMention parsed : mentions) {
                 MentionType type = parsed.mentionType();
                 if (type == null) {
                     continue;
+                }
+                if (isItemMention(type)) {
+                    if (itemMentionUsed) {
+                        continue;
+                    }
+                    itemMentionUsed = true;
                 }
                 effectiveMentionCount++;
 
@@ -72,6 +80,7 @@ public final class MentionExecutor {
             int lastIndex = 0;
 
             List<ServerPlayer> allTargetsHit = new ArrayList<>();
+            itemMentionUsed = false;
 
             for (MentionResolver.ResolvedMention parsed : mentions) {
                 int start = parsed.startIndex();
@@ -94,6 +103,15 @@ public final class MentionExecutor {
                     rebuilt.append(literal);
                     lastIndex = end;
                     continue;
+                }
+                if (isItemMention(type)) {
+                    if (itemMentionUsed) {
+                        String literal = raw.substring(start, Math.min(end, raw.length()));
+                        rebuilt.append(literal);
+                        lastIndex = end;
+                        continue;
+                    }
+                    itemMentionUsed = true;
                 }
 
                 MentionContext context = new MentionContext(
@@ -140,6 +158,10 @@ public final class MentionExecutor {
             sender.sendSystemMessage(cancel.getReason());
             event.setCanceled(true);
         }
+    }
+
+    private static boolean isItemMention(@NotNull MentionType type) {
+        return type.textFormatter() instanceof ItemTextFormatter;
     }
 
     private static @NotNull List<ServerPlayer> executeSingleMention(
