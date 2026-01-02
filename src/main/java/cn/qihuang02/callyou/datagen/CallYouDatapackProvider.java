@@ -8,9 +8,11 @@ import cn.qihuang02.callyou.core.components.formatter.PlayerNameTextFormatter;
 import cn.qihuang02.callyou.core.components.formatter.SimpleTextFormatter;
 import cn.qihuang02.callyou.core.components.formatter.SpotTextFormatter;
 import cn.qihuang02.callyou.core.components.notify.SoundNotifier;
+import cn.qihuang02.callyou.core.components.notify.ToastNotifier;
 import cn.qihuang02.callyou.core.components.target.*;
 import cn.qihuang02.callyou.registry.CallYouMentionRegistries;
 import net.minecraft.ChatFormatting;
+import net.minecraft.advancements.AdvancementType;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.RegistrySetBuilder;
 import net.minecraft.data.PackOutput;
@@ -18,6 +20,7 @@ import net.minecraft.data.worldgen.BootstrapContext;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.item.Items;
 import net.neoforged.neoforge.common.data.DatapackBuiltinEntriesProvider;
 import org.jetbrains.annotations.NotNull;
 
@@ -131,10 +134,12 @@ public final class CallYouDatapackProvider extends DatapackBuiltinEntriesProvide
         MentionType ftbTeamMention = new MentionType(
                 new FTBTeamTargetProvider(),
                 new SimpleTextFormatter("@team", ChatFormatting.GOLD),
-                new SoundNotifier(
-                        SoundEvents.EXPERIENCE_ORB_PICKUP,
-                        1.0F,
-                        1.0F
+                new ToastNotifier(
+                        "message.callyou.notify.toast.title",
+                        "message.callyou.notify.toast.description",
+                        true,
+                        Items.NAME_TAG,
+                        AdvancementType.GOAL
                 ),
                 new MentionRules(
                         0,
