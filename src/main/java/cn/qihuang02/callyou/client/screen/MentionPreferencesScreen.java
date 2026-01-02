@@ -4,26 +4,36 @@ import cn.qihuang02.callyou.client.ClientMentionPreferences;
 import cn.qihuang02.callyou.core.attachment.MentionPreferences;
 import cn.qihuang02.callyou.network.CallYouNetwork;
 import cn.qihuang02.callyou.registry.CallYouMentionRegistries;
+import com.lowdragmc.lowdraglib2.gui.holder.ModularUIScreen;
+import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
+import com.lowdragmc.lowdraglib2.gui.ui.UI;
+import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.data.Horizontal;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.Button;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.ScrollerView;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.Switch;
+import com.lowdragmc.lowdraglib2.gui.ui.style.LayoutStyle;
+import com.lowdragmc.lowdraglib2.gui.ui.style.Stylesheet;
+import com.lowdragmc.lowdraglib2.gui.ui.style.StylesheetManager;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.components.CycleButton;
-import net.minecraft.client.gui.components.ObjectSelectionList;
-import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import org.appliedenergistics.yoga.YogaAlign;
+import org.appliedenergistics.yoga.YogaFlexDirection;
+import org.appliedenergistics.yoga.YogaJustify;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
-public class MentionPreferencesScreen extends Screen {
-    private static final int LIST_TOP_OFFSET = 85;
-    private static final int LIST_BOTTOM_OFFSET = 70;
+public class MentionPreferencesScreen extends ModularUIScreen {
+    private static final int PANEL_WIDTH = 320;
+    private static final int PANEL_HEIGHT = 240;
     private static final Component TITLE = Component.translatable("screen.callyou.mention_preferences.title");
     private static final Component ALLOW_MENTIONS = Component.translatable("screen.callyou.mention_preferences.allow_all");
     private static final Component ALLOW_MASS = Component.translatable("screen.callyou.mention_preferences.allow_mass");
@@ -32,13 +42,26 @@ public class MentionPreferencesScreen extends Screen {
 
     private final Screen parent;
     private MentionPreferences workingCopy;
-    private MentionTypeList mentionTypeList;
-    private CycleButton<Boolean> allowMentionsButton;
-    private CycleButton<Boolean> allowMassMentionsButton;
+    private final Map<ResourceLocation, Switch> typeToggles = new HashMap<>();
+    private final ScrollerView mentionTypeList;
+    private final Switch allowMentionsSwitch;
+    private final Switch allowMassMentionsSwitch;
+    private final Button manageBlockedButton;
+    private final Button doneButton;
 
     public MentionPreferencesScreen(@Nullable Screen parent) {
-        super(TITLE);
+        this(parent, buildUIRefs());
+    }
+
+    private MentionPreferencesScreen(@Nullable Screen parent, @NotNull UIRefs refs) {
+        super(refs.modularUI, TITLE);
         this.parent = parent;
+        this.mentionTypeList = refs.mentionTypeList;
+        this.allowMentionsSwitch = refs.allowMentionsSwitch;
+        this.allowMassMentionsSwitch = refs.allowMassMentionsSwitch;
+        this.manageBlockedButton = refs.manageBlockedButton;
+        this.doneButton = refs.doneButton;
+        this.configureActions();
     }
 
     @Contract("_ -> new")
@@ -48,67 +71,66 @@ public class MentionPreferencesScreen extends Screen {
         return new MentionPreferencesScreen(parent);
     }
 
+    private void configureActions() {
+        this.allowMentionsSwitch.style(style -> style.tooltips(
+                Component.translatable("screen.callyou.mention_preferences.allow_all.tooltip")));
+        this.allowMentionsSwitch.setOnSwitchChanged(value -> {
+            if (this.workingCopy == null) {
+                return;
+            }
+            this.workingCopy.setAllowMentions(value);
+            this.refreshTypeButtons();
+            this.sendUpdate();
+        });
+
+        this.allowMassMentionsSwitch.style(style -> style.tooltips(
+                Component.translatable("screen.callyou.mention_preferences.allow_mass.tooltip")));
+        this.allowMassMentionsSwitch.setOnSwitchChanged(value -> {
+            if (this.workingCopy == null) {
+                return;
+            }
+            this.workingCopy.setAllowMassMentions(value);
+            this.sendUpdate();
+        });
+
+        this.manageBlockedButton.setOnClick(event -> {
+            if (this.minecraft != null) {
+                this.minecraft.setScreen(new BlockedSendersScreen(this, this.workingCopy, true));
+            }
+        });
+
+        this.doneButton.setOnClick(event -> onClose());
+    }
+
     @Override
-    protected void init() {
+    public void init() {
+        super.init();
         this.requestLatestPreferences();
         this.workingCopy = ClientMentionPreferences.copy();
 
-        int centerX = this.width / 2;
-        int y = 30;
+        this.allowMentionsSwitch.setOn(this.workingCopy.isAllowMentions(), false);
+        this.allowMassMentionsSwitch.setOn(this.workingCopy.isAllowMassMentions(), false);
 
-        this.allowMentionsButton = addRenderableWidget(CycleButton.onOffBuilder(this.workingCopy.isAllowMentions())
-                .withTooltip(value -> Tooltip.create(Component.translatable("screen.callyou.mention_preferences.allow_all.tooltip")))
-                .create(centerX - 100, y, 200, 20, ALLOW_MENTIONS, (button, value) -> {
-                    this.workingCopy.setAllowMentions(value);
-                    this.refreshTypeButtons();
-                    this.sendUpdate();
-                }));
-
-        y += 28;
-
-        this.allowMassMentionsButton = addRenderableWidget(CycleButton.onOffBuilder(this.workingCopy.isAllowMassMentions())
-                .withTooltip(value -> Tooltip.create(Component.translatable("screen.callyou.mention_preferences.allow_mass.tooltip")))
-                .create(centerX - 100, y, 200, 20, ALLOW_MASS, (button, value) -> {
-                    this.workingCopy.setAllowMassMentions(value);
-                    this.sendUpdate();
-                }));
-
-        this.mentionTypeList = addRenderableWidget(new MentionTypeList(this.minecraft, this.width, this.height - LIST_TOP_OFFSET - LIST_BOTTOM_OFFSET, LIST_TOP_OFFSET, 26));
         this.populateMentionTypeList();
-
-        addRenderableWidget(Button.builder(MANAGE_BLOCKED, button -> {
-                    if (this.minecraft != null) {
-                        this.minecraft.setScreen(new BlockedSendersScreen(this, this.workingCopy, true));
-                    }
-                })
-                .bounds(centerX - 155, this.height - 40, 150, 20)
-                .build());
-
-        addRenderableWidget(Button.builder(CommonComponents.GUI_DONE, button -> onClose())
-                .bounds(centerX + 5, this.height - 40, 100, 20)
-                .build());
-
     }
 
     @Override
     public void tick() {
         super.tick();
+        this.getModularUI().tick();
         if (ClientMentionPreferences.isSyncPending()) {
             return;
         }
         this.workingCopy = ClientMentionPreferences.copy();
         this.refreshTypeButtons();
-        this.allowMentionsButton.setValue(this.workingCopy.isAllowMentions());
-        this.allowMassMentionsButton.setValue(this.workingCopy.isAllowMassMentions());
+        this.allowMentionsSwitch.setOn(this.workingCopy.isAllowMentions(), false);
+        this.allowMassMentionsSwitch.setOn(this.workingCopy.isAllowMassMentions(), false);
     }
 
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        this.renderBackground(graphics, mouseX, mouseY, partialTick);
-        graphics.drawCenteredString(this.font, this.title, this.width / 2, 10, 0xFFFFFF);
-        super.render(graphics, mouseX, mouseY, partialTick);
-
-        graphics.drawString(this.font, TYPE_LABEL, this.width / 2 - 100, LIST_TOP_OFFSET - 12, 0xFFFFFF, false);
+    public void removed() {
+        super.removed();
+        this.getModularUI().onRemoved();
     }
 
     @Override
@@ -120,8 +142,62 @@ public class MentionPreferencesScreen extends Screen {
 
     private void populateMentionTypeList() {
         List<ResourceLocation> mentionTypes = this.resolveMentionTypes();
-        this.mentionTypeList.reload(mentionTypes);
+        this.typeToggles.clear();
+        this.mentionTypeList.clearAllScrollViewChildren();
+        for (ResourceLocation id : mentionTypes) {
+            this.mentionTypeList.addScrollViewChild(this.buildMentionTypeRow(id));
+        }
         this.refreshTypeButtons();
+    }
+
+    private void refreshTypeButtons() {
+        if (this.workingCopy == null) {
+            return;
+        }
+        boolean allowMentions = this.workingCopy.isAllowMentions();
+        for (Map.Entry<ResourceLocation, Switch> entry : this.typeToggles.entrySet()) {
+            ResourceLocation id = entry.getKey();
+            Switch toggle = entry.getValue();
+            boolean enabled = !this.workingCopy.getBlockedTypes().contains(id);
+            toggle.setOn(enabled, false);
+            toggle.setActive(allowMentions);
+        }
+    }
+
+    private @NotNull UIElement buildMentionTypeRow(@NotNull ResourceLocation id) {
+        Label label = new Label();
+        label.setText(this.buildComponent(id));
+        label.layout(style -> style.flexGrow(1));
+
+        Switch toggle = new Switch();
+        toggle.setOn(!this.workingCopy.getBlockedTypes().contains(id), false);
+        toggle.layout(style -> style.width(34).height(14));
+        toggle.setOnSwitchChanged(value -> {
+            if (value) {
+                this.workingCopy.unblockMentionType(id);
+            } else {
+                this.workingCopy.blockMentionType(id);
+            }
+            this.sendUpdate();
+        });
+
+        this.typeToggles.put(id, toggle);
+
+        return new UIElement()
+                .layout(style -> style.flexDirection(YogaFlexDirection.ROW)
+                        .alignItems(YogaAlign.CENTER)
+                        .gapColumn(8)
+                        .widthStretch()
+                        .height(20))
+                .addChildren(label, toggle);
+    }
+
+    private @NotNull Component buildComponent(@NotNull ResourceLocation id) {
+        String key = "mention_type." + id.getNamespace() + "." + id.getPath();
+        if (I18n.exists(key)) {
+            return Component.translatable(key);
+        }
+        return Component.literal(id.toString());
     }
 
     private List<ResourceLocation> resolveMentionTypes() {
@@ -136,16 +212,6 @@ public class MentionPreferencesScreen extends Screen {
                         .sorted(Comparator.comparing(ResourceLocation::toString))
                         .toList());
         return result.orElseGet(List::of);
-    }
-
-    private void refreshTypeButtons() {
-        if (this.mentionTypeList == null) {
-            return;
-        }
-        boolean allowMentions = this.workingCopy.isAllowMentions();
-        for (MentionTypeEntry entry : this.mentionTypeList.children()) {
-            entry.updateState(allowMentions, !this.workingCopy.getBlockedTypes().contains(entry.id));
-        }
     }
 
     private void sendUpdate() {
@@ -166,82 +232,83 @@ public class MentionPreferencesScreen extends Screen {
         this.sendUpdate();
     }
 
-    class MentionTypeEntry extends ObjectSelectionList.Entry<MentionTypeEntry> {
-        private final ResourceLocation id;
-        private final CycleButton<Boolean> toggle;
+    @Contract(" -> new")
+    private static @NotNull UIRefs buildUIRefs() {
+        Label titleLabel = new Label();
+        titleLabel.setText(TITLE);
+        titleLabel.textStyle(style -> style.textAlignHorizontal(Horizontal.CENTER));
+        titleLabel.layout(LayoutStyle::widthStretch);
 
-        MentionTypeEntry(ResourceLocation id) {
-            this.id = Objects.requireNonNull(id);
-            boolean enabled = !workingCopy.getBlockedTypes().contains(id);
-            this.toggle = CycleButton.onOffBuilder(enabled)
-                    .displayOnlyValue()
-                    .create(0, 0, 80, 20, this.buildComponent(), (button, value) -> {
-                        if (value) {
-                            workingCopy.unblockMentionType(this.id);
-                        } else {
-                            workingCopy.blockMentionType(this.id);
-                        }
-                        sendUpdate();
-                    });
-        }
+        Switch allowMentionsSwitch = new Switch();
+        allowMentionsSwitch.layout(style -> style.width(34).height(14));
+        Label allowMentionsLabel = new Label();
+        allowMentionsLabel.setText(ALLOW_MENTIONS);
+        allowMentionsLabel.layout(style -> style.flexGrow(1));
+        UIElement allowRow = new UIElement()
+                .layout(style -> style.flexDirection(YogaFlexDirection.ROW)
+                        .alignItems(YogaAlign.CENTER)
+                        .gapColumn(8)
+                        .widthStretch())
+                .addChildren(allowMentionsLabel, allowMentionsSwitch);
 
-        void updateState(boolean allowMentions, boolean enabled) {
-            this.toggle.active = allowMentions;
-            this.toggle.setValue(enabled);
-        }
+        Switch allowMassSwitch = new Switch();
+        allowMassSwitch.layout(style -> style.width(34).height(14));
+        Label allowMassLabel = new Label();
+        allowMassLabel.setText(ALLOW_MASS);
+        allowMassLabel.layout(style -> style.flexGrow(1));
+        UIElement allowMassRow = new UIElement()
+                .layout(style -> style.flexDirection(YogaFlexDirection.ROW)
+                        .alignItems(YogaAlign.CENTER)
+                        .gapColumn(8)
+                        .widthStretch())
+                .addChildren(allowMassLabel, allowMassSwitch);
 
-        private @NotNull Component buildComponent() {
-            String key = "mention_type." + this.id.getNamespace() + "." + this.id.getPath();
-            if (I18n.exists(key)) {
-                return Component.translatable(key);
-            }
-            return Component.literal(this.id.toString());
-        }
+        Label typeLabel = new Label();
+        typeLabel.setText(TYPE_LABEL);
+        typeLabel.layout(LayoutStyle::widthStretch);
 
-        @Override
-        public boolean mouseClicked(double mouseX, double mouseY, int button) {
-            return this.toggle.mouseClicked(mouseX, mouseY, button);
-        }
+        ScrollerView mentionList = new ScrollerView();
+        mentionList.layout(style -> style.flexGrow(1).widthStretch());
+        mentionList.viewContainer(container -> container.layout(layout -> layout.flexDirection(YogaFlexDirection.COLUMN)
+                .gapRow(2)
+                .widthStretch()));
 
-        @Override
-        public boolean mouseReleased(double mouseX, double mouseY, int button) {
-            return this.toggle.mouseReleased(mouseX, mouseY, button);
-        }
+        Button manageBlockedButton = new Button();
+        manageBlockedButton.setText(MANAGE_BLOCKED);
+        manageBlockedButton.layout(style -> style.width(150).height(16));
 
-        @Override
-        public @NotNull Component getNarration() {
-            return this.buildComponent();
-        }
+        Button doneButton = new Button();
+        doneButton.setText(CommonComponents.GUI_DONE);
+        doneButton.layout(style -> style.width(100).height(16));
 
-        @Override
-        public void render(@NotNull GuiGraphics graphics, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float partialTick) {
-            graphics.drawString(MentionPreferencesScreen.this.font, this.buildComponent(), x + 4, y + 6, 0xFFFFFF, false);
-            this.toggle.setX(x + entryWidth - 90);
-            this.toggle.setY(y + (entryHeight - 20) / 2);
-            this.toggle.render(graphics, mouseX, mouseY, partialTick);
-        }
+        UIElement buttonRow = new UIElement()
+                .layout(style -> style.flexDirection(YogaFlexDirection.ROW)
+                        .alignItems(YogaAlign.CENTER)
+                        .justifyItems(YogaJustify.SPACE_BETWEEN)
+                        .widthStretch())
+                .addChildren(manageBlockedButton, doneButton);
+
+        UIElement root = new UIElement()
+                .addClass("panel_bg")
+                .layout(style -> style.width(PANEL_WIDTH)
+                        .height(PANEL_HEIGHT)
+                        .flexDirection(YogaFlexDirection.COLUMN)
+                        .alignItems(YogaAlign.STRETCH))
+                .addChildren(titleLabel, allowRow, allowMassRow, typeLabel, mentionList, buttonRow);
+
+        Stylesheet mcStyle = StylesheetManager.INSTANCE.getStylesheetSafe(StylesheetManager.MC);
+        ModularUI modularUI = ModularUI.of(UI.of(root, mcStyle));
+
+        return new UIRefs(modularUI, mentionList, allowMentionsSwitch, allowMassSwitch, manageBlockedButton, doneButton);
     }
 
-    class MentionTypeList extends ObjectSelectionList<MentionPreferencesScreen.MentionTypeEntry> {
-        MentionTypeList(Minecraft minecraft, int width, int height, int top, int itemHeight) {
-            super(minecraft, width, height, top, itemHeight);
-        }
-
-        void reload(@NotNull List<ResourceLocation> ids) {
-            this.clearEntries();
-            for (ResourceLocation id : ids) {
-                this.addEntry(new MentionTypeEntry(id));
-            }
-        }
-
-        @Override
-        protected int getScrollbarPosition() {
-            return this.width - 6;
-        }
-
-        @Override
-        public int getRowWidth() {
-            return this.width - 24;
-        }
+    private record UIRefs(
+            ModularUI modularUI,
+            ScrollerView mentionTypeList,
+            Switch allowMentionsSwitch,
+            Switch allowMassMentionsSwitch,
+            Button manageBlockedButton,
+            Button doneButton
+    ) {
     }
 }
