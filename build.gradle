@@ -13,14 +13,16 @@ group = mod_group_id
 
 repositories {
     maven {
-        name "ftbMavenReleases"
-        url "https://maven.ftb.dev/releases"
+        name = "ftbMavenReleases"
+        url = "https://maven.ftb.dev/releases"
     }
     maven {
-        url "https://maven.architectury.dev/"
+        url = "https://maven.architectury.dev/"
     }
     // LDLib2
-    maven { url = "https://maven.firstdark.dev/snapshots" }
+    maven {
+        url = "https://maven.firstdark.dev/snapshots"
+    }
 }
 
 base {
