@@ -5,6 +5,7 @@ import cn.qihuang02.callyou.core.handler.OnlinePlayersHandler;
 import cn.qihuang02.callyou.registry.CallYouMentionRegistries;
 import cn.qihuang02.callyou.util.OnlinePlayerList;
 import net.minecraft.core.Registry;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.NotNull;
@@ -14,7 +15,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public final class MentionResolver {
-    private static final Map<Registry<MentionType>, Map<String, MentionType>> LOOKUP_CACHE = new ConcurrentHashMap<>();
+    private static final Map<Registry<MentionType>, Map<String, CachedType>> LOOKUP_CACHE = new ConcurrentHashMap<>();
 
     public static @NotNull List<ResolvedMention> resolve(
             @NotNull MinecraftServer server,
@@ -28,7 +29,9 @@ public final class MentionResolver {
                 access.registry(CallYouMentionRegistries.MENTION_TYPE_REGISTRY_KEY);
         Registry<MentionType> registry = optionalRegistry.orElse(null);
 
-        MentionType playerMentionType = registry != null ? getLookup(registry).get("player") : null;
+        CachedType playerMentionEntry = registry != null ? getLookup(registry).get("player") : null;
+        MentionType playerMentionType = playerMentionEntry != null ? playerMentionEntry.type : null;
+        ResourceLocation playerMentionId = playerMentionEntry != null ? playerMentionEntry.id : null;
 
         OnlinePlayerList onlinePlayers = OnlinePlayersHandler.getOnlinePlayers();
 
@@ -38,11 +41,16 @@ public final class MentionResolver {
             int end = token.endIndex();
 
             MentionType type = null;
+            ResourceLocation typeId = null;
             ServerPlayer playerTarget = null;
 
             if (registry != null) {
                 String lowered = key.toLowerCase(Locale.ROOT);
-                type = getLookup(registry).get(lowered);
+                CachedType cached = getLookup(registry).get(lowered);
+                if (cached != null) {
+                    type = cached.type;
+                    typeId = cached.id;
+                }
             }
 
             if (type == null) {
@@ -52,27 +60,28 @@ public final class MentionResolver {
                     if (candidate != null) {
                         playerTarget = candidate;
                         type = playerMentionType;
+                        typeId = playerMentionId;
                     }
                 }
             }
 
-            result.add(new ResolvedMention(start, end, key, type, playerTarget));
+            result.add(new ResolvedMention(start, end, key, type, typeId, playerTarget));
         }
 
         return result;
     }
 
-    private static @NotNull Map<String, MentionType> getLookup(@NotNull Registry<MentionType> registry) {
-        Map<String, MentionType> cached = LOOKUP_CACHE.get(registry);
+    private static @NotNull Map<String, CachedType> getLookup(@NotNull Registry<MentionType> registry) {
+        Map<String, CachedType> cached = LOOKUP_CACHE.get(registry);
         if (cached != null && cached.size() == registry.size()) {
             return cached;
         }
 
-        Map<String, MentionType> map = new HashMap<>();
+        Map<String, CachedType> map = new HashMap<>();
         for (var entry : registry.entrySet()) {
             var id = registry.getKey(entry.getValue());
             if (id != null) {
-                map.put(id.getPath().toLowerCase(Locale.ROOT), entry.getValue());
+                map.put(id.getPath().toLowerCase(Locale.ROOT), new CachedType(entry.getValue(), id));
             }
         }
 
@@ -80,11 +89,15 @@ public final class MentionResolver {
         return map;
     }
 
+    private record CachedType(MentionType type, ResourceLocation id) {
+    }
+
     public record ResolvedMention(
             int startIndex,
             int endIndex,
             @NotNull String key,
             @Nullable MentionType mentionType,
+            @Nullable ResourceLocation typeId,
             @Nullable ServerPlayer playerTarget
     ) {
         public boolean isPlayerMention() {

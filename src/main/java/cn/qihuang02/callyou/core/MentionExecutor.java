@@ -57,7 +57,7 @@ public final class MentionExecutor {
                 }
                 effectiveMentionCount++;
 
-                if (!GUARD.canUseMentionType(sender, type)) {
+                if (!GUARD.canUseMentionType(sender, type, parsed.typeId())) {
                     String key = parsed.key();
                     Component display = Component.literal("@" + key);
                     sender.sendSystemMessage(
@@ -120,9 +120,7 @@ public final class MentionExecutor {
                     itemMentionUsed = true;
                 }
 
-                ResourceLocation typeId = sender.server.registryAccess()
-                        .registryOrThrow(CallYouMentionRegistries.MENTION_TYPE_REGISTRY_KEY)
-                        .getKey(type);
+                ResourceLocation typeId = parsed.typeId();
 
                 MentionContext context = new MentionContext(
                         sender,
@@ -195,7 +193,7 @@ public final class MentionExecutor {
         List<ServerPlayer> preFiltered = new ArrayList<>(preEvent.getTargets());
 
         List<ServerPlayer> filteredTargets =
-                GUARD.filterTargets(context.sender(), type, context, preFiltered, nowTick);
+                GUARD.filterTargets(context.sender(), type, context.typeId(), context, preFiltered, nowTick);
 
         if (filteredTargets.isEmpty()) {
             return List.of();

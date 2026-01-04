@@ -12,7 +12,7 @@ public class CallYouLangProvider extends LanguageProvider {
     @Override
     protected void addTranslations() {
         // Config Titles and Comments
-        add("callyou.config.mentions", "Mentions Settings"); // Category title
+        add("callyou.config.mentions", "Mentions Settings");
         add("callyou.config.mentions.maxMentionsPerMessage", "Max Mentions Per Message");
         add("callyou.config.mentions.maxMentionsPerMessage.comment", "Maximum number of effective mentions (i.e. tokens that resolve to a MentionType) allowed per single chat message. 0 = no limit.");
         add("callyou.config.mentions.maxTargetsPerMention", "Max Targets Per Mention");
@@ -43,8 +43,6 @@ public class CallYouLangProvider extends LanguageProvider {
         add("screen.callyou.mention_preferences.allow_mass", "Allow Mass Mentions");
         add("screen.callyou.mention_preferences.allow_mass.tooltip", "Whether mass mention types (e.g., @here) may ping you.");
         add("screen.callyou.mention_preferences.blocked.none", "No blocked players yet.");
-        add("screen.callyou.mention_preferences.mode_switch.to_blocked", "切换为封禁模式");
-        add("screen.callyou.mention_preferences.mode_switch.to_preferences", "切换为喜好模式");
 
         // Blocked players screen
         add("screen.callyou.blocked_senders.title", "Blocked Players");

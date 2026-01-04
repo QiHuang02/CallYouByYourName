@@ -19,6 +19,7 @@ public class OnlinePlayerList {
 
     private final List<UUID> onlinePlayerUUIDs = new ArrayList<>();
     private final Map<UUID, String> nameCache = new HashMap<>();
+    private final Map<String, UUID> nameToUUID = new HashMap<>();
 
     public static @NotNull List<String> getClientOnlinePlayerNames(@NotNull Minecraft minecraft) {
         ClientPacketListener connection = minecraft.getConnection();
@@ -76,31 +77,45 @@ public class OnlinePlayerList {
     public void clear() {
         onlinePlayerUUIDs.clear();
         nameCache.clear();
+        nameToUUID.clear();
     }
 
     public void refreshFromServer(@NotNull MinecraftServer server) {
         onlinePlayerUUIDs.clear();
         nameCache.clear();
+        nameToUUID.clear();
 
         for (ServerPlayer player : server.getPlayerList().getPlayers()) {
             UUID uuid = player.getUUID();
+            String name = player.getGameProfile().getName();
             onlinePlayerUUIDs.add(uuid);
-            nameCache.put(uuid, player.getGameProfile().getName());
+            nameCache.put(uuid, name);
+            if (name != null) {
+                nameToUUID.put(name.toLowerCase(Locale.ROOT), uuid);
+            }
         }
     }
 
     public void onPlayerLoggedIn(@NotNull ServerPlayer player) {
         UUID uuid = player.getUUID();
+        String name = player.getGameProfile().getName();
         if (!onlinePlayerUUIDs.contains(uuid)) {
             onlinePlayerUUIDs.add(uuid);
         }
-        nameCache.put(uuid, player.getGameProfile().getName());
+        nameCache.put(uuid, name);
+        if (name != null) {
+            nameToUUID.put(name.toLowerCase(Locale.ROOT), uuid);
+        }
     }
 
     public void onPlayerLoggedOut(@NotNull ServerPlayer player) {
         UUID uuid = player.getUUID();
+        String name = nameCache.get(uuid);
         onlinePlayerUUIDs.remove(uuid);
         nameCache.remove(uuid);
+        if (name != null) {
+            nameToUUID.remove(name.toLowerCase(Locale.ROOT));
+        }
     }
 
     public List<UUID> getOnlinePlayerUUIDs() {
@@ -108,15 +123,7 @@ public class OnlinePlayerList {
     }
 
     public UUID findOnlinePlayerByExactName(@NotNull MinecraftServer server, @NotNull String name) {
-        String target = name.toLowerCase(Locale.ROOT);
-        for (UUID uuid : onlinePlayerUUIDs) {
-            String cachedName = getPlayerName(server, uuid);
-            if (cachedName != null && !cachedName.isEmpty()
-                    && cachedName.toLowerCase(Locale.ROOT).equals(target)) {
-                return uuid;
-            }
-        }
-        return null;
+        return nameToUUID.get(name.toLowerCase(Locale.ROOT));
     }
 
     public String getPlayerName(@NotNull MinecraftServer server, @NotNull UUID uuid) {

@@ -7,9 +7,6 @@ import cn.qihuang02.callyou.core.attachment.CallYouAttachments;
 import cn.qihuang02.callyou.core.attachment.MentionPreferences;
 import cn.qihuang02.callyou.config.CallYouConfig;
 import cn.qihuang02.callyou.core.handler.PermissionsHandler;
-import cn.qihuang02.callyou.registry.CallYouMentionRegistries;
-import net.minecraft.core.Registry;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.NotNull;
@@ -21,23 +18,10 @@ public final class MentionGuard {
 
     private final MentionRateLimiter limiter = new MentionRateLimiter();
 
-    private static @Nullable ResourceLocation resolveMentionTypeID(@NotNull ServerPlayer sender, @NotNull MentionType type) {
-        var access = sender.server.registryAccess();
-        Optional<Registry<MentionType>> optionalRegistry = access.registry(CallYouMentionRegistries.MENTION_TYPE_REGISTRY_KEY);
-
-        if (optionalRegistry.isEmpty()) {
-            return null;
-        }
-
-        Registry<MentionType> registry = optionalRegistry.get();
-        PermissionsHandler.refreshMentionPermissions(registry);
-
-        return registry.getResourceKey(type).map(ResourceKey::location).orElse(null);
-    }
-
     public boolean canUseMentionType(
             @NotNull ServerPlayer sender,
-            @NotNull MentionType type
+            @NotNull MentionType type,
+            @Nullable ResourceLocation mentionID
     ) {
         MentionRules rules = type.rules();
 
@@ -56,7 +40,6 @@ public final class MentionGuard {
             }
         }
 
-        ResourceLocation mentionID = resolveMentionTypeID(sender, type);
         return mentionID == null || PermissionsHandler.canUseMentionType(sender, mentionID);
     }
 
@@ -79,6 +62,7 @@ public final class MentionGuard {
     public @NotNull List<ServerPlayer> filterTargets(
             @NotNull ServerPlayer sender,
             @NotNull MentionType type,
+            @Nullable ResourceLocation mentionID,
             @NotNull MentionContext context,
             @NotNull List<ServerPlayer> rawTargets,
             long nowTick
@@ -90,7 +74,6 @@ public final class MentionGuard {
 
         CallYouConfig.Common cfg = CallYouConfig.COMMON;
 
-        ResourceLocation mentionID = resolveMentionTypeID(sender, type);
         int maxTargets = cfg.maxTargetsPerMention.get();
         int perTargetCooldown = cfg.perTargetCooldownTicks.get();
         UUID senderId = context.senderId();
