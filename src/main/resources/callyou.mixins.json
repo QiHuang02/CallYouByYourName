@@ -11,6 +11,7 @@
   },
   "client": [
     "ChatComponentMixin",
-    "ChatScreenMixin"
+    "ChatScreenMixin",
+    "ScreenMixin"
   ]
 }

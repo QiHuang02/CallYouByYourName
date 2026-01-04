@@ -28,6 +28,9 @@ public class CallYouLangProvider extends LanguageProvider {
         add("message.callyou.no_permission", "You do not have permission to mention %s");
         add("message.callyou.too_many_mentions", "Too many mentions in one message!");
         add("message.callyou.spot", "at X: %s Y: %s Z: %s");
+        add("message.callyou.spot.ftb.add", "Click to add a temporary waypoint");
+        add("message.callyou.spot.ftb.shared_by", "%s's shared location");
+        add("message.callyou.spot.ftb.added", "Temporary waypoint added: %s");
         add("message.callyou.item.empty", "Cannot mention empty hand!");
         add("message.callyou.ftbteams_missing", "FTB Teams is not installed; @team mention is unavailable.");
         add("message.callyou.notify.toast.title", "You were mentioned by %s");

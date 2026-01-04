@@ -32,13 +32,18 @@ public class MentionSuggestions extends CommandSuggestions {
             Font font,
             ClientMentionContext mentionContext
     ) {
-        super(minecraft, screen, input, font,
+        super(
+                minecraft,
+                screen,
+                input,
+                font,
                 false,
                 false,
                 0,
                 10,
                 true,
-                0xC0101010);
+                0xC0101010
+        );
 
         this.minecraft = minecraft;
         this.input = input;
@@ -88,7 +93,6 @@ public class MentionSuggestions extends CommandSuggestions {
         if (candidates.isEmpty()) {
             return;
         }
-
 
         buildSuggestions(value, candidates);
     }

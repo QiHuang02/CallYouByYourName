@@ -1,4 +1,4 @@
-package cn.qihuang02.callyou.integration.ftbteams;
+package cn.qihuang02.callyou.compat.ftb;
 
 import dev.ftb.mods.ftbteams.api.FTBTeamsAPI;
 import net.minecraft.server.level.ServerPlayer;

@@ -39,6 +39,13 @@ ordering = "NONE"
 side = "BOTH"
 
 [[dependencies.${mod_id}]]
+modId = "ftbchunks"
+type = "optional"
+versionRange = "[${ftb_ftbchunks_version},)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.${mod_id}]]
 modId = "ldlib2"
 type = "required"
 versionRange = "[${ldlib2_version},)"
