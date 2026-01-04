@@ -42,9 +42,9 @@ public class CallYouLangProvider extends LanguageProvider {
         add("screen.callyou.mention_preferences.allow_all.tooltip", "Whether other players may mention you.");
         add("screen.callyou.mention_preferences.allow_mass", "Allow Mass Mentions");
         add("screen.callyou.mention_preferences.allow_mass.tooltip", "Whether mass mention types (e.g., @here) may ping you.");
-        add("screen.callyou.mention_preferences.type_label", "Mention Types");
-        add("screen.callyou.mention_preferences.manage_blocked", "Manage Blocked Players");
         add("screen.callyou.mention_preferences.blocked.none", "No blocked players yet.");
+        add("screen.callyou.mention_preferences.mode_switch.to_blocked", "切换为封禁模式");
+        add("screen.callyou.mention_preferences.mode_switch.to_preferences", "切换为喜好模式");
 
         // Blocked players screen
         add("screen.callyou.blocked_senders.title", "Blocked Players");

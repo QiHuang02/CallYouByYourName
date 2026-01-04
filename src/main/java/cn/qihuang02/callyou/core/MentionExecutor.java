@@ -1,11 +1,17 @@
 package cn.qihuang02.callyou.core;
 
 import cn.qihuang02.callyou.api.*;
+import cn.qihuang02.callyou.core.attachment.CallYouAttachments;
+import cn.qihuang02.callyou.core.attachment.MentionPreferences;
 import cn.qihuang02.callyou.core.components.formatter.ItemTextFormatter;
 import cn.qihuang02.callyou.api.event.MentionEvent;
+import cn.qihuang02.callyou.core.components.notify.SoundNotifier;
+import cn.qihuang02.callyou.core.components.notify.ToastNotifier;
+import cn.qihuang02.callyou.registry.CallYouMentionRegistries;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.ServerChatEvent;
@@ -114,11 +120,16 @@ public final class MentionExecutor {
                     itemMentionUsed = true;
                 }
 
+                ResourceLocation typeId = sender.server.registryAccess()
+                        .registryOrThrow(CallYouMentionRegistries.MENTION_TYPE_REGISTRY_KEY)
+                        .getKey(type);
+
                 MentionContext context = new MentionContext(
                         sender,
                         originalMessage,
                         raw,
-                        parsed.key()
+                        parsed.key(),
+                        typeId
                 );
 
                 TextFormatter formatter = type.textFormatter();
@@ -190,10 +201,26 @@ public final class MentionExecutor {
             return List.of();
         }
 
-        notifier.apply(context, filteredTargets);
+        List<ServerPlayer> finalTargets = new ArrayList<>();
 
-        NeoForge.EVENT_BUS.post(new MentionEvent.Post(context, type, filteredTargets));
+        for (ServerPlayer target : filteredTargets) {
+            MentionPreferences prefs = target.getData(CallYouAttachments.MENTION_PREFERENCES);
+            ResourceLocation typeId = context.typeId();
 
-        return filteredTargets;
+            if (typeId != null && !prefs.isNotifierEnabled(typeId, target.server.registryAccess())) {
+                continue;
+            }
+            finalTargets.add(target);
+        }
+
+        if (finalTargets.isEmpty()) {
+            return List.of();
+        }
+
+        notifier.apply(context, finalTargets);
+
+        NeoForge.EVENT_BUS.post(new MentionEvent.Post(context, type, finalTargets));
+
+        return finalTargets;
     }
 }

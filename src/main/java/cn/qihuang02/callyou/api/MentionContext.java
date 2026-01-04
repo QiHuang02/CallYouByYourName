@@ -2,12 +2,14 @@ package cn.qihuang02.callyou.api;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Locale;
 import java.util.UUID;
@@ -16,8 +18,18 @@ public record MentionContext(
         ServerPlayer sender,
         Component originalMessage,
         String rawMessage,
-        String mentionKey
+        String mentionKey,
+        @Nullable ResourceLocation typeId
 ) {
+    public MentionContext(
+            ServerPlayer sender,
+            Component originalMessage,
+            String rawMessage,
+            String mentionKey
+    ) {
+        this(sender, originalMessage, rawMessage, mentionKey, null);
+    }
+
     @Contract(pure = true)
     public @NotNull String mentionToken() {
         if (mentionKey == null || mentionKey.isEmpty()) {

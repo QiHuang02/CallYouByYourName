@@ -2,8 +2,13 @@ package cn.qihuang02.callyou.core.attachment;
 
 import cn.qihuang02.callyou.api.MentionRules;
 import cn.qihuang02.callyou.api.MentionType;
+import cn.qihuang02.callyou.api.Notifier;
+import cn.qihuang02.callyou.registry.CallYouMentionRegistries;
+import cn.qihuang02.callyou.registry.CallYouRegistries;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.minecraft.core.Registry;
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -14,6 +19,27 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public final class MentionPreferences {
+
+    public record TypePreference(Map<ResourceLocation, Boolean> enabledNotifiers) {
+        public static final TypePreference DEFAULT = new TypePreference(Map.of());
+        public static final Codec<TypePreference> CODEC = RecordCodecBuilder.create(instance ->
+                instance.group(
+                        Codec.unboundedMap(ResourceLocation.CODEC, Codec.BOOL)
+                                .optionalFieldOf("notifiers", Map.of())
+                                .forGetter(TypePreference::enabledNotifiers)
+                ).apply(instance, TypePreference::new)
+        );
+
+        public TypePreference withNotifier(ResourceLocation notifierId, boolean enabled) {
+            Map<ResourceLocation, Boolean> newMap = new HashMap<>(enabledNotifiers);
+            newMap.put(notifierId, enabled);
+            return new TypePreference(Collections.unmodifiableMap(newMap));
+        }
+        
+        public boolean isNotifierEnabled(ResourceLocation notifierId) {
+            return enabledNotifiers.getOrDefault(notifierId, true);
+        }
+    }
 
     public static final Codec<MentionPreferences> CODEC = RecordCodecBuilder.create(instance ->
             instance.group(
@@ -26,11 +52,17 @@ public final class MentionPreferences {
                     Codec.STRING.listOf().optionalFieldOf("blocked_senders", List.of())
                             .forGetter(p -> p.blockedSenders.stream()
                                     .map(UUID::toString)
-                                    .collect(Collectors.toList()))
+                                    .collect(Collectors.toList())),
+                    Codec.unboundedMap(ResourceLocation.CODEC, TypePreference.CODEC)
+                            .optionalFieldOf("type_preferences", Map.of())
+                            .forGetter(p -> p.typePreferences)
             ).apply(instance, MentionPreferences::fromCodec)
     );
+    
     final Set<UUID> blockedSenders = new HashSet<>();
     private final Set<ResourceLocation> blockedTypes = new HashSet<>();
+    private final Map<ResourceLocation, TypePreference> typePreferences = new HashMap<>();
+    
     private boolean allowMentions = true;
     private boolean allowMassMentions = true;
 
@@ -38,7 +70,8 @@ public final class MentionPreferences {
             boolean allowMentions,
             boolean allowMassMentions,
             @NotNull List<ResourceLocation> blockedTypes,
-            List<String> blockedSenderStrings
+            List<String> blockedSenderStrings,
+            Map<ResourceLocation, TypePreference> typePreferences
     ) {
         MentionPreferences prefs = new MentionPreferences();
         prefs.allowMentions = allowMentions;
@@ -53,6 +86,7 @@ public final class MentionPreferences {
             } catch (IllegalArgumentException ignored) {
             }
         }
+        prefs.typePreferences.putAll(typePreferences);
         return prefs;
     }
 
@@ -94,6 +128,37 @@ public final class MentionPreferences {
         }
     }
 
+    public void setNotifierEnabled(ResourceLocation mentionTypeId, ResourceLocation notifierTypeId, boolean enabled) {
+        typePreferences.put(mentionTypeId, getPreference(mentionTypeId).withNotifier(notifierTypeId, enabled));
+    }
+
+    public boolean isNotifierEnabled(ResourceLocation mentionTypeId, ResourceLocation notifierTypeId) {
+        return getPreference(mentionTypeId).isNotifierEnabled(notifierTypeId);
+    }
+    
+    /**
+     * Checks if the notifier is enabled for the given mention type, resolving the Notifier ID from the registry.
+     */
+    public boolean isNotifierEnabled(ResourceLocation mentionTypeId, @Nullable RegistryAccess registryAccess) {
+        if (registryAccess == null) return true;
+        
+        Registry<MentionType> mentionRegistry = registryAccess.registryOrThrow(CallYouMentionRegistries.MENTION_TYPE_REGISTRY_KEY);
+        MentionType mentionType = mentionRegistry.get(mentionTypeId);
+        if (mentionType == null) return true;
+        
+        Notifier notifier = mentionType.notifier();
+        Notifier.NotifierType notifierType = notifier.type();
+        
+        ResourceLocation notifierId = CallYouRegistries.NOTIFICATION_RULE_TYPES.getKey(notifierType);
+        if (notifierId == null) return true;
+        
+        return isNotifierEnabled(mentionTypeId, notifierId);
+    }
+
+    private TypePreference getPreference(ResourceLocation typeId) {
+        return typePreferences.getOrDefault(typeId, TypePreference.DEFAULT);
+    }
+
     public void blockSender(UUID senderId) {
         if (senderId != null) {
             blockedSenders.add(senderId);
@@ -111,6 +176,7 @@ public final class MentionPreferences {
         this.allowMassMentions = true;
         this.blockedTypes.clear();
         this.blockedSenders.clear();
+        this.typePreferences.clear();
     }
 
     public void copyFrom(@NotNull MentionPreferences other) {
@@ -130,6 +196,9 @@ public final class MentionPreferences {
                 this.blockedSenders.add(uuid);
             }
         }
+        
+        this.typePreferences.clear();
+        this.typePreferences.putAll(other.typePreferences);
     }
 
     public boolean isMentionAllowed(
