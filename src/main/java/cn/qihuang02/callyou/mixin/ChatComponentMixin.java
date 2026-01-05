@@ -22,7 +22,6 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @OnlyIn(Dist.CLIENT)
 @Mixin(ChatComponent.class)
 public abstract class ChatComponentMixin {
-
     @Unique
     private static final float CALLYOU_ITEM_ICON_SCALE = 0.6F;
     @Unique

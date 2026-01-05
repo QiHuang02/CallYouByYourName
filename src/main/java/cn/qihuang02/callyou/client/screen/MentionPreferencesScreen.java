@@ -1,8 +1,11 @@
 package cn.qihuang02.callyou.client.screen;
 
+import cn.qihuang02.callyou.client.ClientMentionHistory;
 import cn.qihuang02.callyou.client.ClientMentionPreferences;
 import cn.qihuang02.callyou.core.attachment.MentionPreferences;
+import cn.qihuang02.callyou.core.storage.MentionRecord;
 import cn.qihuang02.callyou.network.CallYouNetwork;
+import cn.qihuang02.callyou.network.payload.MentionLogActionPayload;
 import cn.qihuang02.callyou.registry.CallYouMentionRegistries;
 import com.lowdragmc.lowdraglib2.gui.holder.ModularUIScreen;
 import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
@@ -14,6 +17,7 @@ import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.ScrollerView;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Switch;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.TextField;
+import com.lowdragmc.lowdraglib2.gui.ui.style.LayoutStyle;
 import com.lowdragmc.lowdraglib2.gui.ui.style.Stylesheet;
 import com.lowdragmc.lowdraglib2.gui.ui.style.StylesheetManager;
 import com.lowdragmc.lowdraglib2.gui.ui.styletemplate.Sprites;
@@ -49,6 +53,11 @@ public class MentionPreferencesScreen extends ModularUIScreen {
     private static final Component BLOCK_ACTION_TOOLTIP = Component.translatable("screen.callyou.blocked_senders.block_action.tooltip");
     private static final Component ERROR_NOT_FOUND = Component.translatable("screen.callyou.blocked_senders.error.not_found");
     private static final Component ERROR_ALREADY_BLOCKED = Component.translatable("screen.callyou.blocked_senders.error.already_blocked");
+    private static final Component TAB_HISTORY = Component.translatable("screen.callyou.history.title");
+    private static final Component HISTORY_EMPTY = Component.translatable("screen.callyou.history.empty");
+    private static final Component HISTORY_LOADING = Component.translatable("screen.callyou.history.loading");
+    private static final Component HISTORY_REFRESH = Component.translatable("screen.callyou.history.refresh");
+    private static final Component HISTORY_MARK_ALL = Component.translatable("screen.callyou.history.mark_all");
 
     private final Screen parent;
     private MentionPreferences workingCopy;
@@ -56,10 +65,12 @@ public class MentionPreferencesScreen extends ModularUIScreen {
     // --- UI References ---
     private final Button tabGeneralButton;
     private final Button tabBlockedButton;
+    private final Button tabHistoryButton;
     
     // Tab Containers
     private final UIElement generalTabContainer;
     private final UIElement blockedTabContainer;
+    private final UIElement historyTabContainer;
 
     // General Tab Components
     private final Switch allowMentionsSwitch;
@@ -75,13 +86,23 @@ public class MentionPreferencesScreen extends ModularUIScreen {
     private final Label blockStatusLabel;
     private final ScrollerView blockedSenderList;
     private final Label blockedEmptyLabel;
+    
+    // History Tab Components
+    private final Button historyRefreshButton;
+    private final Button markAllReadButton;
+    private final Label historyStatusLabel;
+    private final ScrollerView historyList;
+    private final Label historyEmptyLabel;
 
     private final Button doneButton;
 
-    private enum Tab { GENERAL, BLOCKED }
+    private List<MentionRecord> cachedHistory = new ArrayList<>();
+
+    private enum Tab { GENERAL, BLOCKED, HISTORY }
     private Tab currentTab = Tab.GENERAL;
     
     private long lastUiRefreshTime = -1;
+    private long lastHistoryRefreshTime = -1;
 
     public MentionPreferencesScreen(@Nullable Screen parent) {
         this(parent, new UIBuilder());
@@ -93,8 +114,10 @@ public class MentionPreferencesScreen extends ModularUIScreen {
         
         this.tabGeneralButton = builder.tabGeneralButton;
         this.tabBlockedButton = builder.tabBlockedButton;
+        this.tabHistoryButton = builder.tabHistoryButton;
         this.generalTabContainer = builder.generalTabContainer;
         this.blockedTabContainer = builder.blockedTabContainer;
+        this.historyTabContainer = builder.historyTabContainer;
         
         this.allowMentionsSwitch = builder.allowMentionsSwitch;
         this.allowMassMentionsSwitch = builder.allowMassMentionsSwitch;
@@ -106,6 +129,12 @@ public class MentionPreferencesScreen extends ModularUIScreen {
         this.blockStatusLabel = builder.blockStatusLabel;
         this.blockedSenderList = builder.blockedSenderList;
         this.blockedEmptyLabel = builder.blockedEmptyLabel;
+
+        this.historyRefreshButton = builder.historyRefreshButton;
+        this.markAllReadButton = builder.markAllReadButton;
+        this.historyStatusLabel = builder.historyStatusLabel;
+        this.historyList = builder.historyList;
+        this.historyEmptyLabel = builder.historyEmptyLabel;
         
         this.doneButton = builder.doneButton;
         
@@ -123,6 +152,7 @@ public class MentionPreferencesScreen extends ModularUIScreen {
         // Tab Switching
         this.tabGeneralButton.setOnClick(e -> switchTab(Tab.GENERAL));
         this.tabBlockedButton.setOnClick(e -> switchTab(Tab.BLOCKED));
+        this.tabHistoryButton.setOnClick(e -> switchTab(Tab.HISTORY));
 
         // General Tab Actions
         this.allowMentionsSwitch.style(style -> style.tooltips(
@@ -155,6 +185,10 @@ public class MentionPreferencesScreen extends ModularUIScreen {
         this.blockButton.setOnClick(event -> this.attemptBlockSender());
 
         this.doneButton.setOnClick(event -> onClose());
+
+        this.historyRefreshButton.setOnClick(event -> requestHistory());
+        this.markAllReadButton.setOnClick(event ->
+                CallYouNetwork.sendMentionLogAction(MentionLogActionPayload.Action.MARK_ALL_READ, 0));
     }
 
     private void switchTab(Tab tab) {
@@ -163,15 +197,21 @@ public class MentionPreferencesScreen extends ModularUIScreen {
         this.generalTabContainer.setDisplay(tab == Tab.GENERAL);
         this.blockedTabContainer.setVisible(tab == Tab.BLOCKED);
         this.blockedTabContainer.setDisplay(tab == Tab.BLOCKED);
+        this.historyTabContainer.setVisible(tab == Tab.HISTORY);
+        this.historyTabContainer.setDisplay(tab == Tab.HISTORY);
         
         this.tabGeneralButton.setActive(tab != Tab.GENERAL);
         this.tabBlockedButton.setActive(tab != Tab.BLOCKED);
+        this.tabHistoryButton.setActive(tab != Tab.HISTORY);
         
         if (tab == Tab.GENERAL) {
             this.populateMentionTypeList();
-        } else {
+        } else if (tab == Tab.BLOCKED) {
             this.reloadBlockedSenders();
             this.updateBlockControls();
+        } else {
+            this.requestHistory();
+            this.updateHistoryControls();
         }
     }
 
@@ -184,6 +224,10 @@ public class MentionPreferencesScreen extends ModularUIScreen {
         this.allowMentionsSwitch.setOn(this.workingCopy.isAllowMentions(), false);
         this.allowMassMentionsSwitch.setOn(this.workingCopy.isAllowMassMentions(), false);
 
+        this.cachedHistory.clear();
+        this.historyStatusLabel.setText(HISTORY_EMPTY);
+        this.historyEmptyLabel.setVisible(false);
+
         this.switchTab(Tab.GENERAL);
     }
 
@@ -191,6 +235,7 @@ public class MentionPreferencesScreen extends ModularUIScreen {
     public void tick() {
         super.tick();
         this.getModularUI().tick();
+        this.refreshHistoryIfNeeded();
         if (ClientMentionPreferences.isSyncPending()) {
             return;
         }
@@ -209,7 +254,7 @@ public class MentionPreferencesScreen extends ModularUIScreen {
         
         if (this.currentTab == Tab.BLOCKED) {
             this.reloadBlockedSenders();
-        } else {
+        } else if (this.currentTab == Tab.GENERAL) {
             this.populateMentionTypeList();
         }
         this.updateBlockControls();
@@ -221,10 +266,6 @@ public class MentionPreferencesScreen extends ModularUIScreen {
             this.minecraft.setScreen(this.parent);
         }
     }
-
-    // ================================================================================================================
-    // General Tab Logic
-    // ================================================================================================================
 
     private void populateMentionTypeList() {
         if (this.minecraft == null || this.minecraft.level == null) {
@@ -295,10 +336,6 @@ public class MentionPreferencesScreen extends ModularUIScreen {
                         .toList());
         return result.orElseGet(List::of);
     }
-
-    // ================================================================================================================
-    // Blocked Tab Logic
-    // ================================================================================================================
 
     private void attemptBlockSender() {
         if (this.workingCopy == null) {
@@ -429,9 +466,72 @@ public class MentionPreferencesScreen extends ModularUIScreen {
         return Component.literal(id.toString());
     }
 
-    // ================================================================================================================
-    // Shared Logic
-    // ================================================================================================================
+    private void requestHistory() {
+        this.cachedHistory.clear();
+        this.historyEmptyLabel.setVisible(false);
+        this.historyList.clearAllScrollViewChildren();
+        this.historyStatusLabel.setText(HISTORY_LOADING);
+        CallYouNetwork.requestMentionLogs();
+    }
+
+    private void refreshHistoryIfNeeded() {
+        if (this.currentTab != Tab.HISTORY) {
+            return;
+        }
+        if (ClientMentionHistory.isAwaitingResponse()) {
+            this.historyStatusLabel.setText(HISTORY_LOADING);
+            this.updateHistoryControls();
+            return;
+        }
+        long latestHistory = ClientMentionHistory.lastUpdateMillis();
+        if (this.lastHistoryRefreshTime != latestHistory) {
+            this.lastHistoryRefreshTime = latestHistory;
+            this.reloadHistoryList();
+        }
+        this.updateHistoryControls();
+    }
+
+    private void reloadHistoryList() {
+        this.historyList.clearAllScrollViewChildren();
+        List<MentionRecord> records = ClientMentionHistory.copy();
+        records.sort(Comparator.comparingLong(MentionRecord::timestamp).reversed());
+        this.cachedHistory = new ArrayList<>(records);
+
+        if (records.isEmpty()) {
+            this.historyEmptyLabel.setVisible(true);
+            this.historyList.addScrollViewChild(this.historyEmptyLabel);
+            this.historyStatusLabel.setText(HISTORY_EMPTY);
+            return;
+        }
+
+        this.historyEmptyLabel.setVisible(false);
+        for (MentionRecord record : records) {
+            MentionLogRow row = new MentionLogRow(
+                    record,
+                    () -> this.deleteRecord(record)
+            );
+            this.historyList.addScrollViewChild(row.getElement());
+        }
+        this.historyStatusLabel.setText(Component.translatable("screen.callyou.history.count", records.size()));
+    }
+
+    private void updateHistoryControls() {
+        boolean loading = ClientMentionHistory.isAwaitingResponse();
+        boolean hasData = !this.cachedHistory.isEmpty();
+        this.historyRefreshButton.setActive(!loading);
+        this.markAllReadButton.setActive(!loading && hasData);
+
+        if (!loading && !hasData) {
+            this.historyStatusLabel.setText(HISTORY_EMPTY);
+        }
+    }
+
+    private void deleteRecord(@NotNull MentionRecord record) {
+        CallYouNetwork.sendMentionLogAction(
+                MentionLogActionPayload.Action.DELETE_SINGLE,
+                record.timestamp()
+        );
+    }
 
     private void sendUpdate() {
         if (this.workingCopy == null) {
@@ -449,18 +549,16 @@ public class MentionPreferencesScreen extends ModularUIScreen {
             CallYouNetwork.requestPreferencesSync();
         }
     }
-
-    // ================================================================================================================
-    // UI Builder
-    // ================================================================================================================
     
     private static class UIBuilder {
         ModularUI modularUI;
         Label titleLabel;
         Button tabGeneralButton;
         Button tabBlockedButton;
+        Button tabHistoryButton;
         UIElement generalTabContainer;
         UIElement blockedTabContainer;
+        UIElement historyTabContainer;
         
         // General
         Switch allowMentionsSwitch;
@@ -474,6 +572,13 @@ public class MentionPreferencesScreen extends ModularUIScreen {
         Label blockStatusLabel;
         ScrollerView blockedSenderList;
         Label blockedEmptyLabel;
+
+        // History
+        Button historyRefreshButton;
+        Button markAllReadButton;
+        Label historyStatusLabel;
+        ScrollerView historyList;
+        Label historyEmptyLabel;
         
         // Shared
         Button doneButton;
@@ -499,11 +604,16 @@ public class MentionPreferencesScreen extends ModularUIScreen {
             tabBlockedButton.layout(style -> style.flexGrow(1).height(20));
             MentionUIStyles.applyButtonStyle(tabBlockedButton);
 
+            tabHistoryButton = new Button();
+            tabHistoryButton.setText(TAB_HISTORY);
+            tabHistoryButton.layout(style -> style.flexGrow(1).height(20));
+            MentionUIStyles.applyButtonStyle(tabHistoryButton);
+
             UIElement tabBar = new UIElement()
                     .layout(style -> style.flexDirection(YogaFlexDirection.ROW)
                             .gapColumn(4)
                             .widthStretch())
-                    .addChildren(tabGeneralButton, tabBlockedButton);
+                    .addChildren(tabGeneralButton, tabBlockedButton, tabHistoryButton);
 
             UIElement header = new UIElement()
                     .layout(style -> style.flexDirection(YogaFlexDirection.COLUMN)
@@ -517,10 +627,13 @@ public class MentionPreferencesScreen extends ModularUIScreen {
             // --- Blocked Tab Content ---
             blockedTabContainer = buildBlockedTab();
 
+            // --- History Tab Content ---
+            historyTabContainer = buildHistoryTab();
+
             // --- Content Wrapper ---
             UIElement contentArea = new UIElement()
                     .layout(style -> style.flexGrow(1).widthStretch())
-                    .addChildren(generalTabContainer, blockedTabContainer);
+                    .addChildren(generalTabContainer, blockedTabContainer, historyTabContainer);
 
             // --- Footer ---
             doneButton = new Button();
@@ -551,7 +664,7 @@ public class MentionPreferencesScreen extends ModularUIScreen {
             modularUI = ModularUI.of(UI.of(root, mcStyle));
         }
 
-        private UIElement buildGeneralTab() {
+        private @NotNull UIElement buildGeneralTab() {
             allowMentionsSwitch = new Switch();
             allowMentionsSwitch.layout(style -> style.width(34).height(14));
             MentionUIStyles.applySwitchStyle(allowMentionsSwitch);
@@ -592,7 +705,7 @@ public class MentionPreferencesScreen extends ModularUIScreen {
                     .addChildren(allowRow, allowMassRow, typeSearchInput, mentionTypeList);
         }
 
-        private UIElement buildBlockedTab() {
+        private @NotNull UIElement buildBlockedTab() {
             Label blockLabel = new Label();
             blockLabel.setText(BLOCK_LABEL);
             
@@ -611,7 +724,7 @@ public class MentionPreferencesScreen extends ModularUIScreen {
 
             blockStatusLabel = new Label();
             blockStatusLabel.setText(Component.empty());
-            blockStatusLabel.layout(style -> style.widthStretch());
+            blockStatusLabel.layout(LayoutStyle::widthStretch);
 
             blockedSenderList = new ScrollerView();
             blockedSenderList.layout(style -> style.flexGrow(1).widthStretch());
@@ -629,6 +742,45 @@ public class MentionPreferencesScreen extends ModularUIScreen {
             return new UIElement()
                     .layout(style -> style.flexDirection(YogaFlexDirection.COLUMN).gapRow(4).flexGrow(1).widthStretch())
                     .addChildren(blockLabel, searchRow, blockStatusLabel, blockedSenderList);
+        }
+
+        private @NotNull UIElement buildHistoryTab() {
+            historyRefreshButton = new Button();
+            historyRefreshButton.setText(HISTORY_REFRESH);
+            historyRefreshButton.layout(style -> style.width(70).height(16));
+            MentionUIStyles.applyButtonStyle(historyRefreshButton);
+
+            markAllReadButton = new Button();
+            markAllReadButton.setText(HISTORY_MARK_ALL);
+            markAllReadButton.layout(style -> style.width(100).height(16));
+            MentionUIStyles.applyButtonStyle(markAllReadButton);
+
+            UIElement actionsRow = new UIElement()
+                    .layout(style -> style.flexDirection(YogaFlexDirection.ROW)
+                            .gapColumn(4)
+                            .widthStretch())
+                    .addChildren(historyRefreshButton, markAllReadButton);
+
+            historyStatusLabel = new Label();
+            historyStatusLabel.setText(HISTORY_EMPTY);
+            historyStatusLabel.layout(LayoutStyle::widthStretch);
+
+            historyList = new ScrollerView();
+            historyList.layout(style -> style.flexGrow(1).widthStretch());
+            historyList.viewContainer(container -> container.layout(layout -> layout.flexDirection(YogaFlexDirection.COLUMN)
+                    .gapRow(3)
+                    .widthStretch()));
+            MentionUIStyles.applyScrollerStyle(historyList);
+
+            historyEmptyLabel = new Label();
+            historyEmptyLabel.setText(HISTORY_EMPTY);
+            historyEmptyLabel.textStyle(style -> style.textAlignHorizontal(Horizontal.CENTER).textColor(0xAAAAAA));
+            historyEmptyLabel.layout(style -> style.widthStretch().height(20));
+            historyEmptyLabel.setVisible(false);
+
+            return new UIElement()
+                    .layout(style -> style.flexDirection(YogaFlexDirection.COLUMN).gapRow(4).flexGrow(1).widthStretch())
+                    .addChildren(actionsRow, historyStatusLabel, historyList);
         }
     }
 }

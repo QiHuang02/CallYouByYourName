@@ -41,7 +41,7 @@ side = "BOTH"
 [[dependencies.${mod_id}]]
 modId = "ftbchunks"
 type = "optional"
-versionRange = "[${ftb_ftbchunks_version},)"
+versionRange = "[${ftb_chunks_version},)"
 ordering = "NONE"
 side = "BOTH"
 

@@ -9,9 +9,6 @@ import org.jetbrains.annotations.NotNull;
 
 @OnlyIn(Dist.CLIENT)
 public final class ToastNotifierClient {
-    private ToastNotifierClient() {
-    }
-
     public static void showToast(@NotNull AdvancementHolder advancement) {
         Minecraft minecraft = Minecraft.getInstance();
         minecraft.getToasts().addToast(new AdvancementToast(advancement));

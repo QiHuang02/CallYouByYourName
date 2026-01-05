@@ -1,17 +1,21 @@
 package cn.qihuang02.callyou.core;
 
 import cn.qihuang02.callyou.api.*;
+import cn.qihuang02.callyou.config.CallYouConfig;
 import cn.qihuang02.callyou.core.attachment.CallYouAttachments;
 import cn.qihuang02.callyou.core.attachment.MentionPreferences;
 import cn.qihuang02.callyou.core.components.formatter.ItemTextFormatter;
 import cn.qihuang02.callyou.api.event.MentionEvent;
 import cn.qihuang02.callyou.core.components.notify.SoundNotifier;
 import cn.qihuang02.callyou.core.components.notify.ToastNotifier;
+import cn.qihuang02.callyou.core.storage.MentionRecord;
+import cn.qihuang02.callyou.core.storage.MentionSavedData;
 import cn.qihuang02.callyou.registry.CallYouMentionRegistries;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.core.GlobalPos;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.ServerChatEvent;
@@ -21,7 +25,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public final class MentionExecutor {
-
     private static final MentionGuard GUARD = new MentionGuard();
 
     public static void handlePlayerLogout(@NotNull ServerPlayer player) {
@@ -219,6 +222,27 @@ public final class MentionExecutor {
 
         NeoForge.EVENT_BUS.post(new MentionEvent.Post(context, type, finalTargets));
 
+        if (CallYouConfig.COMMON.enableServerSideHistory.get()) {
+            MentionRecord record = buildMentionRecord(context);
+            MentionSavedData savedData = MentionSavedData.get(context.level());
+            for (ServerPlayer target : finalTargets) {
+                savedData.addLog(target.getUUID(), record);
+            }
+        }
+
         return finalTargets;
+    }
+
+    private static @NotNull MentionRecord buildMentionRecord(@NotNull MentionContext context) {
+        Component messageCopy = context.originalMessage() == null ? Component.empty() : context.originalMessage().copy();
+        GlobalPos location = GlobalPos.of(context.dimension(), context.sender().blockPosition());
+        return new MentionRecord(
+                context.senderId(),
+                context.senderName(),
+                messageCopy,
+                System.currentTimeMillis(),
+                false,
+                location
+        );
     }
 }

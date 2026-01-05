@@ -9,9 +9,6 @@ public final class ClientMentionPreferences {
     private static boolean awaitingSync;
     private static long lastSyncMillis;
 
-    private ClientMentionPreferences() {
-    }
-
     public static synchronized @NotNull MentionPreferences get() {
         return preferences;
     }

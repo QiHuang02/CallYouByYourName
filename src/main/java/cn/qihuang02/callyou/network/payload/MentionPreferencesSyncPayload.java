@@ -10,7 +10,6 @@ import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 
 public record MentionPreferencesSyncPayload(MentionPreferences preferences) implements CustomPacketPayload {
-
     public static final Type<MentionPreferencesSyncPayload> TYPE =
             new Type<>(ResourceLocation.fromNamespaceAndPath(CallYouByYourName.MODID, "mention_prefs_sync"));
 

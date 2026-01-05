@@ -1,6 +1,6 @@
 package cn.qihuang02.callyou.mixin;
 
-import cn.qihuang02.callyou.client.compat.ftb.FTBChunksClickHandler;
+import cn.qihuang02.callyou.core.handler.FTBChunksClickHandler;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Style;

@@ -30,7 +30,8 @@ public final class MentionPreferences {
                 ).apply(instance, TypePreference::new)
         );
 
-        public TypePreference withNotifier(ResourceLocation notifierId, boolean enabled) {
+        @Contract("_, _ -> new")
+        public @NotNull TypePreference withNotifier(ResourceLocation notifierId, boolean enabled) {
             Map<ResourceLocation, Boolean> newMap = new HashMap<>(enabledNotifiers);
             newMap.put(notifierId, enabled);
             return new TypePreference(Collections.unmodifiableMap(newMap));

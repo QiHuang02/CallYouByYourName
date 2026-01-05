@@ -15,7 +15,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 
 public final class MentionGuard {
-
     private final MentionRateLimiter limiter = new MentionRateLimiter();
 
     public boolean canUseMentionType(

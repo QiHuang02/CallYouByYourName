@@ -63,7 +63,6 @@ public class MentionSuggestions extends CommandSuggestions {
         this.suggestions = null;
         this.setAllowSuggestions(false);
 
-
         String value = this.input.getValue();
         int caret = this.input.getCursorPosition();
         if (value.isEmpty() || caret == 0) {

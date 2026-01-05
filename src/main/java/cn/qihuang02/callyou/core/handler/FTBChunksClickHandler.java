@@ -1,4 +1,4 @@
-package cn.qihuang02.callyou.client.compat.ftb;
+package cn.qihuang02.callyou.core.handler;
 
 import cn.qihuang02.callyou.compat.ftb.FTBChunksAPIWrapper;
 import net.minecraft.client.Minecraft;
@@ -10,9 +10,6 @@ import org.jetbrains.annotations.Nullable;
 
 @OnlyIn(Dist.CLIENT)
 public final class FTBChunksClickHandler {
-    private FTBChunksClickHandler() {
-    }
-
     public static boolean handle(@Nullable ClickEvent clickEvent) {
         if (clickEvent == null || clickEvent.getAction() != ClickEvent.Action.RUN_COMMAND) {
             return false;
