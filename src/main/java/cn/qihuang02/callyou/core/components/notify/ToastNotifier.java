@@ -3,6 +3,7 @@ package cn.qihuang02.callyou.core.components.notify;
 import cn.qihuang02.callyou.CallYouByYourName;
 import cn.qihuang02.callyou.api.MentionContext;
 import cn.qihuang02.callyou.api.Notifier;
+import cn.qihuang02.callyou.network.CYRPCPacket;
 import cn.qihuang02.callyou.network.CallYouNetwork;
 import cn.qihuang02.callyou.registry.BuiltInCallYouRegistries;
 import com.mojang.serialization.Codec;
@@ -76,7 +77,7 @@ public record ToastNotifier(
         AdvancementHolder holder = new AdvancementHolder(TOAST_ID, advancement);
 
         for (ServerPlayer target : targets) {
-            CallYouNetwork.sendToast(target, holder);
+            CYRPCPacket.sendToast(target, holder);
         }
     }
 

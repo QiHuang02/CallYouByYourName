@@ -1,6 +1,7 @@
 package cn.qihuang02.callyou.core.handler;
 
 import cn.qihuang02.callyou.CallYouByYourName;
+import cn.qihuang02.callyou.network.CYRPCPacket;
 import cn.qihuang02.callyou.network.CallYouNetwork;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -13,14 +14,14 @@ public final class MentionPreferencesHandler {
     @SubscribeEvent
     public static void onPlayerLogin(@NotNull PlayerEvent.PlayerLoggedInEvent event) {
         if (event.getEntity() instanceof ServerPlayer player) {
-            CallYouNetwork.syncPreferences(player);
+            CYRPCPacket.syncPreferences(player);
         }
     }
 
     @SubscribeEvent
     public static void onPlayerRespawn(@NotNull PlayerEvent.PlayerRespawnEvent event) {
         if (event.getEntity() instanceof ServerPlayer player) {
-            CallYouNetwork.syncPreferences(player);
+            CYRPCPacket.syncPreferences(player);
         }
     }
 }
