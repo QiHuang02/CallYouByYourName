@@ -1,9 +1,9 @@
 package cn.qihuang02.callyou.registry;
 
 import cn.qihuang02.callyou.CallYouByYourName;
-import cn.qihuang02.callyou.api.Notifier;
-import cn.qihuang02.callyou.api.TargetProvider;
-import cn.qihuang02.callyou.api.TextFormatter;
+import cn.qihuang02.callyou.api.components.Notifier;
+import cn.qihuang02.callyou.api.components.TargetProvider;
+import cn.qihuang02.callyou.api.components.TextFormatter;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;

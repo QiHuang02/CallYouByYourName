@@ -1,16 +1,16 @@
 package cn.qihuang02.callyou.core;
 
 import cn.qihuang02.callyou.api.*;
+import cn.qihuang02.callyou.api.components.Notifier;
+import cn.qihuang02.callyou.api.components.TargetProvider;
+import cn.qihuang02.callyou.api.components.TextFormatter;
 import cn.qihuang02.callyou.config.CallYouConfig;
 import cn.qihuang02.callyou.core.attachment.CallYouAttachments;
 import cn.qihuang02.callyou.core.attachment.MentionPreferences;
 import cn.qihuang02.callyou.core.components.formatter.ItemTextFormatter;
 import cn.qihuang02.callyou.api.event.MentionEvent;
-import cn.qihuang02.callyou.core.components.notify.SoundNotifier;
-import cn.qihuang02.callyou.core.components.notify.ToastNotifier;
 import cn.qihuang02.callyou.core.storage.MentionRecord;
 import cn.qihuang02.callyou.core.storage.MentionSavedData;
-import cn.qihuang02.callyou.registry.CallYouMentionRegistries;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;

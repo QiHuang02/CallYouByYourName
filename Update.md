@@ -1,12 +1,18 @@
 # Update Log
 
+[dev] Version 2101.2.0-build.26
+refactor(api): 将组件接口移至专用包并更新序列化实现
+
+- 将 Notifier、TargetProvider 和 TextFormatter 接口移动到 cn.qihuang02.callyou.api.components 包
+- 简化网络数据传输的数据编解码器实现
+
 [dev] Version 2101.2.0-build.25
 refactor(network): 重构网络通信系统使用RPC框架
 
-- 将原有的Payload系统替换为RPCPacket系统
-- 创建新的CYRPCPacket类处理所有网络通信
-- 更新CallYouNetwork类使用新的RPC框架初始化
-- 移除所有旧的Payload相关类和处理方法
+- 将原有的 Payload系统替换为 RPCPacket 系统
+- 创建新的 CYRPCPacket 类处理所有网络通信
+- 更新 CallYouNetwork 类使用新的RPC框架初始化
+- 移除所有旧的 Payload 相关类和处理方法
 - 更新客户端和服务端通信方法调用
 
 [dev] Version 2101.2.0-build.24

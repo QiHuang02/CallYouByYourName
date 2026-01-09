@@ -1,7 +1,7 @@
 package cn.qihuang02.callyou.core.components.formatter;
 
 import cn.qihuang02.callyou.api.MentionContext;
-import cn.qihuang02.callyou.api.TextFormatter;
+import cn.qihuang02.callyou.api.components.TextFormatter;
 import cn.qihuang02.callyou.registry.BuiltInCallYouRegistries;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;

@@ -123,7 +123,6 @@ public class CYRPCPacket {
         RPCPacketDistributor.rpcToServer(RPC_LOG_ACTION, action, targetTimestamp);
     }
 
-
     private static void sendLogSnapshot(@NotNull ServerPlayer player, @NotNull MentionSavedData data) {
         RPCPacketDistributor.rpcToPlayer(player, RPC_LOG_RESPONSE, data.getLogs(player.getUUID()));
     }

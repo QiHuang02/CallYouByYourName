@@ -1,7 +1,7 @@
 package cn.qihuang02.callyou.core.components.target;
 
 import cn.qihuang02.callyou.api.MentionContext;
-import cn.qihuang02.callyou.api.TargetProvider;
+import cn.qihuang02.callyou.api.components.TargetProvider;
 import cn.qihuang02.callyou.compat.ftb.FTBTeamsAPIWrapper;
 import cn.qihuang02.callyou.registry.BuiltInCallYouRegistries;
 import com.mojang.serialization.MapCodec;

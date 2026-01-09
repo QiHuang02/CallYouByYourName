@@ -1,5 +1,6 @@
-package cn.qihuang02.callyou.api;
+package cn.qihuang02.callyou.api.components;
 
+import cn.qihuang02.callyou.api.MentionContext;
 import cn.qihuang02.callyou.registry.CallYouRegistries;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
