@@ -38,7 +38,7 @@ public enum SpotTextFormatter implements TextFormatter {
                     .append(Component.translatable("message.callyou.spot.ftb.add"));
         }
 
-        MutableComponent base = Component.literal("Spot")
+        MutableComponent base = Component.translatable("message.callyou.spot.label")
                 .withStyle(style -> style.withColor(ChatFormatting.GREEN));
 
         if (FTBChunksAPIWrapper.isLoaded()) {

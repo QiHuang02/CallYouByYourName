@@ -1,5 +1,11 @@
 # Update Log
 
+[dev] Version 2101.2.0-build.27
+feat(lang): 添加位置标签翻译并更新格式化器
+
+- 将硬编码的 Spot 文本替换为可翻译的组件
+- 更新了位置文本格式化器以使用翻译文本
+
 [dev] Version 2101.2.0-build.26
 refactor(api): 将组件接口移至专用包并更新序列化实现
 

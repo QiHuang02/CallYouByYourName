@@ -27,6 +27,7 @@ public class CallYouLangProvider extends LanguageProvider {
             // Messages
             new TranslationEntry("message.callyou.no_permission", "You do not have permission to mention %s", "你没有权限提及 %s"),
             new TranslationEntry("message.callyou.too_many_mentions", "Too many mentions in one message!", "单条消息中提及过多！"),
+            new TranslationEntry("message.callyou.spot.label", "Spot", "位置"),
             new TranslationEntry("message.callyou.spot", "at X: %s Y: %s Z: %s", "位置 X: %s Y: %s Z: %s"),
             new TranslationEntry("message.callyou.spot.ftb.add", "Click to add a temporary waypoint", "点击添加临时标记点"),
             new TranslationEntry("message.callyou.spot.ftb.shared_by", "%s's shared location", "由 %s 分享的位置"),
