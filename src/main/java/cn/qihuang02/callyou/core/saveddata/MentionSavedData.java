@@ -1,4 +1,4 @@
-package cn.qihuang02.callyou.core.storage;
+package cn.qihuang02.callyou.core.saveddata;
 
 import cn.qihuang02.callyou.CallYouByYourName;
 import cn.qihuang02.callyou.config.CallYouConfig;

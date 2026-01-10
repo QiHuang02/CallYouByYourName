@@ -1,6 +1,6 @@
 package cn.qihuang02.callyou.client.screen;
 
-import cn.qihuang02.callyou.core.storage.MentionRecord;
+import cn.qihuang02.callyou.core.saveddata.MentionRecord;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Button;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;

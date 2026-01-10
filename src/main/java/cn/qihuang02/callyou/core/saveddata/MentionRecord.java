@@ -1,4 +1,4 @@
-package cn.qihuang02.callyou.core.storage;
+package cn.qihuang02.callyou.core.saveddata;
 
 import com.lowdragmc.lowdraglib2.syncdata.IPersistedSerializable;
 import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;

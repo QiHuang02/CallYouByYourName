@@ -2,7 +2,7 @@ package cn.qihuang02.callyou.core.handler;
 
 import cn.qihuang02.callyou.CallYouByYourName;
 import cn.qihuang02.callyou.config.CallYouConfig;
-import cn.qihuang02.callyou.core.storage.MentionSavedData;
+import cn.qihuang02.callyou.core.saveddata.MentionSavedData;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;

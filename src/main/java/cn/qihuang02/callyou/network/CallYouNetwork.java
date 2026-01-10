@@ -1,7 +1,7 @@
 package cn.qihuang02.callyou.network;
 
 import cn.qihuang02.callyou.core.attachment.MentionPreferences;
-import cn.qihuang02.callyou.core.storage.MentionRecord;
+import cn.qihuang02.callyou.core.saveddata.MentionRecord;
 import com.lowdragmc.lowdraglib2.networking.rpc.RPCPacketDistributor;
 import com.lowdragmc.lowdraglib2.syncdata.AccessorRegistries;
 import com.lowdragmc.lowdraglib2.syncdata.accessor.direct.CustomDirectAccessor;

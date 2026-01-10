@@ -1,6 +1,6 @@
 package cn.qihuang02.callyou.client;
 
-import cn.qihuang02.callyou.core.storage.MentionRecord;
+import cn.qihuang02.callyou.core.saveddata.MentionRecord;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;

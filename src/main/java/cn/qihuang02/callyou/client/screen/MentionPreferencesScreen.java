@@ -3,7 +3,7 @@ package cn.qihuang02.callyou.client.screen;
 import cn.qihuang02.callyou.client.ClientMentionHistory;
 import cn.qihuang02.callyou.client.ClientMentionPreferences;
 import cn.qihuang02.callyou.core.attachment.MentionPreferences;
-import cn.qihuang02.callyou.core.storage.MentionRecord;
+import cn.qihuang02.callyou.core.saveddata.MentionRecord;
 import cn.qihuang02.callyou.network.CYRPCPacket;
 import cn.qihuang02.callyou.network.CallYouNetwork;
 import cn.qihuang02.callyou.registry.CallYouMentionRegistries;

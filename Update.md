@@ -1,5 +1,8 @@
 # Update Log
 
+[dev] Version 2101.2.0-build.28
+refactor(core): 将 MentionRecord 和 MentionSavedData 从 storage 包移动到 saveddata 包
+
 [dev] Version 2101.2.0-build.27
 feat(lang): 添加位置标签翻译并更新格式化器
 
