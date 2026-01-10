@@ -1,6 +1,6 @@
 package cn.qihuang02.callyou.core.attachment;
 
-import cn.qihuang02.callyou.api.MentionRules;
+import cn.qihuang02.callyou.api.components.MentionRules;
 import cn.qihuang02.callyou.api.MentionType;
 import cn.qihuang02.callyou.api.components.Notifier;
 import cn.qihuang02.callyou.registry.CallYouMentionRegistries;

@@ -8,24 +8,12 @@ import net.minecraft.server.level.ServerPlayer;
 
 import java.util.List;
 
-public interface Notifier {
-    Codec<Notifier> CODEC =
-            CallYouRegistries.NOTIFICATION_RULE_TYPES
-                    .byNameCodec()
-                    .dispatch(
-                            "type",
-                            Notifier::type,
-                            NotifierType::mapCodec
-                    );
+public interface Notifier extends IDispatchedComponent<Notifier, Notifier.NotifierType> {
+    Codec<Notifier> CODEC = IDispatchedComponent.codec(CallYouRegistries.NOTIFICATION_RULE_TYPES);
+
+    record NotifierType(MapCodec<? extends Notifier> mapCodec) implements IDispatchedComponent.Type<Notifier> {}
 
     NotifierType type();
 
     void apply(MentionContext context, List<ServerPlayer> targets);
-
-    record NotifierType(MapCodec<? extends Notifier> mapCodec) {
-        @SuppressWarnings("unchecked")
-        public Codec<Notifier> codec() {
-            return (Codec<Notifier>) mapCodec.codec();
-        }
-    }
 }

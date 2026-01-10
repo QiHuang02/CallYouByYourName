@@ -1,7 +1,7 @@
 package cn.qihuang02.callyou.datagen;
 
 import cn.qihuang02.callyou.CallYouByYourName;
-import cn.qihuang02.callyou.api.MentionRules;
+import cn.qihuang02.callyou.api.components.MentionRules;
 import cn.qihuang02.callyou.api.MentionType;
 import cn.qihuang02.callyou.core.components.formatter.ItemTextFormatter;
 import cn.qihuang02.callyou.core.components.formatter.PlayerNameTextFormatter;

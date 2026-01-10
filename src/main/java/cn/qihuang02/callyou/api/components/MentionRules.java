@@ -1,4 +1,4 @@
-package cn.qihuang02.callyou.api;
+package cn.qihuang02.callyou.api.components;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;

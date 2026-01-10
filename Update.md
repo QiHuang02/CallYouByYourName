@@ -1,5 +1,12 @@
 # Update Log
 
+[dev] Version 2101.2.0-build.29
+refactor(api): 重构API组件为可分发组件架构
+
+- 将 MentionRules 从 api 包移动到 api.components 子包
+- 更新MentionType中的字段名称从 notification 改为 notifier
+- 统一所有组件的编解码器实现方式为基于 IDispatchedComponent 的通用实现
+
 [dev] Version 2101.2.0-build.28
 refactor(core): 将 MentionRecord 和 MentionSavedData 从 storage 包移动到 saveddata 包
 

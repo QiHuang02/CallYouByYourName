@@ -1,5 +1,6 @@
 package cn.qihuang02.callyou.api;
 
+import cn.qihuang02.callyou.api.components.MentionRules;
 import cn.qihuang02.callyou.api.components.Notifier;
 import cn.qihuang02.callyou.api.components.TargetProvider;
 import cn.qihuang02.callyou.api.components.TextFormatter;
@@ -16,7 +17,7 @@ public record MentionType(
             RecordCodecBuilder.create(instance -> instance.group(
                             TargetProvider.CODEC.fieldOf("target").forGetter(MentionType::targetProvider),
                             TextFormatter.CODEC.fieldOf("format").forGetter(MentionType::textFormatter),
-                            Notifier.CODEC.fieldOf("notification").forGetter(MentionType::notifier),
+                            Notifier.CODEC.fieldOf("notifier").forGetter(MentionType::notifier),
                             MentionRules.CODEC.optionalFieldOf("rules", MentionRules.DEFAULT).forGetter(MentionType::rules)
                     ).apply(instance, MentionType::new)
             );

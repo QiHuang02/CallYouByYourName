@@ -1,7 +1,7 @@
 package cn.qihuang02.callyou.core;
 
 import cn.qihuang02.callyou.api.MentionContext;
-import cn.qihuang02.callyou.api.MentionRules;
+import cn.qihuang02.callyou.api.components.MentionRules;
 import cn.qihuang02.callyou.api.MentionType;
 import cn.qihuang02.callyou.core.attachment.CallYouAttachments;
 import cn.qihuang02.callyou.core.attachment.MentionPreferences;
