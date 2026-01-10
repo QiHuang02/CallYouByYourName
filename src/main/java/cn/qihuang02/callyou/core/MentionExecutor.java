@@ -24,6 +24,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public final class MentionExecutor {
     private static final MentionGuard GUARD = new MentionGuard();
@@ -224,25 +225,27 @@ public final class MentionExecutor {
         NeoForge.EVENT_BUS.post(new MentionEvent.Post(context, type, finalTargets));
 
         if (CallYouConfig.COMMON.enableServerSideHistory.get()) {
-            MentionRecord record = buildMentionRecord(context);
             MentionSavedData savedData = MentionSavedData.get(context.level());
-            for (ServerPlayer target : finalTargets) {
-                savedData.addLog(target.getUUID(), record);
-            }
+            List<UUID> targetIds = finalTargets.stream().map(ServerPlayer::getUUID).toList();
+            MentionRecord record = buildMentionRecord(context, targetIds);
+            savedData.addLog(record);
         }
 
         return finalTargets;
     }
 
-    private static @NotNull MentionRecord buildMentionRecord(@NotNull MentionContext context) {
+    private static @NotNull MentionRecord buildMentionRecord(
+            @NotNull MentionContext context,
+            @NotNull List<UUID> targetIds
+    ) {
         Component messageCopy = context.originalMessage() == null ? Component.empty() : context.originalMessage().copy();
         GlobalPos location = GlobalPos.of(context.dimension(), context.sender().blockPosition());
-        return new MentionRecord(
+        return MentionRecord.create(
                 context.senderId(),
                 context.senderName(),
                 messageCopy,
                 System.currentTimeMillis(),
-                false,
+                targetIds,
                 location
         );
     }

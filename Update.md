@@ -1,5 +1,14 @@
 # Update Log
 
+[dev] Version 2101.2.0-build.32
+refactor(core): 优化提及记录的数据结构和存储方式
+
+- 修改 MentionRecord 类以支持多个目标 ID 和对应的读取状态
+- 更新 MentionSavedData 存储逻辑，统一管理所有提及记录而非按玩家分组
+- 实现遗留数据迁移功能，确保旧版本记录能够正确转换
+- 优化提及记录的读取标记和删除操作，提升性能表现
+- 添加记录规范化处理，确保数据一致性和完整性
+
 [dev] Version 2101.2.0-build.31
 refactor(core): 重构组件包结构并优化数据序列化
 

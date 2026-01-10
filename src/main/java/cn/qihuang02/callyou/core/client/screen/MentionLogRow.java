@@ -7,6 +7,7 @@ import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
 import com.lowdragmc.lowdraglib2.gui.ui.style.LayoutStyle;
 import com.lowdragmc.lowdraglib2.gui.ui.styletemplate.Sprites;
 import net.minecraft.client.Minecraft;
+import net.minecraft.Util;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.network.chat.Component;
 import org.appliedenergistics.yoga.YogaAlign;
@@ -17,6 +18,7 @@ import org.jetbrains.annotations.NotNull;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.UUID;
 
 public final class MentionLogRow {
     private static final DateTimeFormatter DATE_FORMATTER =
@@ -28,18 +30,21 @@ public final class MentionLogRow {
     private final UIElement element;
 
     public MentionLogRow(@NotNull MentionRecord record, @NotNull Runnable onDelete) {
+        UUID localPlayerId = resolveLocalPlayerId();
+        boolean isRead = record.isRead(localPlayerId);
+
         String headerText = "[" + DATE_FORMATTER.format(Instant.ofEpochMilli(record.timestamp())) + "] "
                 + record.senderName();
 
         Label header = new Label();
         header.setText(Component.literal(headerText));
         header.layout(LayoutStyle::widthStretch);
-        header.textStyle(style -> style.textColor(record.read() ? 0xDDDDDD : 0xFFE2A0));
+        header.textStyle(style -> style.textColor(isRead ? 0xDDDDDD : 0xFFE2A0));
 
         Label body = new Label();
         body.setText(Component.literal(buildPreview(record.message().getString())));
         body.layout(LayoutStyle::widthStretch);
-        body.textStyle(style -> style.textColor(record.read() ? 0xCCCCCC : 0xFFFFFF));
+        body.textStyle(style -> style.textColor(isRead ? 0xCCCCCC : 0xFFFFFF));
 
         UIElement actionRow = new UIElement()
                 .layout(style -> style.flexDirection(YogaFlexDirection.ROW)
@@ -70,7 +75,7 @@ public final class MentionLogRow {
                         .gapRow(2)
                         .widthStretch()
                         .paddingAll(4))
-                .style(style -> style.background(record.read() ? Sprites.RECT_RD : Sprites.RECT_RD_LIGHT))
+                .style(style -> style.background(isRead ? Sprites.RECT_RD : Sprites.RECT_RD_LIGHT))
                 .addChildren(header, body, actionRow);
         this.element.style(style -> style.tooltips(buildTooltip(record)));
     }
@@ -111,5 +116,13 @@ public final class MentionLogRow {
             tooltip = tooltip.copy().append(Component.literal("\n" + formatLocation(location)));
         }
         return tooltip;
+    }
+
+    private @NotNull UUID resolveLocalPlayerId() {
+        Minecraft minecraft = Minecraft.getInstance();
+        if (minecraft != null && minecraft.player != null) {
+            return minecraft.player.getUUID();
+        }
+        return Util.NIL_UUID;
     }
 }
