@@ -1,6 +1,8 @@
 package cn.qihuang02.callyou.mixin;
 
 import cn.qihuang02.callyou.config.CallYouConfig;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -17,7 +19,6 @@ import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Redirect;
 
 @OnlyIn(Dist.CLIENT)
 @Mixin(ChatComponent.class)
@@ -29,7 +30,7 @@ public abstract class ChatComponentMixin {
     @Unique
     private static final String CALLYOU_ITEM_ICON_PLACEHOLDER = "  ";
 
-    @Redirect(
+    @WrapOperation(
             method = "render",
             at = @At(
                     value = "INVOKE",
@@ -43,10 +44,11 @@ public abstract class ChatComponentMixin {
             FormattedCharSequence line,
             int x,
             int y,
-            int color
+            int color,
+            Operation<Integer> original
     ) {
         callyou$renderItemIconsInLine(guiGraphics, font, line, x, y, color);
-        return guiGraphics.drawString(font, line, x, y, color);
+        return original.call(guiGraphics, font, line, x, y, color);
     }
 
     @Unique

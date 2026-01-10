@@ -47,14 +47,12 @@ public abstract class ChatScreenMixin extends Screen {
         );
     }
 
-
     @Inject(method = "onEdited", at = @At("TAIL"))
     private void callyou$onEdited(String newText, CallbackInfo ci) {
         if (this.callyou$mentionSuggestions != null) {
             this.callyou$mentionSuggestions.markDirty();
         }
     }
-
 
     @Inject(method = "render", at = @At("TAIL"))
     private void callyou$render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick, CallbackInfo ci) {
@@ -63,7 +61,6 @@ public abstract class ChatScreenMixin extends Screen {
         }
     }
 
-
     @Inject(method = "keyPressed", at = @At("HEAD"), cancellable = true)
     private void callyou$keyPressed(int keyCode, int scanCode, int modifiers, CallbackInfoReturnable<Boolean> cir) {
         if (this.callyou$mentionSuggestions != null
@@ -71,7 +68,6 @@ public abstract class ChatScreenMixin extends Screen {
             cir.setReturnValue(true);
         }
     }
-
 
     @Inject(method = "mouseScrolled", at = @At("HEAD"), cancellable = true)
     private void callyou$mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY, CallbackInfoReturnable<Boolean> cir) {
@@ -82,7 +78,6 @@ public abstract class ChatScreenMixin extends Screen {
             }
         }
     }
-
 
     @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true)
     private void callyou$mouseClicked(double mouseX, double mouseY, int button, CallbackInfoReturnable<Boolean> cir) {

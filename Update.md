@@ -1,5 +1,8 @@
 # Update Log
 
+[release] Version 2101.2.0-build.33
+fix(mixin): 修复与 ChatHeads 模组的兼容问题
+
 [dev] Version 2101.2.0-build.32
 refactor(core): 优化提及记录的数据结构和存储方式
 

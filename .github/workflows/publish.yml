@@ -38,12 +38,36 @@ jobs:
           VERSION=$(grep "mod_version=" gradle.properties | cut -d'=' -f2)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
+      - name: Extract release notes from Update.md
+        id: release_notes
+        run: |
+          RELEASE_NOTES=$(awk '
+            /\[release\]/ {
+              if (found) {
+                exit
+              }
+              found=1
+            }
+            found { print }
+          ' Update.md)
+
+          if [ -z "$RELEASE_NOTES" ]; then
+            echo "Unable to find release notes in Update.md" >&2
+            exit 1
+          fi
+
+          {
+            echo "body<<'EOF'"
+            echo "$RELEASE_NOTES"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ env.VERSION }}
           name: Release v${{ env.VERSION }}
-          body: ${{ github.event.head_commit.message }}
+          body: ${{ steps.release_notes.outputs.body }}
           draft: false
           prerelease: false
           files: build/libs/*.jar
