@@ -1,6 +1,6 @@
 package cn.qihuang02.callyou;
 
-import cn.qihuang02.callyou.client.screen.MentionPreferencesScreen;
+import cn.qihuang02.callyou.core.client.screen.MentionPreferencesScreen;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;

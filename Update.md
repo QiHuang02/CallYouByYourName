@@ -1,5 +1,15 @@
 # Update Log
 
+[dev] Version 2101.2.0-build.30
+refactor(core): 重构核心包结构以更好地组织提及功能组件
+
+- 将 components 包重命名为 mention.components 以明确其职责
+- 移动网络相关类到 core.network 包下
+- 更新客户端相关类到 core.client 包下
+- 修改聊天相关的类到 core.client.chat 包下
+- 调整屏幕界面相关的类到 core.client.screen 包下
+- 修正注册表中的命名以匹配新的架构设计
+
 [dev] Version 2101.2.0-build.29
 refactor(api): 重构API组件为可分发组件架构
 

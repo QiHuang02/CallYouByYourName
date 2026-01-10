@@ -1,8 +1,7 @@
 package cn.qihuang02.callyou.core.handler;
 
 import cn.qihuang02.callyou.CallYouByYourName;
-import cn.qihuang02.callyou.network.CYRPCPacket;
-import cn.qihuang02.callyou.network.CallYouNetwork;
+import cn.qihuang02.callyou.core.network.CYRPCPacket;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;

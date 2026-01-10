@@ -3,7 +3,7 @@ package cn.qihuang02.callyou;
 import cn.qihuang02.callyou.config.CallYouConfig;
 import cn.qihuang02.callyou.core.attachment.CallYouAttachments;
 import cn.qihuang02.callyou.registry.BuiltInCallYouRegistries;
-import cn.qihuang02.callyou.network.CallYouNetwork;
+import cn.qihuang02.callyou.core.network.CallYouNetwork;
 import com.mojang.logging.LogUtils;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;

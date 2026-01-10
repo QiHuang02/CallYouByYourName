@@ -1,7 +1,7 @@
 package cn.qihuang02.callyou.mixin;
 
-import cn.qihuang02.callyou.client.chat.ClientMentionContext;
-import cn.qihuang02.callyou.client.chat.MentionSuggestions;
+import cn.qihuang02.callyou.core.client.chat.ClientMentionContext;
+import cn.qihuang02.callyou.core.client.chat.MentionSuggestions;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;

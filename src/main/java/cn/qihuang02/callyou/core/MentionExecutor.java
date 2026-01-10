@@ -7,7 +7,7 @@ import cn.qihuang02.callyou.api.components.TextFormatter;
 import cn.qihuang02.callyou.config.CallYouConfig;
 import cn.qihuang02.callyou.core.attachment.CallYouAttachments;
 import cn.qihuang02.callyou.core.attachment.MentionPreferences;
-import cn.qihuang02.callyou.core.components.formatter.ItemTextFormatter;
+import cn.qihuang02.callyou.core.mention.components.formatter.ItemTextFormatter;
 import cn.qihuang02.callyou.api.event.MentionEvent;
 import cn.qihuang02.callyou.core.saveddata.MentionRecord;
 import cn.qihuang02.callyou.core.saveddata.MentionSavedData;

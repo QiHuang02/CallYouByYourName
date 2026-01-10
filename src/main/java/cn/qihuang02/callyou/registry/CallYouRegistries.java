@@ -22,7 +22,7 @@ public final class CallYouRegistries {
             ResourceKey.createRegistryKey(ResourceLocation.fromNamespaceAndPath(CallYouByYourName.MODID, "text_formatter_type"));
 
     public static final ResourceKey<Registry<Notifier.NotifierType>> NOTIFICATION_RULE_TYPE_REGISTRY_KEY =
-            ResourceKey.createRegistryKey(ResourceLocation.fromNamespaceAndPath(CallYouByYourName.MODID, "notification_rule_type"));
+            ResourceKey.createRegistryKey(ResourceLocation.fromNamespaceAndPath(CallYouByYourName.MODID, "notifier_type"));
 
     public static final Registry<TargetProvider.TargetProviderType> TARGET_PROVIDER_TYPES =
             new RegistryBuilder<>(TARGET_PROVIDER_TYPE_REGISTRY_KEY)
