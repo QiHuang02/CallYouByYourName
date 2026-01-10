@@ -57,7 +57,7 @@ jobs:
           fi
 
           {
-            echo "body<<'EOF'"
+            echo "body<<EOF"
             echo "$RELEASE_NOTES"
             echo "EOF"
           } >> "$GITHUB_OUTPUT"

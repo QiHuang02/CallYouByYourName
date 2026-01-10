@@ -27,7 +27,6 @@ public class CallYouByYourNameClient {
 
     public CallYouByYourNameClient(@NotNull ModContainer container) {
         container.registerExtensionPoint(IConfigScreenFactory.class, ConfigurationScreen::new);
-        container.registerExtensionPoint(IConfigScreenFactory.class, (minecraft, parent) -> new MentionPreferencesScreen(parent));
     }
 
     @SubscribeEvent
