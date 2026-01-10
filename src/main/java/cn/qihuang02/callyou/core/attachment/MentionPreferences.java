@@ -1,7 +1,7 @@
 package cn.qihuang02.callyou.core.attachment;
 
-import cn.qihuang02.callyou.api.components.MentionRules;
 import cn.qihuang02.callyou.api.MentionType;
+import cn.qihuang02.callyou.api.components.MentionRules;
 import cn.qihuang02.callyou.api.components.Notifier;
 import cn.qihuang02.callyou.registry.CallYouMentionRegistries;
 import cn.qihuang02.callyou.registry.CallYouRegistries;
@@ -12,10 +12,10 @@ import com.lowdragmc.lowdraglib2.utils.PersistedParser;
 import com.mojang.serialization.Codec;
 import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -24,49 +24,15 @@ import org.jetbrains.annotations.UnmodifiableView;
 import java.util.*;
 
 public final class MentionPreferences implements IPersistedSerializable {
-    public static final class TypePreference implements IPersistedSerializable {
-        public static final TypePreference DEFAULT = new TypePreference(Map.of());
-        public static final Codec<TypePreference> CODEC = PersistedParser.createCodec(TypePreference::new);
-
-        @Persisted(key = "notifiers")
-        private Map<ResourceLocation, Boolean> enabledNotifiers = new HashMap<>();
-
-        @SkipPersistedValue(field = "enabledNotifiers")
-        private boolean skipEmptyNotifiers(Map<ResourceLocation, Boolean> notifiers) {
-            return notifiers.isEmpty();
-        }
-
-        public TypePreference() {
-            this(Map.of());
-        }
-
-        public TypePreference(Map<ResourceLocation, Boolean> enabledNotifiers) {
-            this.enabledNotifiers = Map.copyOf(enabledNotifiers);
-        }
-
-        @Contract("_, _ -> new")
-        public @NotNull TypePreference withNotifier(ResourceLocation notifierId, boolean enabled) {
-            Map<ResourceLocation, Boolean> newMap = new HashMap<>(enabledNotifiers);
-            newMap.put(notifierId, enabled);
-            return new TypePreference(Collections.unmodifiableMap(newMap));
-        }
-        
-        public boolean isNotifierEnabled(ResourceLocation notifierId) {
-            return enabledNotifiers.getOrDefault(notifierId, true);
-        }
-    }
-
     public static final Codec<MentionPreferences> CODEC = PersistedParser.createCodec(MentionPreferences::new);
     public static final StreamCodec<RegistryFriendlyByteBuf, MentionPreferences> STREAM_CODEC =
             ByteBufCodecs.fromCodecWithRegistries(CODEC);
-    
     @Persisted(key = "blocked_senders")
     final Set<UUID> blockedSenders = new HashSet<>();
     @Persisted(key = "blocked_types")
     private final Set<ResourceLocation> blockedTypes = new HashSet<>();
     @Persisted(key = "type_preferences")
     private final Map<ResourceLocation, TypePreference> typePreferences = new HashMap<>();
-    
     @Persisted(key = "allow_mentions")
     private boolean allowMentions = true;
     @Persisted(key = "allow_mass_mentions")
@@ -142,23 +108,23 @@ public final class MentionPreferences implements IPersistedSerializable {
     public boolean isNotifierEnabled(ResourceLocation mentionTypeId, ResourceLocation notifierTypeId) {
         return getPreference(mentionTypeId).isNotifierEnabled(notifierTypeId);
     }
-    
+
     /**
      * Checks if the notifier is enabled for the given mention type, resolving the Notifier ID from the registry.
      */
     public boolean isNotifierEnabled(ResourceLocation mentionTypeId, @Nullable RegistryAccess registryAccess) {
         if (registryAccess == null) return true;
-        
+
         Registry<MentionType> mentionRegistry = registryAccess.registryOrThrow(CallYouMentionRegistries.MENTION_TYPE_REGISTRY_KEY);
         MentionType mentionType = mentionRegistry.get(mentionTypeId);
         if (mentionType == null) return true;
-        
+
         Notifier notifier = mentionType.notifier();
         Notifier.NotifierType notifierType = notifier.type();
-        
+
         ResourceLocation notifierId = CallYouRegistries.NOTIFICATION_RULE_TYPES.getKey(notifierType);
         if (notifierId == null) return true;
-        
+
         return isNotifierEnabled(mentionTypeId, notifierId);
     }
 
@@ -203,7 +169,7 @@ public final class MentionPreferences implements IPersistedSerializable {
                 this.blockedSenders.add(uuid);
             }
         }
-        
+
         this.typePreferences.clear();
         this.typePreferences.putAll(other.typePreferences);
     }
@@ -227,5 +193,37 @@ public final class MentionPreferences implements IPersistedSerializable {
 
         MentionRules rules = type.rules();
         return allowMassMentions || rules == null || !rules.isMass();
+    }
+
+    public static final class TypePreference implements IPersistedSerializable {
+        public static final TypePreference DEFAULT = new TypePreference(Map.of());
+        public static final Codec<TypePreference> CODEC = PersistedParser.createCodec(TypePreference::new);
+
+        @Persisted(key = "notifiers")
+        private Map<ResourceLocation, Boolean> enabledNotifiers = new HashMap<>();
+
+        public TypePreference() {
+            this(Map.of());
+        }
+
+        public TypePreference(Map<ResourceLocation, Boolean> enabledNotifiers) {
+            this.enabledNotifiers = Map.copyOf(enabledNotifiers);
+        }
+
+        @SkipPersistedValue(field = "enabledNotifiers")
+        private boolean skipEmptyNotifiers(Map<ResourceLocation, Boolean> notifiers) {
+            return notifiers.isEmpty();
+        }
+
+        @Contract("_, _ -> new")
+        public @NotNull TypePreference withNotifier(ResourceLocation notifierId, boolean enabled) {
+            Map<ResourceLocation, Boolean> newMap = new HashMap<>(enabledNotifiers);
+            newMap.put(notifierId, enabled);
+            return new TypePreference(Collections.unmodifiableMap(newMap));
+        }
+
+        public boolean isNotifierEnabled(ResourceLocation notifierId) {
+            return enabledNotifiers.getOrDefault(notifierId, true);
+        }
     }
 }

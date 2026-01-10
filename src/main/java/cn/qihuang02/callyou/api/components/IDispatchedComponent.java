@@ -6,6 +6,11 @@ import net.minecraft.core.Registry;
 import org.jetbrains.annotations.NotNull;
 
 public interface IDispatchedComponent<C extends IDispatchedComponent<C, T>, T extends IDispatchedComponent.Type<C>> {
+    static <C extends IDispatchedComponent<C, T>, T extends IDispatchedComponent.Type<C>>
+    Codec<C> codec(@NotNull Registry<T> registry) {
+        return registry.byNameCodec().dispatch("type", IDispatchedComponent::type, Type::mapCodec);
+    }
+
     T type();
 
     interface Type<C> {
@@ -15,10 +20,5 @@ public interface IDispatchedComponent<C extends IDispatchedComponent<C, T>, T ex
         default Codec<C> codec() {
             return (Codec<C>) mapCodec().codec();
         }
-    }
-
-    static <C extends IDispatchedComponent<C, T>, T extends IDispatchedComponent.Type<C>>
-    Codec<C> codec(@NotNull Registry<T> registry) {
-        return registry.byNameCodec().dispatch("type", IDispatchedComponent::type, Type::mapCodec);
     }
 }

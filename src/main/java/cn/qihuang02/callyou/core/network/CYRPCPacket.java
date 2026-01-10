@@ -1,12 +1,12 @@
 package cn.qihuang02.callyou.core.network;
 
 import cn.qihuang02.callyou.CallYouByYourName;
-import cn.qihuang02.callyou.core.client.ClientMentionHistory;
-import cn.qihuang02.callyou.core.client.ClientMentionPreferences;
-import cn.qihuang02.callyou.core.client.ToastNotifierClient;
 import cn.qihuang02.callyou.config.CallYouConfig;
 import cn.qihuang02.callyou.core.attachment.CallYouAttachments;
 import cn.qihuang02.callyou.core.attachment.MentionPreferences;
+import cn.qihuang02.callyou.core.client.ClientMentionHistory;
+import cn.qihuang02.callyou.core.client.ClientMentionPreferences;
+import cn.qihuang02.callyou.core.client.ToastNotifierClient;
 import cn.qihuang02.callyou.core.saveddata.MentionRecord;
 import cn.qihuang02.callyou.core.saveddata.MentionSavedData;
 import com.lowdragmc.lowdraglib2.networking.rpc.RPCPacket;

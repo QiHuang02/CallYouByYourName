@@ -8,12 +8,12 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.server.ServerLifecycleHooks;
 import net.neoforged.neoforge.server.permission.PermissionAPI;
 import net.neoforged.neoforge.server.permission.events.PermissionGatherEvent;
 import net.neoforged.neoforge.server.permission.nodes.PermissionDynamicContext;
 import net.neoforged.neoforge.server.permission.nodes.PermissionNode;
 import net.neoforged.neoforge.server.permission.nodes.PermissionTypes;
-import net.neoforged.neoforge.server.ServerLifecycleHooks;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
@@ -23,15 +23,12 @@ import java.util.concurrent.ConcurrentHashMap;
 @EventBusSubscriber(modid = CallYouByYourName.MODID)
 public final class PermissionsHandler {
 
-    private static final Map<ResourceLocation, PermissionNode<Boolean>> MENTION_PERMISSIONS = new ConcurrentHashMap<>();
-
     public static final PermissionNode<Boolean> USE_MENTION =
             new PermissionNode<>(
                     ResourceLocation.fromNamespaceAndPath(CallYouByYourName.MODID, "mention.use"),
                     PermissionTypes.BOOLEAN,
                     (ServerPlayer player, java.util.UUID uuid, PermissionDynamicContext<?>... ctx) -> true
             );
-
     public static final PermissionNode<Boolean> USE_MASS_MENTION =
             new PermissionNode<>(
                     ResourceLocation.fromNamespaceAndPath(CallYouByYourName.MODID, "mention.mass"),
@@ -39,6 +36,7 @@ public final class PermissionsHandler {
                     (ServerPlayer player, java.util.UUID uuid, PermissionDynamicContext<?>... ctx) ->
                             player != null && player.hasPermissions(2)
             );
+    private static final Map<ResourceLocation, PermissionNode<Boolean>> MENTION_PERMISSIONS = new ConcurrentHashMap<>();
 
     @SubscribeEvent
     public static void onGatherPermissionNodes(PermissionGatherEvent.@NotNull Nodes event) {

@@ -1,5 +1,15 @@
 # Update Log
 
+[dev] Version 2101.2.0-build.31
+refactor(core): 重构组件包结构并优化数据序列化
+
+- 将 notify 包重命名为 notifier 并更新所有相关引用
+- 将 target 包重命名为 targetProvider 并更新所有相关引用
+- 为 MentionRules 和 MentionType 类实现 IPersistedSerializable 接口
+- 重构 MentionSavedData 的序列化逻辑以使用 PersistedParser
+- 更新 CallYouNetwork 中的网络编解码器注册逻辑
+- 重新排列 MentionPreferences 中 TypePreference 类的位置
+
 chore(build): 更新模组许可证配置
 
 - 将模组许可证从 All Rights Reserved 修改为 GPL-3.0 LICENSE

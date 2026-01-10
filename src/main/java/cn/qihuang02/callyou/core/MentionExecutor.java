@@ -1,21 +1,22 @@
 package cn.qihuang02.callyou.core;
 
-import cn.qihuang02.callyou.api.*;
+import cn.qihuang02.callyou.api.MentionContext;
+import cn.qihuang02.callyou.api.MentionType;
 import cn.qihuang02.callyou.api.components.Notifier;
 import cn.qihuang02.callyou.api.components.TargetProvider;
 import cn.qihuang02.callyou.api.components.TextFormatter;
+import cn.qihuang02.callyou.api.event.MentionEvent;
 import cn.qihuang02.callyou.config.CallYouConfig;
 import cn.qihuang02.callyou.core.attachment.CallYouAttachments;
 import cn.qihuang02.callyou.core.attachment.MentionPreferences;
 import cn.qihuang02.callyou.core.mention.components.formatter.ItemTextFormatter;
-import cn.qihuang02.callyou.api.event.MentionEvent;
 import cn.qihuang02.callyou.core.saveddata.MentionRecord;
 import cn.qihuang02.callyou.core.saveddata.MentionSavedData;
+import net.minecraft.core.GlobalPos;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.core.GlobalPos;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.ServerChatEvent;

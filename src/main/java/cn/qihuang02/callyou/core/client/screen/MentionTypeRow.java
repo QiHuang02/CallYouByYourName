@@ -21,7 +21,7 @@ public class MentionTypeRow {
     private final Switch masterSwitch;
     private final Switch notifierSwitch;
     private final UIElement element;
-    
+
     private ResourceLocation resolvedNotifierId;
 
     public MentionTypeRow(
@@ -68,13 +68,13 @@ public class MentionTypeRow {
                 Notifier notifier = type.notifier();
                 if (notifier != null) {
                     this.resolvedNotifierId = CallYouRegistries.NOTIFICATION_RULE_TYPES.getKey(notifier.type());
-                    
+
                     if (this.resolvedNotifierId != null) {
                         String transKey = "notifier." + this.resolvedNotifierId.getNamespace() + "." + this.resolvedNotifierId.getPath();
                         this.notifierSwitch.style(style -> style.tooltips(Component.translatable(transKey)));
                         this.notifierSwitch.setVisible(true);
                         this.notifierSwitch.setDisplay(true);
-                        
+
                         this.notifierSwitch.setOnSwitchChanged(value -> {
                             prefs.setNotifierEnabled(id, this.resolvedNotifierId, value);
                             onUpdate.run();
@@ -103,7 +103,7 @@ public class MentionTypeRow {
             MentionPreferences prefs
     ) {
         boolean isMassType = false;
-        
+
         Minecraft mc = Minecraft.getInstance();
         if (mc.level != null) {
             Registry<MentionType> registry = mc.level.registryAccess()

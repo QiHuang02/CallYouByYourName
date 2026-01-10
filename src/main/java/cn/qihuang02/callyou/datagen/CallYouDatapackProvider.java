@@ -1,15 +1,15 @@
 package cn.qihuang02.callyou.datagen;
 
 import cn.qihuang02.callyou.CallYouByYourName;
-import cn.qihuang02.callyou.api.components.MentionRules;
 import cn.qihuang02.callyou.api.MentionType;
+import cn.qihuang02.callyou.api.components.MentionRules;
 import cn.qihuang02.callyou.core.mention.components.formatter.ItemTextFormatter;
 import cn.qihuang02.callyou.core.mention.components.formatter.PlayerNameTextFormatter;
 import cn.qihuang02.callyou.core.mention.components.formatter.SimpleTextFormatter;
 import cn.qihuang02.callyou.core.mention.components.formatter.SpotTextFormatter;
-import cn.qihuang02.callyou.core.mention.components.notify.SoundNotifier;
-import cn.qihuang02.callyou.core.mention.components.notify.ToastNotifier;
-import cn.qihuang02.callyou.core.mention.components.target.*;
+import cn.qihuang02.callyou.core.mention.components.notifier.SoundNotifier;
+import cn.qihuang02.callyou.core.mention.components.notifier.ToastNotifier;
+import cn.qihuang02.callyou.core.mention.components.targetProvider.*;
 import cn.qihuang02.callyou.registry.CallYouMentionRegistries;
 import net.minecraft.ChatFormatting;
 import net.minecraft.advancements.AdvancementType;

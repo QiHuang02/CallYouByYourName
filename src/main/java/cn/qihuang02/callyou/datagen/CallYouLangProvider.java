@@ -102,5 +102,6 @@ public class CallYouLangProvider extends LanguageProvider {
         ENTRIES.forEach(entry -> add(entry.key(), translationSelector.apply(entry)));
     }
 
-    private record TranslationEntry(String key, String enUs, String zhCn) { }
+    private record TranslationEntry(String key, String enUs, String zhCn) {
+    }
 }

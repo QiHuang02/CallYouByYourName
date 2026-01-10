@@ -10,8 +10,6 @@ import org.jetbrains.annotations.NotNull;
 public interface TextFormatter extends IDispatchedComponent<TextFormatter, TextFormatter.TextFormatterType> {
     Codec<TextFormatter> CODEC = IDispatchedComponent.codec(CallYouRegistries.TEXT_FORMATTER_TYPES);
 
-    record TextFormatterType(MapCodec<? extends TextFormatter> mapCodec) implements IDispatchedComponent.Type<TextFormatter> {}
-
     @NotNull TextFormatterType type();
 
     @NotNull Component format(MentionContext context);
@@ -22,5 +20,9 @@ public interface TextFormatter extends IDispatchedComponent<TextFormatter, TextF
 
     default String buildReplySuggestion(@NotNull MentionContext context, @NotNull Component formattedMention) {
         return "";
+    }
+
+    record TextFormatterType(
+            MapCodec<? extends TextFormatter> mapCodec) implements IDispatchedComponent.Type<TextFormatter> {
     }
 }

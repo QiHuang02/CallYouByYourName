@@ -2,8 +2,8 @@ package cn.qihuang02.callyou.core.handler;
 
 import cn.qihuang02.callyou.compat.ftb.FTBChunksAPIWrapper;
 import net.minecraft.client.Minecraft;
-import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ClickEvent;
+import net.minecraft.network.chat.Component;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import org.jetbrains.annotations.Nullable;

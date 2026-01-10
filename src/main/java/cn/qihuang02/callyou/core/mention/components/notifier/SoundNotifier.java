@@ -1,4 +1,4 @@
-package cn.qihuang02.callyou.core.mention.components.notify;
+package cn.qihuang02.callyou.core.mention.components.notifier;
 
 import cn.qihuang02.callyou.api.MentionContext;
 import cn.qihuang02.callyou.api.components.Notifier;

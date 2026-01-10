@@ -1,22 +1,18 @@
 package cn.qihuang02.callyou.core.client.screen;
 
+import cn.qihuang02.callyou.core.attachment.MentionPreferences;
 import cn.qihuang02.callyou.core.client.ClientMentionHistory;
 import cn.qihuang02.callyou.core.client.ClientMentionPreferences;
-import cn.qihuang02.callyou.core.attachment.MentionPreferences;
-import cn.qihuang02.callyou.core.saveddata.MentionRecord;
 import cn.qihuang02.callyou.core.network.CYRPCPacket;
 import cn.qihuang02.callyou.core.network.CallYouNetwork;
+import cn.qihuang02.callyou.core.saveddata.MentionRecord;
 import cn.qihuang02.callyou.registry.CallYouMentionRegistries;
 import com.lowdragmc.lowdraglib2.gui.holder.ModularUIScreen;
 import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
 import com.lowdragmc.lowdraglib2.gui.ui.UI;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.data.Horizontal;
-import com.lowdragmc.lowdraglib2.gui.ui.elements.Button;
-import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
-import com.lowdragmc.lowdraglib2.gui.ui.elements.ScrollerView;
-import com.lowdragmc.lowdraglib2.gui.ui.elements.Switch;
-import com.lowdragmc.lowdraglib2.gui.ui.elements.TextField;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.*;
 import com.lowdragmc.lowdraglib2.gui.ui.style.LayoutStyle;
 import com.lowdragmc.lowdraglib2.gui.ui.style.Stylesheet;
 import com.lowdragmc.lowdraglib2.gui.ui.style.StylesheetManager;
@@ -43,10 +39,10 @@ public class MentionPreferencesScreen extends ModularUIScreen {
     private static final int PANEL_HEIGHT = 220;
 
     private static final Component TITLE = Component.translatable("screen.callyou.mention_preferences.title");
-    
+
     private static final Component ALLOW_MENTIONS = Component.translatable("screen.callyou.mention_preferences.allow_all");
     private static final Component ALLOW_MASS = Component.translatable("screen.callyou.mention_preferences.allow_mass");
-    
+
     private static final Component EMPTY_BLOCKED = Component.translatable("screen.callyou.mention_preferences.blocked.none");
     private static final Component BLOCK_LABEL = Component.translatable("screen.callyou.blocked_senders.block_label");
     private static final Component BLOCK_ACTION = Component.translatable("screen.callyou.blocked_senders.block_action");
@@ -60,50 +56,38 @@ public class MentionPreferencesScreen extends ModularUIScreen {
     private static final Component HISTORY_MARK_ALL = Component.translatable("screen.callyou.history.mark_all");
 
     private final Screen parent;
-    private MentionPreferences workingCopy;
-    
     // --- UI References ---
     private final Button tabGeneralButton;
     private final Button tabBlockedButton;
     private final Button tabHistoryButton;
-    
     // Tab Containers
     private final UIElement generalTabContainer;
     private final UIElement blockedTabContainer;
     private final UIElement historyTabContainer;
-
     // General Tab Components
     private final Switch allowMentionsSwitch;
     private final Switch allowMassMentionsSwitch;
     private final TextField typeSearchInput;
     private final ScrollerView mentionTypeList;
-    
     private final List<MentionTypeRow> mentionTypeRows = new ArrayList<>();
-
     // Blocked Tab Components
     private final TextField playerSearchInput;
     private final Button blockButton;
     private final Label blockStatusLabel;
     private final ScrollerView blockedSenderList;
     private final Label blockedEmptyLabel;
-    
     // History Tab Components
     private final Button historyRefreshButton;
     private final Button markAllReadButton;
     private final Label historyStatusLabel;
     private final ScrollerView historyList;
     private final Label historyEmptyLabel;
-
     private final Button doneButton;
-
+    private MentionPreferences workingCopy;
     private List<MentionRecord> cachedHistory = new ArrayList<>();
-
-    private enum Tab { GENERAL, BLOCKED, HISTORY }
     private Tab currentTab = Tab.GENERAL;
-    
     private long lastUiRefreshTime = -1;
     private long lastHistoryRefreshTime = -1;
-
     public MentionPreferencesScreen(@Nullable Screen parent) {
         this(parent, new UIBuilder());
     }
@@ -111,19 +95,19 @@ public class MentionPreferencesScreen extends ModularUIScreen {
     private MentionPreferencesScreen(@Nullable Screen parent, @NotNull UIBuilder builder) {
         super(builder.modularUI, TITLE);
         this.parent = parent;
-        
+
         this.tabGeneralButton = builder.tabGeneralButton;
         this.tabBlockedButton = builder.tabBlockedButton;
         this.tabHistoryButton = builder.tabHistoryButton;
         this.generalTabContainer = builder.generalTabContainer;
         this.blockedTabContainer = builder.blockedTabContainer;
         this.historyTabContainer = builder.historyTabContainer;
-        
+
         this.allowMentionsSwitch = builder.allowMentionsSwitch;
         this.allowMassMentionsSwitch = builder.allowMassMentionsSwitch;
         this.typeSearchInput = builder.typeSearchInput;
         this.mentionTypeList = builder.mentionTypeList;
-        
+
         this.playerSearchInput = builder.playerSearchInput;
         this.blockButton = builder.blockButton;
         this.blockStatusLabel = builder.blockStatusLabel;
@@ -135,9 +119,9 @@ public class MentionPreferencesScreen extends ModularUIScreen {
         this.historyStatusLabel = builder.historyStatusLabel;
         this.historyList = builder.historyList;
         this.historyEmptyLabel = builder.historyEmptyLabel;
-        
+
         this.doneButton = builder.doneButton;
-        
+
         this.configureActions();
     }
 
@@ -174,7 +158,7 @@ public class MentionPreferencesScreen extends ModularUIScreen {
                 this.sendUpdate();
             }
         });
-        
+
         this.typeSearchInput.setTextResponder(s -> this.populateMentionTypeList());
 
         // Blocked Tab Actions
@@ -199,11 +183,11 @@ public class MentionPreferencesScreen extends ModularUIScreen {
         this.blockedTabContainer.setDisplay(tab == Tab.BLOCKED);
         this.historyTabContainer.setVisible(tab == Tab.HISTORY);
         this.historyTabContainer.setDisplay(tab == Tab.HISTORY);
-        
+
         this.tabGeneralButton.setActive(tab != Tab.GENERAL);
         this.tabBlockedButton.setActive(tab != Tab.BLOCKED);
         this.tabHistoryButton.setActive(tab != Tab.HISTORY);
-        
+
         if (tab == Tab.GENERAL) {
             this.populateMentionTypeList();
         } else if (tab == Tab.BLOCKED) {
@@ -247,11 +231,11 @@ public class MentionPreferencesScreen extends ModularUIScreen {
         this.lastUiRefreshTime = latestSync;
 
         this.workingCopy = ClientMentionPreferences.copy();
-        
+
         this.refreshTypeButtons();
         this.allowMentionsSwitch.setOn(this.workingCopy.isAllowMentions(), false);
         this.allowMassMentionsSwitch.setOn(this.workingCopy.isAllowMassMentions(), false);
-        
+
         if (this.currentTab == Tab.BLOCKED) {
             this.reloadBlockedSenders();
         } else if (this.currentTab == Tab.GENERAL) {
@@ -273,10 +257,10 @@ public class MentionPreferencesScreen extends ModularUIScreen {
         }
         List<ResourceLocation> mentionTypes = this.resolveMentionTypes();
         String query = this.typeSearchInput.getText().trim().toLowerCase(Locale.ROOT);
-        
+
         this.mentionTypeRows.clear();
         this.mentionTypeList.clearAllScrollViewChildren();
-        
+
         for (ResourceLocation id : mentionTypes) {
             if (!query.isEmpty()) {
                 String display = this.buildComponent(id).getString().toLowerCase(Locale.ROOT);
@@ -285,7 +269,7 @@ public class MentionPreferencesScreen extends ModularUIScreen {
                     continue;
                 }
             }
-            
+
             MentionTypeRow row = new MentionTypeRow(
                     id,
                     this.buildComponent(id),
@@ -303,14 +287,14 @@ public class MentionPreferencesScreen extends ModularUIScreen {
         if (this.workingCopy == null || this.minecraft == null || this.minecraft.level == null) {
             return;
         }
-        
+
         boolean allowMentions = this.workingCopy.isAllowMentions();
         boolean allowMass = this.workingCopy.isAllowMassMentions();
 
         for (MentionTypeRow row : this.mentionTypeRows) {
             row.updateState(allowMentions, allowMass, this.workingCopy);
         }
-        
+
         this.allowMassMentionsSwitch.setOn(allowMentions && allowMass, false);
         this.allowMassMentionsSwitch.setActive(allowMentions);
     }
@@ -427,7 +411,7 @@ public class MentionPreferencesScreen extends ModularUIScreen {
         this.blockStatusLabel.setText(message);
         this.blockStatusLabel.textStyle(style -> style.textColor(color));
     }
-    
+
     private @Nullable UUID resolveOnlinePlayer(@NotNull String name) {
         Minecraft minecraft = Minecraft.getInstance();
         if (minecraft == null) {
@@ -549,7 +533,9 @@ public class MentionPreferencesScreen extends ModularUIScreen {
             CYRPCPacket.requestPreferencesSync();
         }
     }
-    
+
+    private enum Tab {GENERAL, BLOCKED, HISTORY}
+
     private static class UIBuilder {
         ModularUI modularUI;
         Label titleLabel;
@@ -559,13 +545,13 @@ public class MentionPreferencesScreen extends ModularUIScreen {
         UIElement generalTabContainer;
         UIElement blockedTabContainer;
         UIElement historyTabContainer;
-        
+
         // General
         Switch allowMentionsSwitch;
         Switch allowMassMentionsSwitch;
         TextField typeSearchInput;
         ScrollerView mentionTypeList;
-        
+
         // Blocked
         TextField playerSearchInput;
         Button blockButton;
@@ -579,7 +565,7 @@ public class MentionPreferencesScreen extends ModularUIScreen {
         Label historyStatusLabel;
         ScrollerView historyList;
         Label historyEmptyLabel;
-        
+
         // Shared
         Button doneButton;
 
@@ -668,11 +654,11 @@ public class MentionPreferencesScreen extends ModularUIScreen {
             allowMentionsSwitch = new Switch();
             allowMentionsSwitch.layout(style -> style.width(34).height(14));
             MentionUIStyles.applySwitchStyle(allowMentionsSwitch);
-            
+
             Label allowLabel = new Label();
             allowLabel.setText(ALLOW_MENTIONS);
             allowLabel.layout(style -> style.flexGrow(1));
-            
+
             UIElement allowRow = new UIElement()
                     .layout(style -> style.flexDirection(YogaFlexDirection.ROW).alignItems(YogaAlign.CENTER).widthStretch())
                     .addChildren(allowLabel, allowMentionsSwitch);
@@ -680,11 +666,11 @@ public class MentionPreferencesScreen extends ModularUIScreen {
             allowMassMentionsSwitch = new Switch();
             allowMassMentionsSwitch.layout(style -> style.width(34).height(14));
             MentionUIStyles.applySwitchStyle(allowMassMentionsSwitch);
-            
+
             Label allowMassLabel = new Label();
             allowMassLabel.setText(ALLOW_MASS);
             allowMassLabel.layout(style -> style.flexGrow(1));
-            
+
             UIElement allowMassRow = new UIElement()
                     .layout(style -> style.flexDirection(YogaFlexDirection.ROW).alignItems(YogaAlign.CENTER).widthStretch())
                     .addChildren(allowMassLabel, allowMassMentionsSwitch);
@@ -708,16 +694,16 @@ public class MentionPreferencesScreen extends ModularUIScreen {
         private @NotNull UIElement buildBlockedTab() {
             Label blockLabel = new Label();
             blockLabel.setText(BLOCK_LABEL);
-            
+
             playerSearchInput = new TextField();
             playerSearchInput.layout(style -> style.flexGrow(1).height(16));
             MentionUIStyles.applyTextFieldStyle(playerSearchInput);
-            
+
             blockButton = new Button();
             blockButton.setText(BLOCK_ACTION);
             blockButton.layout(style -> style.width(50).height(16));
             MentionUIStyles.applyButtonStyle(blockButton);
-            
+
             UIElement searchRow = new UIElement()
                     .layout(style -> style.flexDirection(YogaFlexDirection.ROW).alignItems(YogaAlign.CENTER).gapColumn(4).widthStretch())
                     .addChildren(playerSearchInput, blockButton);

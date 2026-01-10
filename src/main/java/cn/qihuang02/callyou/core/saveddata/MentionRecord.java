@@ -5,12 +5,12 @@ import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 import com.lowdragmc.lowdraglib2.syncdata.annotation.SkipPersistedValue;
 import com.lowdragmc.lowdraglib2.utils.PersistedParser;
 import com.mojang.serialization.Codec;
+import net.minecraft.Util;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.Util;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -39,11 +39,6 @@ public class MentionRecord implements IPersistedSerializable {
     @Persisted(key = "location")
     private GlobalPos location;
 
-    @SkipPersistedValue(field = "location")
-    private boolean skipMissingLocation(@Nullable GlobalPos pos) {
-        return pos == null;
-    }
-
     public MentionRecord() {
     }
 
@@ -61,6 +56,11 @@ public class MentionRecord implements IPersistedSerializable {
         this.timestamp = timestamp;
         this.read = read;
         this.location = location;
+    }
+
+    @SkipPersistedValue(field = "location")
+    private boolean skipMissingLocation(@Nullable GlobalPos pos) {
+        return pos == null;
     }
 
     public @NotNull UUID senderId() {

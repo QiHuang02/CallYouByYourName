@@ -11,9 +11,11 @@ import java.util.List;
 public interface TargetProvider extends IDispatchedComponent<TargetProvider, TargetProvider.TargetProviderType> {
     Codec<TargetProvider> CODEC = IDispatchedComponent.codec(CallYouRegistries.TARGET_PROVIDER_TYPES);
 
-    record TargetProviderType(MapCodec<? extends TargetProvider> mapCodec) implements IDispatchedComponent.Type<TargetProvider> {}
-
     TargetProviderType type();
 
     List<ServerPlayer> getTargets(MentionContext context);
+
+    record TargetProviderType(
+            MapCodec<? extends TargetProvider> mapCodec) implements IDispatchedComponent.Type<TargetProvider> {
+    }
 }
