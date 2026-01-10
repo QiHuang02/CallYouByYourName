@@ -1,5 +1,9 @@
 # Update Log
 
+chore(build): 更新模组许可证配置
+
+- 将模组许可证从 All Rights Reserved 修改为 GPL-3.0 LICENSE
+
 [dev] Version 2101.2.0-build.30
 refactor(core): 重构核心包结构以更好地组织提及功能组件
 
