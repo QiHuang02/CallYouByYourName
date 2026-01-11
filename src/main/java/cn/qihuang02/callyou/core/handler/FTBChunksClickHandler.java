@@ -21,9 +21,9 @@ public final class FTBChunksClickHandler {
         }
 
         return FTBChunksAPIWrapper.handleTransientWaypointCommand(value)
-                .map(waypoint -> {
+                .map(waypointName -> {
                     if (Minecraft.getInstance().player != null) {
-                        Component msg = Component.translatable("message.callyou.spot.ftb.added", waypoint.getName());
+                        Component msg = Component.translatable("message.callyou.spot.ftb.added", waypointName);
                         Minecraft.getInstance().player.displayClientMessage(msg, true);
                     }
                     return true;

@@ -1,9 +1,5 @@
 package cn.qihuang02.callyou.compat.ftb;
 
-import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
-import dev.ftb.mods.ftbchunks.api.client.FTBChunksClientAPI;
-import dev.ftb.mods.ftbchunks.api.client.waypoint.Waypoint;
-import dev.ftb.mods.ftbchunks.api.client.waypoint.WaypointManager;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
@@ -48,7 +44,7 @@ public class FTBChunksAPIWrapper {
         );
     }
 
-    public static Optional<Waypoint> handleTransientWaypointCommand(@NotNull String rawCommand) {
+    public static Optional<String> handleTransientWaypointCommand(@NotNull String rawCommand) {
         if (!rawCommand.startsWith(TRANSIENT_WAYPOINT_COMMAND)) {
             return Optional.empty();
         }
@@ -89,7 +85,7 @@ public class FTBChunksAPIWrapper {
         );
     }
 
-    public static Optional<Waypoint> addTransientWaypointAt(
+    public static Optional<String> addTransientWaypointAt(
             ResourceKey<Level> dimension,
             BlockPos pos,
             String waypointName
@@ -104,13 +100,30 @@ public class FTBChunksAPIWrapper {
         }
 
         try {
-            FTBChunksClientAPI api = FTBChunksAPI.clientApi();
-            Optional<WaypointManager> manager = dimension == null
-                    ? api.getWaypointManager()
-                    : api.getWaypointManager(dimension).or(api::getWaypointManager);
+            Class<?> apiClass = Class.forName("dev.ftb.mods.ftbchunks.api.FTBChunksAPI");
+            Object clientApi = apiClass.getMethod("clientApi").invoke(null);
+            Class<?> clientApiClass = Class.forName("dev.ftb.mods.ftbchunks.api.client.FTBChunksClientAPI");
+            Object managerOptional = dimension == null
+                    ? clientApiClass.getMethod("getWaypointManager").invoke(clientApi)
+                    : clientApiClass.getMethod("getWaypointManager", ResourceKey.class).invoke(clientApi, dimension);
+            Optional<?> manager = (Optional<?>) managerOptional;
+            if (manager.isEmpty()) {
+                Optional<?> fallback = (Optional<?>) clientApiClass.getMethod("getWaypointManager").invoke(clientApi);
+                manager = fallback;
+            }
+            if (manager.isEmpty()) {
+                return Optional.empty();
+            }
 
-            return manager.map(waypointManager -> waypointManager.addTransientWaypointAt(pos, finalName));
-        } catch (Exception e) {
+            Object waypointManager = manager.get();
+            Object waypoint = waypointManager.getClass()
+                    .getMethod("addTransientWaypointAt", BlockPos.class, String.class)
+                    .invoke(waypointManager, pos, finalName);
+            if (waypoint == null) {
+                return Optional.empty();
+            }
+            return Optional.of(finalName);
+        } catch (ReflectiveOperationException | RuntimeException e) {
             return Optional.empty();
         }
     }

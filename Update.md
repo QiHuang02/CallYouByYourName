@@ -1,5 +1,12 @@
 # Update Log
 
+[release] Version 2101.2.0-build.34
+refactor(compat): 使用反射调用 FTB API 避免硬依赖
+
+- 使用反射调用方式添加临时路标点并返回路标名称
+- 通过反射获取FTB Teams团队成员列表
+- 统一异常处理为反射操作异常
+
 [release] Version 2101.2.0-build.33
 fix(mixin): 修复与 ChatHeads 模组的兼容问题
 
