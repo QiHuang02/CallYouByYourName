@@ -1,40 +1,27 @@
 package cn.qihuang02.callyou.core.network;
 
-import cn.qihuang02.callyou.core.attachment.MentionPreferences;
-import cn.qihuang02.callyou.core.saveddata.MentionRecord;
-import com.lowdragmc.lowdraglib2.networking.rpc.RPCPacketDistributor;
-import com.lowdragmc.lowdraglib2.syncdata.AccessorRegistries;
-import com.lowdragmc.lowdraglib2.syncdata.accessor.direct.CustomDirectAccessor;
+import cn.qihuang02.callyou.CallYouByYourName;
+import cn.qihuang02.callyou.core.network.payload.c2s.*;
+import cn.qihuang02.callyou.core.network.payload.s2c.*;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
+import net.neoforged.neoforge.network.registration.PayloadRegistrar;
+import org.jetbrains.annotations.NotNull;
 
+@EventBusSubscriber(modid = CallYouByYourName.MODID)
 public final class CallYouNetwork {
-    private static boolean initialized;
+    private static final String PROTOCOL_VERSION = "1";
 
-    public static void init() {
-        if (initialized) {
-            return;
-        }
-        initialized = true;
-        registerAccessors();
-        RPCPacketDistributor.init();
-    }
-
-    private static void registerAccessors() {
-        AccessorRegistries.registerAccessor(
-                CustomDirectAccessor.builder(MentionPreferences.class)
-                        .codec(MentionPreferences.CODEC)
-                        .streamCodec(MentionPreferences.STREAM_CODEC)
-                        .build()
-        );
-        AccessorRegistries.registerAccessor(
-                CustomDirectAccessor.builder(MentionRecord.class)
-                        .codec(MentionRecord.CODEC)
-                        .streamCodec(MentionRecord.STREAM_CODEC)
-                        .build()
-        );
-    }
-
-    public enum MentionLogAction {
-        MARK_ALL_READ,
-        DELETE_SINGLE
+    @SubscribeEvent
+    public static void registerPayloadHandlers(final @NotNull RegisterPayloadHandlersEvent event) {
+        PayloadRegistrar registrar = event.registrar(CallYouByYourName.MODID).versioned(PROTOCOL_VERSION);
+        registrar.playToClient(MentionPrefsSyncPayload.TYPE, MentionPrefsSyncPayload.STREAM_CODEC, NetworkHandler::handleSync);
+        registrar.playToServer(MentionPrefsUpdatePayload.TYPE, MentionPrefsUpdatePayload.STREAM_CODEC, NetworkHandler::handleUpdate);
+        registrar.playToServer(MentionPrefsRequestPayload.TYPE, MentionPrefsRequestPayload.STREAM_CODEC, NetworkHandler::handleRequest);
+        registrar.playToClient(MentionToastPayload.TYPE, MentionToastPayload.STREAM_CODEC, NetworkHandler::handleToast);
+        registrar.playToServer(MentionLogRequestPayload.TYPE, MentionLogRequestPayload.STREAM_CODEC, NetworkHandler::handleLogRequest);
+        registrar.playToClient(MentionLogResponsePayload.TYPE, MentionLogResponsePayload.STREAM_CODEC, NetworkHandler::handleLogResponse);
+        registrar.playToServer(MentionLogActionPayload.TYPE, MentionLogActionPayload.STREAM_CODEC, NetworkHandler::handleLogAction);
     }
 }

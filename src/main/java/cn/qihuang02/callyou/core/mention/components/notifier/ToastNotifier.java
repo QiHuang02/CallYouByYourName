@@ -3,17 +3,12 @@ package cn.qihuang02.callyou.core.mention.components.notifier;
 import cn.qihuang02.callyou.CallYouByYourName;
 import cn.qihuang02.callyou.api.MentionContext;
 import cn.qihuang02.callyou.api.components.Notifier;
-import cn.qihuang02.callyou.core.network.CYRPCPacket;
+import cn.qihuang02.callyou.core.network.NetworkHandler;
 import cn.qihuang02.callyou.registry.BuiltInCallYouRegistries;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.minecraft.advancements.Advancement;
-import net.minecraft.advancements.AdvancementHolder;
-import net.minecraft.advancements.AdvancementRequirements;
-import net.minecraft.advancements.AdvancementRewards;
-import net.minecraft.advancements.AdvancementType;
-import net.minecraft.advancements.DisplayInfo;
+import net.minecraft.advancements.*;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -76,7 +71,7 @@ public record ToastNotifier(
         AdvancementHolder holder = new AdvancementHolder(TOAST_ID, advancement);
 
         for (ServerPlayer target : targets) {
-            CYRPCPacket.sendToast(target, holder);
+            NetworkHandler.sendToast(target, holder);
         }
     }
 

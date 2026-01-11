@@ -66,6 +66,10 @@ public record ClientMentionContext(
         return Style.EMPTY;
     }
 
+    private static @NotNull String normalizeKey(@NotNull String key) {
+        return key.toLowerCase(Locale.ROOT);
+    }
+
     public @NotNull Set<String> getMentionTypeKeys() {
         return mentionTypeKeys;
     }
@@ -99,9 +103,5 @@ public record ClientMentionContext(
             return Style.EMPTY;
         }
         return mentionTypeStyles.getOrDefault(normalizeKey(key), Style.EMPTY);
-    }
-
-    private static @NotNull String normalizeKey(@NotNull String key) {
-        return key.toLowerCase(Locale.ROOT);
     }
 }

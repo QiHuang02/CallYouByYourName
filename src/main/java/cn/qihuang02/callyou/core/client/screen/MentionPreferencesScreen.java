@@ -3,8 +3,9 @@ package cn.qihuang02.callyou.core.client.screen;
 import cn.qihuang02.callyou.core.attachment.MentionPreferences;
 import cn.qihuang02.callyou.core.client.ClientMentionHistory;
 import cn.qihuang02.callyou.core.client.ClientMentionPreferences;
-import cn.qihuang02.callyou.core.network.CYRPCPacket;
 import cn.qihuang02.callyou.core.network.CallYouNetwork;
+import cn.qihuang02.callyou.core.network.NetworkHandler;
+import cn.qihuang02.callyou.core.network.payload.c2s.MentionLogActionPayload;
 import cn.qihuang02.callyou.core.saveddata.MentionRecord;
 import cn.qihuang02.callyou.registry.CallYouMentionRegistries;
 import com.lowdragmc.lowdraglib2.gui.holder.ModularUIScreen;
@@ -88,6 +89,7 @@ public class MentionPreferencesScreen extends ModularUIScreen {
     private Tab currentTab = Tab.GENERAL;
     private long lastUiRefreshTime = -1;
     private long lastHistoryRefreshTime = -1;
+
     public MentionPreferencesScreen(@Nullable Screen parent) {
         this(parent, new UIBuilder());
     }
@@ -128,7 +130,7 @@ public class MentionPreferencesScreen extends ModularUIScreen {
     @Contract("_ -> new")
     public static @NotNull MentionPreferencesScreen createWithRefresh(@Nullable Screen parent) {
         ClientMentionPreferences.markAwaitingSync();
-        CYRPCPacket.requestPreferencesSync();
+        NetworkHandler.requestPreferencesSync();
         return new MentionPreferencesScreen(parent);
     }
 
@@ -172,7 +174,7 @@ public class MentionPreferencesScreen extends ModularUIScreen {
 
         this.historyRefreshButton.setOnClick(event -> requestHistory());
         this.markAllReadButton.setOnClick(event ->
-                CYRPCPacket.sendMentionLogAction(CallYouNetwork.MentionLogAction.MARK_ALL_READ, 0));
+                NetworkHandler.sendMentionLogAction(MentionLogActionPayload.MentionLogAction.MARK_ALL_READ, 0));
     }
 
     private void switchTab(Tab tab) {
@@ -295,6 +297,7 @@ public class MentionPreferencesScreen extends ModularUIScreen {
             row.updateState(allowMentions, allowMass, this.workingCopy);
         }
 
+        // Only show ON if global allowMentions is also ON
         this.allowMassMentionsSwitch.setOn(allowMentions && allowMass, false);
         this.allowMassMentionsSwitch.setActive(allowMentions);
     }
@@ -455,7 +458,7 @@ public class MentionPreferencesScreen extends ModularUIScreen {
         this.historyEmptyLabel.setVisible(false);
         this.historyList.clearAllScrollViewChildren();
         this.historyStatusLabel.setText(HISTORY_LOADING);
-        CYRPCPacket.requestMentionLogs();
+        NetworkHandler.requestMentionLogs();
     }
 
     private void refreshHistoryIfNeeded() {
@@ -511,8 +514,8 @@ public class MentionPreferencesScreen extends ModularUIScreen {
     }
 
     private void deleteRecord(@NotNull MentionRecord record) {
-        CYRPCPacket.sendMentionLogAction(
-                CallYouNetwork.MentionLogAction.DELETE_SINGLE,
+        NetworkHandler.sendMentionLogAction(
+                MentionLogActionPayload.MentionLogAction.DELETE_SINGLE,
                 record.timestamp()
         );
     }
@@ -524,13 +527,13 @@ public class MentionPreferencesScreen extends ModularUIScreen {
         MentionPreferences payload = new MentionPreferences();
         payload.copyFrom(this.workingCopy);
         ClientMentionPreferences.markPending(payload);
-        CYRPCPacket.sendPreferenceUpdate(payload);
+        NetworkHandler.sendPreferenceUpdate(payload);
     }
 
     private void requestLatestPreferences() {
         if (!ClientMentionPreferences.isAwaitingSync()) {
             ClientMentionPreferences.markAwaitingSync();
-            CYRPCPacket.requestPreferencesSync();
+            NetworkHandler.requestPreferencesSync();
         }
     }
 

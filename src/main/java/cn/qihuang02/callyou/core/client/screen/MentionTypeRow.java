@@ -109,28 +109,26 @@ public class MentionTypeRow {
             Registry<MentionType> registry = mc.level.registryAccess()
                     .registryOrThrow(CallYouMentionRegistries.MENTION_TYPE_REGISTRY_KEY);
             var type = registry.get(id);
-            if (type != null) {
+            if (type != null && type.rules() != null) {
                 isMassType = type.rules().isMass();
             }
         }
 
         boolean isBlocked = prefs.getBlockedTypes().contains(id);
-        boolean isGloballyAllowed = globalAllow;
-
-        if (isMassType && !globalMassAllow) {
-            isGloballyAllowed = false;
-        }
-
-        boolean isActive = isGloballyAllowed && !isBlocked;
+        
+        // Effective master state: Not blocked AND global rules allow it
+        boolean effectiveMasterAllowed = globalAllow && (!isMassType || globalMassAllow);
+        boolean isMasterOn = effectiveMasterAllowed && !isBlocked;
 
         // Update Master Switch
-        this.masterSwitch.setOn(!isBlocked, false);
-        this.masterSwitch.setActive(isGloballyAllowed);
+        this.masterSwitch.setOn(isMasterOn, false);
+        this.masterSwitch.setActive(effectiveMasterAllowed);
 
         // Update Notifier Switch
         if (this.resolvedNotifierId != null) {
-            this.notifierSwitch.setOn(prefs.isNotifierEnabled(id, this.resolvedNotifierId), false);
-            this.notifierSwitch.setActive(isActive);
+            boolean isNotifierEnabled = prefs.isNotifierEnabled(id, this.resolvedNotifierId);
+            this.notifierSwitch.setOn(isMasterOn && isNotifierEnabled, false);
+            this.notifierSwitch.setActive(isMasterOn);
         }
     }
 }

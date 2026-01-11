@@ -14,12 +14,7 @@ import net.minecraft.network.codec.StreamCodec;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 public class MentionRecord implements IPersistedSerializable {
     public static final Codec<MentionRecord> CODEC = PersistedParser.createCodec(MentionRecord::new);

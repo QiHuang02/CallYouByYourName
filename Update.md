@@ -1,5 +1,19 @@
 # Update Log
 
+[release] Version 2101.2.0-build.35
+refactor(network): 迁移网络通信至 NeoForge Payload 系统
+
+- 移除基于 LowDragLib2 的 RPC 网络实现 (CYRPCPacket)
+- 引入标准的 NeoForge Payload 数据包系统
+- 重构网络处理逻辑，新增 NetworkHandler 统一处理数据包
+- 实现了一系列 Payload 类用于处理配置同步、日志请求和 Toast 通知
+
+fix(client): 优化提及配置界面的交互逻辑
+
+- 修复提及类型主开关与通知开关的联动逻辑，确保禁用时正确锁定子选项
+- 优化全局设置与特定类型设置的生效优先级判定
+- 调整群发提及开关的显示状态，现在会正确响应全局开关的变化
+
 [release] Version 2101.2.0-build.34
 refactor(compat): 使用反射调用 FTB API 避免硬依赖
 
