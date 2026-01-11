@@ -29,6 +29,9 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
+      - name: Run data generation
+        run: ./gradlew runData
+
       - name: Build with Gradle
         run: ./gradlew build
 
