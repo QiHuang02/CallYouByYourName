@@ -1,8 +1,13 @@
 package cn.qihuang02.callyou.core.network;
 
 import cn.qihuang02.callyou.CallYouByYourName;
-import cn.qihuang02.callyou.core.network.payload.c2s.*;
-import cn.qihuang02.callyou.core.network.payload.s2c.*;
+import cn.qihuang02.callyou.core.network.payload.c2s.MentionLogActionPayload;
+import cn.qihuang02.callyou.core.network.payload.c2s.MentionLogRequestPayload;
+import cn.qihuang02.callyou.core.network.payload.c2s.MentionPrefsRequestPayload;
+import cn.qihuang02.callyou.core.network.payload.c2s.MentionPrefsUpdatePayload;
+import cn.qihuang02.callyou.core.network.payload.s2c.MentionLogResponsePayload;
+import cn.qihuang02.callyou.core.network.payload.s2c.MentionPrefsSyncPayload;
+import cn.qihuang02.callyou.core.network.payload.s2c.MentionToastPayload;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;

@@ -1,5 +1,13 @@
 # Update Log
 
+[dev] Version 2101.2.0-build.36
+chore(build): 更新依赖版本并添加忽略文件
+
+- 更新 neo_version 从 21.1.216 到 21.1.218
+- 更新 ftb_teams_version 从 2101.1.7 到 2101.1.9
+- 更新 ftb_library_version 从 2101.1.28 到 2101.1.30
+- 更新 ldlib2_version 从 2.1.5.b 到 2.1.7
+
 [release] Version 2101.2.0-build.35 -- fix
 refactor(network): 迁移网络通信至 NeoForge Payload 系统
 

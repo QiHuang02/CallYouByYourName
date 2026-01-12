@@ -1,14 +1,13 @@
 package cn.qihuang02.callyou.core.saveddata;
 
-import com.lowdragmc.lowdraglib2.syncdata.IPersistedSerializable;
-import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
-import com.lowdragmc.lowdraglib2.syncdata.annotation.SkipPersistedValue;
-import com.lowdragmc.lowdraglib2.utils.PersistedParser;
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.Util;
 import net.minecraft.core.GlobalPos;
+import net.minecraft.core.UUIDUtil;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.ComponentSerialization;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import org.jetbrains.annotations.NotNull;
@@ -16,40 +15,56 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
-public class MentionRecord implements IPersistedSerializable {
-    public static final Codec<MentionRecord> CODEC = PersistedParser.createCodec(MentionRecord::new);
+public class MentionRecord {
+    private static final String TAG_SENDER_ID = "sender_id";
+    private static final String TAG_SENDER_NAME = "sender_name";
+    private static final String TAG_MESSAGE = "message";
+    private static final String TAG_TIMESTAMP = "timestamp";
+    private static final String TAG_LOCATION = "location";
+    private static final String TAG_TARGETS = "targets";
+    private static final String TAG_READ_TARGETS = "read_targets";
+    private static final String TAG_LEGACY_TARGET_ID = "target_id";
+    private static final String TAG_LEGACY_READ = "read";
+
+    public static final Codec<MentionRecord> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+            UUIDUtil.CODEC.optionalFieldOf(TAG_SENDER_ID, Util.NIL_UUID).forGetter(record -> record.senderId),
+            Codec.STRING.optionalFieldOf(TAG_SENDER_NAME, "").forGetter(record -> record.senderName),
+            ComponentSerialization.CODEC.optionalFieldOf(TAG_MESSAGE, Component.empty()).forGetter(record -> record.message),
+            Codec.LONG.optionalFieldOf(TAG_TIMESTAMP, 0L).forGetter(record -> record.timestamp),
+            GlobalPos.CODEC.optionalFieldOf(TAG_LOCATION).forGetter(record -> Optional.ofNullable(record.location)),
+            UUIDUtil.CODEC.listOf().optionalFieldOf(TAG_TARGETS).forGetter(record -> record.targetIds.isEmpty()
+                    ? Optional.empty()
+                    : Optional.of(record.targetIds)),
+            UUIDUtil.CODEC.listOf().optionalFieldOf(TAG_READ_TARGETS).forGetter(record -> record.readTargets.isEmpty()
+                    ? Optional.empty()
+                    : Optional.of(record.readTargets)),
+            UUIDUtil.CODEC.optionalFieldOf(TAG_LEGACY_TARGET_ID).forGetter(record -> Util.NIL_UUID.equals(record.legacyTargetId)
+                    ? Optional.empty()
+                    : Optional.of(record.legacyTargetId)),
+            Codec.BOOL.optionalFieldOf(TAG_LEGACY_READ).forGetter(record -> record.legacyRead
+                    ? Optional.of(true)
+                    : Optional.empty())
+    ).apply(instance, MentionRecord::fromCodec));
     public static final StreamCodec<RegistryFriendlyByteBuf, MentionRecord> STREAM_CODEC =
             ByteBufCodecs.fromCodecWithRegistries(CODEC);
 
-    @Persisted(key = "sender_id")
     private UUID senderId = Util.NIL_UUID;
 
-    @Persisted(key = "sender_name")
     private String senderName = "";
 
-    @Persisted(key = "message")
     private Component message = Component.empty();
 
-    @Persisted(key = "timestamp")
     private long timestamp;
 
-    @Persisted(key = "location")
     private GlobalPos location;
 
-    @Persisted(key = "targets")
     private List<UUID> targetIds = new ArrayList<>();
 
-    @Persisted(key = "read_targets")
     private List<UUID> readTargets = new ArrayList<>();
 
-    @Persisted(key = "target_id")
     private UUID legacyTargetId = Util.NIL_UUID;
 
-    @Persisted(key = "read")
     private boolean legacyRead;
-
-    public MentionRecord() {
-    }
 
     public MentionRecord(
             @NotNull UUID senderId,
@@ -82,29 +97,29 @@ public class MentionRecord implements IPersistedSerializable {
         return new MentionRecord(senderId, senderName, message, timestamp, targets, List.of(), location);
     }
 
-    @SkipPersistedValue(field = "location")
-    private boolean skipMissingLocation(@Nullable GlobalPos pos) {
-        return pos == null;
-    }
-
-    @SkipPersistedValue(field = "targets")
-    private boolean skipEmptyTargets(@NotNull List<UUID> targets) {
-        return targets.isEmpty();
-    }
-
-    @SkipPersistedValue(field = "readTargets")
-    private boolean skipEmptyReadTargets(@NotNull List<UUID> targets) {
-        return targets.isEmpty();
-    }
-
-    @SkipPersistedValue(field = "legacyTargetId")
-    private boolean skipLegacyTarget(@NotNull UUID target) {
-        return Util.NIL_UUID.equals(target);
-    }
-
-    @SkipPersistedValue(field = "legacyRead")
-    private boolean skipLegacyRead(boolean read) {
-        return !read;
+    private static @NotNull MentionRecord fromCodec(
+            @NotNull UUID senderId,
+            @NotNull String senderName,
+            @NotNull Component message,
+            long timestamp,
+            @NotNull Optional<GlobalPos> location,
+            @NotNull Optional<List<UUID>> targets,
+            @NotNull Optional<List<UUID>> readTargets,
+            @NotNull Optional<UUID> legacyTargetId,
+            @NotNull Optional<Boolean> legacyRead
+    ) {
+        MentionRecord record = new MentionRecord(
+                senderId,
+                senderName,
+                message,
+                timestamp,
+                targets.orElse(List.of()),
+                readTargets.orElse(List.of()),
+                location.orElse(null)
+        );
+        record.legacyTargetId = legacyTargetId.orElse(Util.NIL_UUID);
+        record.legacyRead = legacyRead.orElse(false);
+        return record;
     }
 
     private @NotNull List<UUID> sanitizeTargets(@NotNull Collection<UUID> targets) {

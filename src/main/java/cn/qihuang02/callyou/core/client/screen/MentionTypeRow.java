@@ -115,7 +115,7 @@ public class MentionTypeRow {
         }
 
         boolean isBlocked = prefs.getBlockedTypes().contains(id);
-        
+
         // Effective master state: Not blocked AND global rules allow it
         boolean effectiveMasterAllowed = globalAllow && (!isMassType || globalMassAllow);
         boolean isMasterOn = effectiveMasterAllowed && !isBlocked;

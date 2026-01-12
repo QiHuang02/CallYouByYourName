@@ -2,26 +2,22 @@ package cn.qihuang02.callyou.core.saveddata;
 
 import cn.qihuang02.callyou.CallYouByYourName;
 import cn.qihuang02.callyou.config.CallYouConfig;
-import com.lowdragmc.lowdraglib2.syncdata.IPersistedSerializable;
-import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
-import com.lowdragmc.lowdraglib2.syncdata.annotation.SkipPersistedValue;
-import com.lowdragmc.lowdraglib2.utils.PersistedParser;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
+import net.minecraft.resources.RegistryOps;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.saveddata.SavedData;
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.Duration;
 import java.util.*;
 
-public final class MentionSavedData extends SavedData implements IPersistedSerializable {
+public final class MentionSavedData extends SavedData {
     private static final String TAG_LOGS = "logs";
 
-    @Persisted(key = TAG_LOGS)
     private final List<MentionRecord> allLogs = new ArrayList<>();
 
     public static @NotNull MentionSavedData get(@NotNull ServerLevel level) {
@@ -41,51 +37,74 @@ public final class MentionSavedData extends SavedData implements IPersistedSeria
 
     private static @NotNull MentionSavedData load(@NotNull CompoundTag tag, @NotNull HolderLookup.Provider registries) {
         MentionSavedData data = new MentionSavedData();
-        PersistedParser.deserialize(NbtOps.INSTANCE, tag, data, registries);
-        if (data.allLogs.isEmpty() && tag.contains(TAG_LOGS, Tag.TAG_COMPOUND)) {
+        if (tag.contains(TAG_LOGS, Tag.TAG_LIST)) {
+            ListTag list = tag.getList(TAG_LOGS, Tag.TAG_COMPOUND);
+            RegistryOps<Tag> ops = RegistryOps.create(NbtOps.INSTANCE, registries);
+            for (int i = 0; i < list.size(); i++) {
+                CompoundTag recordTag = list.getCompound(i);
+                MentionRecord.CODEC.parse(ops, recordTag)
+                        .resultOrPartial(CallYouByYourName.LOGGER::error)
+                        .ifPresent(data.allLogs::add);
+            }
+        } else if (tag.contains(TAG_LOGS, Tag.TAG_COMPOUND)) {
             data.importLegacyLogs(tag, registries);
         }
         data.normalizeRecords();
         return data;
     }
 
-    @Contract(pure = true)
-    @SkipPersistedValue(field = "allLogs")
-    private boolean skipEmptyLogs(@NotNull List<MentionRecord> logs) {
-        return logs.isEmpty();
-    }
-
     @Override
     public @NotNull CompoundTag save(@NotNull CompoundTag tag, @NotNull HolderLookup.Provider registries) {
-        PersistedParser.serialize(NbtOps.INSTANCE, this, registries)
-                .resultOrPartial(CallYouByYourName.LOGGER::error)
-                .ifPresent(encoded -> {
-                    if (encoded instanceof CompoundTag compound) {
-                        tag.merge(compound);
-                    }
-                });
+        if (allLogs.isEmpty()) {
+            return tag;
+        }
+        RegistryOps<Tag> ops = RegistryOps.create(NbtOps.INSTANCE, registries);
+        ListTag list = new ListTag();
+        for (MentionRecord record : allLogs) {
+            MentionRecord.CODEC.encodeStart(ops, record)
+                    .resultOrPartial(CallYouByYourName.LOGGER::error)
+                    .ifPresent(encoded -> {
+                        if (encoded instanceof CompoundTag compound) {
+                            list.add(compound);
+                        }
+                    });
+        }
+        if (!list.isEmpty()) {
+            tag.put(TAG_LOGS, list);
+        }
         return tag;
     }
 
     private void importLegacyLogs(@NotNull CompoundTag tag, @NotNull HolderLookup.Provider registries) {
-        LegacyLogs legacyLogs = new LegacyLogs();
-        PersistedParser.deserialize(NbtOps.INSTANCE, tag, legacyLogs, registries);
         boolean changed = false;
-
-        for (Map.Entry<UUID, List<MentionRecord>> entry : legacyLogs.playerLogs.entrySet()) {
-            UUID targetId = entry.getKey();
-            List<MentionRecord> records = entry.getValue();
-            if (targetId == null || records == null || records.isEmpty()) {
-                continue;
-            }
-            for (MentionRecord record : records) {
-                if (record == null) {
+        int originalSize = allLogs.size();
+        CompoundTag legacyLogs = tag.getCompound(TAG_LOGS);
+        if (!legacyLogs.isEmpty()) {
+            RegistryOps<Tag> ops = RegistryOps.create(NbtOps.INSTANCE, registries);
+            for (String key : legacyLogs.getAllKeys()) {
+                UUID targetId;
+                try {
+                    targetId = UUID.fromString(key);
+                } catch (IllegalArgumentException ex) {
                     continue;
                 }
-                MentionRecord normalized = record.normalized().withTargets(List.of(targetId));
-                allLogs.add(normalized);
-                changed = true;
+                ListTag records = legacyLogs.getList(key, Tag.TAG_COMPOUND);
+                if (records.isEmpty()) {
+                    continue;
+                }
+                for (int i = 0; i < records.size(); i++) {
+                    CompoundTag recordTag = records.getCompound(i);
+                    MentionRecord.CODEC.parse(ops, recordTag)
+                            .resultOrPartial(CallYouByYourName.LOGGER::error)
+                            .ifPresent(record -> {
+                                MentionRecord normalized = record.normalized().withTargets(List.of(targetId));
+                                allLogs.add(normalized);
+                            });
+                }
             }
+        }
+        if (allLogs.size() != originalSize) {
+            changed = true;
         }
 
         if (prune()) {
@@ -267,8 +286,4 @@ public final class MentionSavedData extends SavedData implements IPersistedSeria
         }
     }
 
-    private static final class LegacyLogs implements IPersistedSerializable {
-        @Persisted(key = TAG_LOGS)
-        private final Map<UUID, List<MentionRecord>> playerLogs = new HashMap<>();
-    }
 }
