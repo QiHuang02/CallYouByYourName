@@ -1,6 +1,56 @@
 # Update Log
 
+[dev] Version 2101.2.0-build.37
+refactor(core): 拆分提及执行流程为权限/组装/派发模块，并独立历史记录器
+
+- 提及消息由 MentionMessageComposer 重建，并为可回复提及增加悬停提示
+- 服务端历史记录保存格式化后的消息组件，统一由 MentionHistoryRecorder 写入
+- MentionExecutor 仅负责流程编排，降低耦合
+
+feat(client): 提及历史界面重做，支持回复与标记已读
+
+- 新增 MentionHistoryRow：渲染完整消息组件与动态操作按钮，并支持快速回复
+- 支持从记录中创建 FTB 临时传送点，替代坐标复制
+- 支持物品提及图标内嵌显示
+
+refactor(storage,network): 历史记录改用唯一ID并扩展操作
+
+- MentionRecord 新增 historyId，移除 senderName/location 与遗留字段
+- 日志操作改用 historyId，新增单条标记已读
+
+chore(build): 更新构建配置与元数据生成
+
+- 升级到 NeoForge moddev 插件并调整依赖作用域
+- 引入 mods.toml 模板生成，Gradle wrapper 升级到 9.2.1
+
+refactor(core): Refactor mention execution into permission, composition, and dispatch modules with a dedicated history recorder
+
+- Messages are rebuilt by MentionMessageComposer with reply hover hints for replyable mentions
+- Server-side history now stores formatted message components via MentionHistoryRecorder
+- MentionExecutor now orchestrates only, reducing coupling
+
+feat(client): Reworked mention history UI with reply and mark-read
+
+- New MentionHistoryRow renders full message components, dynamic actions, and quick reply
+- Create FTB transient waypoints from history instead of copying coords
+- Inline item icon rendering for item mentions
+
+refactor(storage,network): History records now use unique IDs and expanded actions
+
+- MentionRecord adds historyId and drops senderName/location and legacy fields
+- Log actions now use historyId with a new single-record mark-read action
+
+chore(build): Update build config and metadata generation
+
+- Move to NeoForge moddev plugin and adjust dependency scopes
+- Add templated mods.toml generation and update Gradle wrapper to 9.2.1
+
 [dev] Version 2101.2.0-build.36
+refactor(storage): 迁移数据存储系统使用原版Codec序列化
+
+- 更新 MentionSavedData 的 NBT 存储格式，从映射结构改为列表结构
+- 保留对旧版存档格式的兼容性支持，实现数据迁移逻辑
+
 chore(build): 更新依赖版本并添加忽略文件
 
 - 更新 neo_version 从 21.1.216 到 21.1.218

@@ -41,10 +41,10 @@ public record PlayerNameTextFormatter(ChatFormatting color) implements TextForma
 
     @Override
     public @NotNull String buildReplySuggestion(@NotNull MentionContext context, @NotNull Component formattedMention) {
-        String name = context.mentionKey();
-        if (name == null || name.isEmpty()) {
+        String senderName = context.senderName();
+        if (senderName == null || senderName.isBlank()) {
             return "";
         }
-        return context.mentionToken() + " ";
+        return "@" + senderName + " ";
     }
 }

@@ -49,7 +49,6 @@ public final class MentionSavedData extends SavedData {
         } else if (tag.contains(TAG_LOGS, Tag.TAG_COMPOUND)) {
             data.importLegacyLogs(tag, registries);
         }
-        data.normalizeRecords();
         return data;
     }
 
@@ -96,10 +95,7 @@ public final class MentionSavedData extends SavedData {
                     CompoundTag recordTag = records.getCompound(i);
                     MentionRecord.CODEC.parse(ops, recordTag)
                             .resultOrPartial(CallYouByYourName.LOGGER::error)
-                            .ifPresent(record -> {
-                                MentionRecord normalized = record.normalized().withTargets(List.of(targetId));
-                                allLogs.add(normalized);
-                            });
+                            .ifPresent(record -> allLogs.add(record.withTargets(List.of(targetId))));
                 }
             }
         }
@@ -117,11 +113,10 @@ public final class MentionSavedData extends SavedData {
     }
 
     public void addLog(@NotNull MentionRecord record) {
-        MentionRecord normalized = record.normalized();
-        if (normalized.targetIds().isEmpty()) {
+        if (record.targetIds().isEmpty()) {
             return;
         }
-        allLogs.add(normalized);
+        allLogs.add(record);
         prune();
         setDirty();
     }
@@ -174,14 +169,37 @@ public final class MentionSavedData extends SavedData {
         return changed;
     }
 
-    public boolean removeRecord(@NotNull UUID target, long timestamp) {
+    public boolean markAsRead(@NotNull UUID target, @NotNull UUID historyId) {
+        if (allLogs.isEmpty()) {
+            return false;
+        }
+        boolean changed = false;
+        for (int i = 0; i < allLogs.size(); i++) {
+            MentionRecord record = allLogs.get(i);
+            if (!record.isTarget(target) || !record.historyId().equals(historyId)) {
+                continue;
+            }
+            MentionRecord marked = record.markRead(target);
+            if (marked != record) {
+                allLogs.set(i, marked);
+                changed = true;
+            }
+            break;
+        }
+        if (changed) {
+            setDirty();
+        }
+        return changed;
+    }
+
+    public boolean removeRecord(@NotNull UUID target, @NotNull UUID historyId) {
         if (allLogs.isEmpty()) {
             return false;
         }
         boolean removed = false;
         for (int i = 0; i < allLogs.size(); i++) {
             MentionRecord record = allLogs.get(i);
-            if (!record.isTarget(target) || record.timestamp() != timestamp) {
+            if (!record.isTarget(target) || !record.historyId().equals(historyId)) {
                 continue;
             }
             MentionRecord updated = record.withoutTarget(target);
@@ -191,6 +209,7 @@ public final class MentionSavedData extends SavedData {
                 allLogs.set(i, updated);
             }
             removed = true;
+            break;
         }
         if (removed) {
             allLogs.removeIf(Objects::isNull);
@@ -267,23 +286,5 @@ public final class MentionSavedData extends SavedData {
         return changed;
     }
 
-    private void normalizeRecords() {
-        if (allLogs.isEmpty()) {
-            return;
-        }
-        List<MentionRecord> normalized = new ArrayList<>(allLogs.size());
-        boolean changed = false;
-        for (MentionRecord record : allLogs) {
-            MentionRecord fixed = record.normalized();
-            normalized.add(fixed);
-            changed |= fixed != record;
-        }
-        if (changed) {
-            allLogs.clear();
-            allLogs.addAll(normalized);
-            prune();
-            setDirty();
-        }
-    }
 
 }

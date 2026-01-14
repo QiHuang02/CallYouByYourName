@@ -21,6 +21,7 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
+import java.util.UUID;
 
 public class NetworkHandler {
     public static void handleSync(MentionPrefsSyncPayload payload, IPayloadContext context) {
@@ -82,7 +83,9 @@ public class NetworkHandler {
             if (payload.action() == MentionLogActionPayload.MentionLogAction.MARK_ALL_READ) {
                 data.markAsRead(player.getUUID());
             } else if (payload.action() == MentionLogActionPayload.MentionLogAction.DELETE_SINGLE) {
-                data.removeRecord(player.getUUID(), payload.targetTimestamp());
+                data.removeRecord(player.getUUID(), payload.targetHistoryId());
+            } else if (payload.action() == MentionLogActionPayload.MentionLogAction.MARK_SINGLE_READ) {
+                data.markAsRead(player.getUUID(), payload.targetHistoryId());
             }
             data.pruneOldLogs();
             sendLogSnapshot(player, data);
@@ -111,9 +114,12 @@ public class NetworkHandler {
         PacketDistributor.sendToServer(new MentionLogRequestPayload());
     }
 
-    public static void sendMentionLogAction(@NotNull MentionLogActionPayload.MentionLogAction action, long targetTimestamp) {
+    public static void sendMentionLogAction(
+            @NotNull MentionLogActionPayload.MentionLogAction action,
+            @NotNull UUID targetHistoryId
+    ) {
         ClientMentionHistory.markAwaitingResponse();
-        PacketDistributor.sendToServer(new MentionLogActionPayload(action, targetTimestamp));
+        PacketDistributor.sendToServer(new MentionLogActionPayload(action, targetHistoryId));
     }
 
     private static void sendLogSnapshot(@NotNull ServerPlayer player, @NotNull MentionSavedData data) {

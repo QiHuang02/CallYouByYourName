@@ -17,6 +17,7 @@ import com.lowdragmc.lowdraglib2.gui.ui.style.LayoutStyle;
 import com.lowdragmc.lowdraglib2.gui.ui.style.Stylesheet;
 import com.lowdragmc.lowdraglib2.gui.ui.style.StylesheetManager;
 import com.lowdragmc.lowdraglib2.gui.ui.styletemplate.Sprites;
+import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.multiplayer.ClientPacketListener;
@@ -173,7 +174,10 @@ public class MentionPreferencesScreen extends ModularUIScreen {
 
         this.historyRefreshButton.setOnClick(event -> requestHistory());
         this.markAllReadButton.setOnClick(event ->
-                NetworkHandler.sendMentionLogAction(MentionLogActionPayload.MentionLogAction.MARK_ALL_READ, 0));
+                NetworkHandler.sendMentionLogAction(
+                        MentionLogActionPayload.MentionLogAction.MARK_ALL_READ,
+                        Util.NIL_UUID
+                ));
     }
 
     private void switchTab(Tab tab) {
@@ -213,7 +217,7 @@ public class MentionPreferencesScreen extends ModularUIScreen {
         this.historyStatusLabel.setText(HISTORY_EMPTY);
         this.historyEmptyLabel.setVisible(false);
 
-        this.switchTab(Tab.GENERAL);
+        this.switchTab(this.currentTab);
     }
 
     @Override
@@ -492,9 +496,10 @@ public class MentionPreferencesScreen extends ModularUIScreen {
 
         this.historyEmptyLabel.setVisible(false);
         for (MentionRecord record : records) {
-            MentionLogRow row = new MentionLogRow(
+            MentionHistoryRow row = new MentionHistoryRow(
                     record,
-                    () -> this.deleteRecord(record)
+                    () -> this.deleteRecord(record),
+                    () -> this.markRecordRead(record)
             );
             this.historyList.addScrollViewChild(row.getElement());
         }
@@ -515,7 +520,14 @@ public class MentionPreferencesScreen extends ModularUIScreen {
     private void deleteRecord(@NotNull MentionRecord record) {
         NetworkHandler.sendMentionLogAction(
                 MentionLogActionPayload.MentionLogAction.DELETE_SINGLE,
-                record.timestamp()
+                record.historyId()
+        );
+    }
+
+    private void markRecordRead(@NotNull MentionRecord record) {
+        NetworkHandler.sendMentionLogAction(
+                MentionLogActionPayload.MentionLogAction.MARK_SINGLE_READ,
+                record.historyId()
         );
     }
 

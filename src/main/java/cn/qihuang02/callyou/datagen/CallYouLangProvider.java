@@ -38,6 +38,7 @@ public class CallYouLangProvider extends LanguageProvider {
             new TranslationEntry("message.callyou.notify.toast.description", "Mentioned by %s in chat.", "%s 在聊天中提及了你。"),
             new TranslationEntry("message.callyou.notify.default", "You were mentioned by %s", "你被 %s 提及了"),
             new TranslationEntry("message.callyou.unread_mentions", "Welcome back! You have %s unread mentions, press M to view.", "欢迎回来，你有 %s 条未读提及消息，按 M 查看。"),
+            new TranslationEntry("message.callyou.reply.hover", "Click to reply", "点击回复"),
 
             // Keybinds
             new TranslationEntry("key.callyou.mention_preferences", "Mention Preferences", "提及偏好"),
@@ -74,9 +75,11 @@ public class CallYouLangProvider extends LanguageProvider {
             new TranslationEntry("screen.callyou.history.loading", "Loading...", "正在加载..."),
             new TranslationEntry("screen.callyou.history.refresh", "Refresh", "刷新"),
             new TranslationEntry("screen.callyou.history.mark_all", "Mark All Read", "全部标记为已读"),
+            new TranslationEntry("screen.callyou.history.mark_read", "Mark Read", "已读"),
+            new TranslationEntry("screen.callyou.history.reply", "Reply", "回复"),
             new TranslationEntry("screen.callyou.history.count", "Total %s records", "共 %s 条记录"),
             new TranslationEntry("screen.callyou.history.delete", "Delete", "删除"),
-            new TranslationEntry("screen.callyou.history.coords", "Copy Coords", "复制坐标"),
+            new TranslationEntry("screen.callyou.history.coords", "Create Waypoint", "创建传送点"),
             new TranslationEntry("screen.callyou.history.coords_copied", "Copied coords: %s", "已复制坐标：%s")
     );
 

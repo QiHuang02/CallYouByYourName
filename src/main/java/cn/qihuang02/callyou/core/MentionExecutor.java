@@ -1,33 +1,19 @@
 package cn.qihuang02.callyou.core;
 
-import cn.qihuang02.callyou.api.MentionContext;
-import cn.qihuang02.callyou.api.MentionType;
-import cn.qihuang02.callyou.api.components.Notifier;
-import cn.qihuang02.callyou.api.components.TargetProvider;
-import cn.qihuang02.callyou.api.components.TextFormatter;
-import cn.qihuang02.callyou.api.event.MentionEvent;
-import cn.qihuang02.callyou.config.CallYouConfig;
-import cn.qihuang02.callyou.core.attachment.CallYouAttachments;
-import cn.qihuang02.callyou.core.attachment.MentionPreferences;
-import cn.qihuang02.callyou.core.mention.components.formatter.ItemTextFormatter;
-import cn.qihuang02.callyou.core.saveddata.MentionRecord;
-import cn.qihuang02.callyou.core.saveddata.MentionSavedData;
-import net.minecraft.core.GlobalPos;
-import net.minecraft.network.chat.ClickEvent;
+import cn.qihuang02.callyou.core.mention.executor.MentionDispatcher;
+import cn.qihuang02.callyou.core.mention.executor.MentionHistoryRecorder;
+import cn.qihuang02.callyou.core.mention.executor.MentionMessageComposer;
+import cn.qihuang02.callyou.core.mention.executor.MentionPermissionValidator;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.ServerChatEvent;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 public final class MentionExecutor {
     private static final MentionGuard GUARD = new MentionGuard();
+    private static final MentionExecutionTools TOOLS = MentionExecutionTools.create(GUARD);
 
     public static void handlePlayerLogout(@NotNull ServerPlayer player) {
         GUARD.onPlayerLogout(player);
@@ -46,33 +32,15 @@ public final class MentionExecutor {
                 return;
             }
 
-            int effectiveMentionCount = 0;
-            boolean itemMentionUsed = false;
-
-            for (MentionResolver.ResolvedMention parsed : mentions) {
-                MentionType type = parsed.mentionType();
-                if (type == null) {
-                    continue;
-                }
-                if (isItemMention(type)) {
-                    if (itemMentionUsed) {
-                        continue;
-                    }
-                    itemMentionUsed = true;
-                }
-                effectiveMentionCount++;
-
-                if (!GUARD.canUseMentionType(sender, type, parsed.typeId())) {
-                    String key = parsed.key();
-                    Component display = Component.literal("@" + key);
-                    sender.sendSystemMessage(
-                            Component.translatable("message.callyou.no_permission", display)
-                    );
-                    event.setCanceled(true);
-                    return;
-                }
+            MentionPermissionValidator.ValidationResult validation =
+                    TOOLS.permissionValidator().validate(sender, mentions);
+            if (validation.errorMessage() != null) {
+                sender.sendSystemMessage(validation.errorMessage());
+                event.setCanceled(true);
+                return;
             }
 
+            int effectiveMentionCount = validation.effectiveMentionCount();
             if (effectiveMentionCount <= 0) {
                 return;
             }
@@ -87,166 +55,31 @@ public final class MentionExecutor {
                 return;
             }
 
-            MutableComponent rebuilt = Component.literal("");
-            int lastIndex = 0;
+            MentionMessageComposer.ComposeResult composeResult =
+                    TOOLS.messageComposer().compose(sender, originalMessage, raw, mentions);
+            event.setMessage(composeResult.rebuilt());
 
-            List<ServerPlayer> allTargetsHit = new ArrayList<>();
-            itemMentionUsed = false;
-
-            for (MentionResolver.ResolvedMention parsed : mentions) {
-                int start = parsed.startIndex();
-                int end = parsed.endIndex();
-
-                if (start < lastIndex || start >= raw.length() || end <= start) {
-                    continue;
-                }
-
-                if (start > lastIndex) {
-                    String before = raw.substring(lastIndex, start);
-                    if (!before.isEmpty()) {
-                        rebuilt.append(before);
-                    }
-                }
-
-                MentionType type = parsed.mentionType();
-                if (type == null) {
-                    String literal = raw.substring(start, Math.min(end, raw.length()));
-                    rebuilt.append(literal);
-                    lastIndex = end;
-                    continue;
-                }
-                if (isItemMention(type)) {
-                    if (itemMentionUsed) {
-                        String literal = raw.substring(start, Math.min(end, raw.length()));
-                        rebuilt.append(literal);
-                        lastIndex = end;
-                        continue;
-                    }
-                    itemMentionUsed = true;
-                }
-
-                ResourceLocation typeId = parsed.typeId();
-
-                MentionContext context = new MentionContext(
-                        sender,
-                        originalMessage,
-                        raw,
-                        parsed.key(),
-                        typeId
-                );
-
-                TextFormatter formatter = type.textFormatter();
-
-                Component formattedMention = formatter.format(context);
-
-                if (formatter.supportReply()) {
-                    String suggestion = formatter.buildReplySuggestion(context, formattedMention);
-                    if (!suggestion.isBlank()) {
-                        formattedMention = formattedMention.copy().withStyle(style ->
-                                style.withClickEvent(
-                                        new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, suggestion)
-                                )
-                        );
-                    }
-                }
-
-                rebuilt.append(formattedMention);
-
-                List<ServerPlayer> hit = executeSingleMention(type, context, nowTick);
-                allTargetsHit.addAll(hit);
-
-                lastIndex = end;
-            }
-
-            if (lastIndex < raw.length()) {
-                String tail = raw.substring(lastIndex);
-                if (!tail.isEmpty()) {
-                    rebuilt.append(tail);
-                }
-            }
-
+            List<ServerPlayer> allTargetsHit = TOOLS.dispatcher()
+                    .dispatchAll(composeResult.pendingMentions(), nowTick, composeResult.rebuilt());
             GUARD.recordUsage(sender, allTargetsHit, nowTick);
-
-            event.setMessage(rebuilt);
         } catch (MentionCancelException cancel) {
             sender.sendSystemMessage(cancel.getReason());
             event.setCanceled(true);
         }
     }
 
-    private static boolean isItemMention(@NotNull MentionType type) {
-        return type.textFormatter() instanceof ItemTextFormatter;
-    }
-
-    private static @NotNull List<ServerPlayer> executeSingleMention(
-            @NotNull MentionType type,
-            @NotNull MentionContext context,
-            long nowTick
+    private record MentionExecutionTools(
+            @NotNull MentionPermissionValidator permissionValidator,
+            @NotNull MentionMessageComposer messageComposer,
+            @NotNull MentionDispatcher dispatcher
     ) {
-        TargetProvider targetProvider = type.targetProvider();
-        Notifier notifier = type.notifier();
-
-        List<ServerPlayer> rawTargets = new ArrayList<>(targetProvider.getTargets(context));
-
-        MentionEvent.Pre preEvent = new MentionEvent.Pre(context, type, rawTargets);
-        NeoForge.EVENT_BUS.post(preEvent);
-
-        if (preEvent.isCanceled() || preEvent.getTargets().isEmpty()) {
-            return List.of();
+        private static @NotNull MentionExecutionTools create(@NotNull MentionGuard guard) {
+            MentionHistoryRecorder historyRecorder = new MentionHistoryRecorder();
+            return new MentionExecutionTools(
+                    new MentionPermissionValidator(guard),
+                    new MentionMessageComposer(),
+                    new MentionDispatcher(guard, historyRecorder)
+            );
         }
-
-        List<ServerPlayer> preFiltered = new ArrayList<>(preEvent.getTargets());
-
-        List<ServerPlayer> filteredTargets =
-                GUARD.filterTargets(context.sender(), type, context.typeId(), context, preFiltered, nowTick);
-
-        if (filteredTargets.isEmpty()) {
-            return List.of();
-        }
-
-        List<ServerPlayer> finalTargets = new ArrayList<>();
-
-        for (ServerPlayer target : filteredTargets) {
-            MentionPreferences prefs = target.getData(CallYouAttachments.MENTION_PREFERENCES);
-            ResourceLocation typeId = context.typeId();
-
-            if (typeId != null && !prefs.isNotifierEnabled(typeId, target.server.registryAccess())) {
-                continue;
-            }
-            finalTargets.add(target);
-        }
-
-        if (finalTargets.isEmpty()) {
-            return List.of();
-        }
-
-        notifier.apply(context, finalTargets);
-
-        NeoForge.EVENT_BUS.post(new MentionEvent.Post(context, type, finalTargets));
-
-        if (CallYouConfig.COMMON.enableServerSideHistory.get()) {
-            MentionSavedData savedData = MentionSavedData.get(context.level());
-            List<UUID> targetIds = finalTargets.stream().map(ServerPlayer::getUUID).toList();
-            MentionRecord record = buildMentionRecord(context, targetIds);
-            savedData.addLog(record);
-        }
-
-        return finalTargets;
-    }
-
-    private static @NotNull MentionRecord buildMentionRecord(
-            @NotNull MentionContext context,
-            @NotNull List<UUID> targetIds
-    ) {
-        Component messageCopy = context.originalMessage() == null ? Component.empty() : context.originalMessage().copy();
-        GlobalPos location = GlobalPos.of(context.dimension(), context.sender().blockPosition());
-        return MentionRecord.create(
-                context.senderId(),
-                context.senderName(),
-                messageCopy,
-                System.currentTimeMillis(),
-                targetIds,
-                location
-        );
     }
 }

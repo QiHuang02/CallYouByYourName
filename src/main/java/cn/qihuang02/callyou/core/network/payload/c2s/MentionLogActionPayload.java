@@ -7,9 +7,26 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import org.jetbrains.annotations.NotNull;
 
-public record MentionLogActionPayload(MentionLogAction action, long targetTimestamp) implements CustomPacketPayload {
+import java.util.UUID;
+
+public record MentionLogActionPayload(MentionLogAction action, UUID targetHistoryId) implements CustomPacketPayload {
     public static final Type<MentionLogActionPayload> TYPE = new Type<>(CallYouByYourName.getRl("mention_log_action"));
-    public static final StreamCodec<RegistryFriendlyByteBuf, MentionLogActionPayload> STREAM_CODEC = StreamCodec.composite(ByteBufCodecs.idMapper(id -> MentionLogAction.values()[id], MentionLogAction::ordinal), MentionLogActionPayload::action, ByteBufCodecs.VAR_LONG, MentionLogActionPayload::targetTimestamp, MentionLogActionPayload::new);
+    private static final StreamCodec<RegistryFriendlyByteBuf, UUID> UUID_STREAM_CODEC =
+            StreamCodec.composite(
+                    ByteBufCodecs.VAR_LONG,
+                    UUID::getMostSignificantBits,
+                    ByteBufCodecs.VAR_LONG,
+                    UUID::getLeastSignificantBits,
+                    UUID::new
+            );
+    public static final StreamCodec<RegistryFriendlyByteBuf, MentionLogActionPayload> STREAM_CODEC =
+            StreamCodec.composite(
+                    ByteBufCodecs.idMapper(id -> MentionLogAction.values()[id], MentionLogAction::ordinal),
+                    MentionLogActionPayload::action,
+                    UUID_STREAM_CODEC,
+                    MentionLogActionPayload::targetHistoryId,
+                    MentionLogActionPayload::new
+            );
 
     @Override
     public @NotNull Type<? extends CustomPacketPayload> type() {
@@ -17,6 +34,6 @@ public record MentionLogActionPayload(MentionLogAction action, long targetTimest
     }
 
     public enum MentionLogAction {
-        MARK_ALL_READ, DELETE_SINGLE
+        MARK_ALL_READ, DELETE_SINGLE, MARK_SINGLE_READ
     }
 }
