@@ -54,7 +54,7 @@ public final class MentionResolver {
             }
 
             if (type == null) {
-                UUID targetID = onlinePlayers.findOnlinePlayerByExactName(server, key);
+                UUID targetID = onlinePlayers.findPlayerByExactName(server, key);
                 if (targetID != null) {
                     ServerPlayer candidate = server.getPlayerList().getPlayer(targetID);
                     if (candidate != null) {

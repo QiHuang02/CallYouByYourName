@@ -17,6 +17,7 @@ import java.util.*;
 public class MentionRecord {
     private static final String TAG_HISTORY_ID = "history_id";
     private static final String TAG_SENDER_ID = "sender_id";
+    private static final String TAG_SENDER_NAME = "sender_name";
     private static final String TAG_MESSAGE = "message";
     private static final String TAG_TIMESTAMP = "timestamp";
     private static final String TAG_TARGETS = "targets";
@@ -25,6 +26,7 @@ public class MentionRecord {
     public static final Codec<MentionRecord> CODEC = RecordCodecBuilder.create(instance -> instance.group(
             UUIDUtil.CODEC.optionalFieldOf(TAG_HISTORY_ID, Util.NIL_UUID).forGetter(record -> record.historyId),
             UUIDUtil.CODEC.optionalFieldOf(TAG_SENDER_ID, Util.NIL_UUID).forGetter(record -> record.senderId),
+            Codec.STRING.optionalFieldOf(TAG_SENDER_NAME, "").forGetter(record -> record.senderName),
             ComponentSerialization.CODEC.optionalFieldOf(TAG_MESSAGE, Component.empty()).forGetter(record -> record.message),
             Codec.LONG.optionalFieldOf(TAG_TIMESTAMP, 0L).forGetter(record -> record.timestamp),
             UUIDUtil.CODEC.listOf().optionalFieldOf(TAG_TARGETS, List.of()).forGetter(record -> record.targetIds),
@@ -37,6 +39,8 @@ public class MentionRecord {
 
     private final UUID senderId;
 
+    private final String senderName;
+
     private final Component message;
 
     private final long timestamp;
@@ -48,6 +52,7 @@ public class MentionRecord {
     public MentionRecord(
             @NotNull UUID historyId,
             @NotNull UUID senderId,
+            @NotNull String senderName,
             @NotNull Component message,
             long timestamp,
             @NotNull Collection<UUID> targets,
@@ -55,6 +60,7 @@ public class MentionRecord {
     ) {
         this.historyId = Util.NIL_UUID.equals(historyId) ? UUID.randomUUID() : historyId;
         this.senderId = senderId;
+        this.senderName = senderName == null ? "" : senderName;
         this.message = message;
         this.timestamp = timestamp;
         this.targetIds = sanitizeTargets(targets);
@@ -65,11 +71,23 @@ public class MentionRecord {
 
     public static @NotNull MentionRecord create(
             @NotNull UUID senderId,
+            @NotNull String senderName,
             @NotNull Component message,
             long timestamp,
             @NotNull Collection<UUID> targets
     ) {
-        return new MentionRecord(UUID.randomUUID(), senderId, message, timestamp, targets, List.of());
+        return create(senderId, senderName, message, timestamp, targets, List.of());
+    }
+
+    public static @NotNull MentionRecord create(
+            @NotNull UUID senderId,
+            @NotNull String senderName,
+            @NotNull Component message,
+            long timestamp,
+            @NotNull Collection<UUID> targets,
+            @NotNull Collection<UUID> readTargets
+    ) {
+        return new MentionRecord(UUID.randomUUID(), senderId, senderName, message, timestamp, targets, readTargets);
     }
 
     public @NotNull UUID historyId() {
@@ -88,6 +106,10 @@ public class MentionRecord {
 
     public @NotNull UUID senderId() {
         return senderId;
+    }
+
+    public @NotNull String senderName() {
+        return senderName;
     }
 
     public @NotNull Component message() {
@@ -116,7 +138,7 @@ public class MentionRecord {
         }
         List<UUID> updatedRead = new ArrayList<>(readTargets);
         updatedRead.add(targetId);
-        return new MentionRecord(historyId, senderId, message, timestamp, targetIds, updatedRead);
+        return new MentionRecord(historyId, senderId, senderName, message, timestamp, targetIds, updatedRead);
     }
 
     public @NotNull MentionRecord withTargets(@NotNull Collection<UUID> targets) {
@@ -130,7 +152,7 @@ public class MentionRecord {
                 filteredRead.add(id);
             }
         }
-        return new MentionRecord(historyId, senderId, message, timestamp, sanitized, filteredRead);
+        return new MentionRecord(historyId, senderId, senderName, message, timestamp, sanitized, filteredRead);
     }
 
     public @Nullable MentionRecord withoutTarget(@NotNull UUID targetId) {
@@ -144,6 +166,6 @@ public class MentionRecord {
         }
         List<UUID> remainingRead = new ArrayList<>(readTargets);
         remainingRead.remove(targetId);
-        return new MentionRecord(historyId, senderId, message, timestamp, remainingTargets, remainingRead);
+        return new MentionRecord(historyId, senderId, senderName, message, timestamp, remainingTargets, remainingRead);
     }
 }

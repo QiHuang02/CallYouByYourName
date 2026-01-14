@@ -37,7 +37,7 @@ public final class PlayerNameTargetProvider implements TargetProvider {
         }
 
         OnlinePlayerList onlinePlayerList = OnlinePlayersHandler.getOnlinePlayers();
-        UUID targetID = onlinePlayerList.findOnlinePlayerByExactName(server, targetName);
+        UUID targetID = onlinePlayerList.findPlayerByExactName(server, targetName);
         if (targetID == null) {
             return List.of();
         }

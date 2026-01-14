@@ -37,7 +37,7 @@ public class CallYouLangProvider extends LanguageProvider {
             new TranslationEntry("message.callyou.notify.toast.title", "You were mentioned by %s", "你被 %s 提及"),
             new TranslationEntry("message.callyou.notify.toast.description", "Mentioned by %s in chat.", "%s 在聊天中提及了你。"),
             new TranslationEntry("message.callyou.notify.default", "You were mentioned by %s", "你被 %s 提及了"),
-            new TranslationEntry("message.callyou.unread_mentions", "Welcome back! You have %s unread mentions, press M to view.", "欢迎回来，你有 %s 条未读提及消息，按 M 查看。"),
+            new TranslationEntry("message.callyou.unread_mentions", "Welcome back! You have %s unread mentions, press %s to view.", "欢迎回来，你有 %s 条未读提及消息，按 %s 查看。"),
             new TranslationEntry("message.callyou.reply.hover", "Click to reply", "点击回复"),
 
             // Keybinds

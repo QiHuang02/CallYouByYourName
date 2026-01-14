@@ -8,8 +8,12 @@ import com.lowdragmc.lowdraglib2.gui.ui.elements.Button;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.ItemSlot;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.TextField;
+import com.lowdragmc.lowdraglib2.gui.ui.event.HoverTooltips;
+import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvent;
+import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
 import com.lowdragmc.lowdraglib2.gui.ui.style.LayoutStyle;
 import com.lowdragmc.lowdraglib2.gui.ui.styletemplate.Sprites;
+import com.lowdragmc.lowdraglib2.gui.util.DrawerHelper;
 import com.lowdragmc.lowdraglib2.utils.TextUtilities;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
@@ -19,6 +23,7 @@ import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.util.FormattedCharSequence;
@@ -51,6 +56,7 @@ public final class MentionHistoryRow {
     private static final Component REPLY_LABEL = Component.translatable("screen.callyou.history.reply");
     private static final String ITEM_ICON_PLACEHOLDER = "  ";
     private static final float ITEM_ICON_EXTRA_SHIFT = 1.0F;
+    private static final String SPOT_FTB_ADD_TOOLTIP_KEY = "message.callyou.spot.ftb.add";
 
     private final UIElement element;
 
@@ -63,7 +69,7 @@ public final class MentionHistoryRow {
         boolean isRead = record.isRead(localPlayerId);
 
         String headerText = "[" + DATE_FORMATTER.format(Instant.ofEpochMilli(record.timestamp())) + "] "
-                + resolveSenderName(record.senderId());
+                + resolveSenderName(record.senderId(), record.senderName());
 
         Label header = new Label();
         header.setText(Component.literal(headerText));
@@ -96,7 +102,9 @@ public final class MentionHistoryRow {
                         .justifyItems(YogaJustify.FLEX_END));
 
         String replyTrigger = findReplySuggestion(record.message());
-        String replySuggestion = replyTrigger != null ? buildSenderReplySuggestion(record.senderId()) : null;
+        String replySuggestion = replyTrigger != null
+                ? buildSenderReplySuggestion(record.senderId(), record.senderName())
+                : null;
         UIElement[] replyGroup = new UIElement[1];
         boolean[] replyVisible = new boolean[]{false};
 
@@ -198,10 +206,14 @@ public final class MentionHistoryRow {
             return;
         }
         FTBChunksAPIWrapper.handleTransientWaypointCommand(command)
-                .ifPresent(name -> minecraft.player.displayClientMessage(
-                        Component.translatable("message.callyou.spot.ftb.added", name),
-                        true
-                ));
+                .ifPresent(name -> {
+                    Component message = Component.translatable("message.callyou.spot.ftb.added", name);
+                    if (minecraft.screen instanceof MentionPreferencesScreen screen) {
+                        screen.showTransientMessage(message);
+                        return;
+                    }
+                    minecraft.player.displayClientMessage(message, true);
+                });
     }
 
     private boolean shouldShowCoordsButton(@Nullable String waypointCommand) {
@@ -288,7 +300,7 @@ public final class MentionHistoryRow {
         return Util.NIL_UUID;
     }
 
-    private @NotNull String resolveSenderName(@NotNull UUID senderId) {
+    private @NotNull String resolveSenderName(@NotNull UUID senderId, @Nullable String fallbackName) {
         Minecraft minecraft = Minecraft.getInstance();
         if (minecraft != null) {
             ClientPacketListener connection = minecraft.getConnection();
@@ -312,11 +324,17 @@ public final class MentionHistoryRow {
                 }
             }
         }
+        String fallback = normalizeSenderName(fallbackName);
+        if (fallback != null) {
+            LAST_KNOWN_SENDER_NAMES.put(senderId, fallback);
+            LAST_KNOWN_SENDER_PROFILES.put(senderId, fallback);
+            return fallback;
+        }
         String cached = LAST_KNOWN_SENDER_NAMES.get(senderId);
         return cached != null ? cached : senderId.toString();
     }
 
-    private @Nullable String resolveSenderProfileName(@NotNull UUID senderId) {
+    private @Nullable String resolveSenderProfileName(@NotNull UUID senderId, @Nullable String fallbackName) {
         Minecraft minecraft = Minecraft.getInstance();
         if (minecraft != null) {
             ClientPacketListener connection = minecraft.getConnection();
@@ -331,21 +349,35 @@ public final class MentionHistoryRow {
                 }
             }
         }
+        String fallback = normalizeSenderName(fallbackName);
+        if (fallback != null) {
+            LAST_KNOWN_SENDER_PROFILES.put(senderId, fallback);
+            return fallback;
+        }
         return LAST_KNOWN_SENDER_PROFILES.get(senderId);
     }
 
-    private @NotNull String buildSenderReplySuggestion(@NotNull UUID senderId) {
-        String senderName = resolveSenderProfileName(senderId);
+    private @NotNull String buildSenderReplySuggestion(@NotNull UUID senderId, @Nullable String fallbackName) {
+        String senderName = resolveSenderProfileName(senderId, fallbackName);
         if (senderName == null || senderName.isBlank()) {
             return "";
         }
         return "@" + senderName + " ";
     }
 
+    private @Nullable String normalizeSenderName(@Nullable String name) {
+        if (name == null) {
+            return null;
+        }
+        String trimmed = name.trim();
+        return trimmed.isEmpty() ? null : trimmed;
+    }
+
     private static final class MentionBodyLabel extends Label {
         private ItemSlot itemSlot;
 
         private MentionBodyLabel() {
+            addEventListener(UIEvents.HOVER_TOOLTIPS, this::onHoverTooltips);
             ensureItemSlot();
             refreshItemSlot();
         }
@@ -371,7 +403,7 @@ public final class MentionHistoryRow {
             if (itemSlot != null) {
                 return;
             }
-            itemSlot = MentionUIStyles.createItemSlot(ItemStack.EMPTY, 18, false, false);
+            itemSlot = MentionUIStyles.createItemSlot(ItemStack.EMPTY, 18, false, true);
             itemSlot.layout(style -> style.positionType(YogaPositionType.ABSOLUTE).paddingAll(0));
             itemSlot.setVisible(false);
             addChild(itemSlot);
@@ -395,6 +427,203 @@ public final class MentionHistoryRow {
                     .height(itemSize)
                     .paddingAll(0));
             itemSlot.setVisible(true);
+        }
+
+        private void onHoverTooltips(UIEvent event) {
+            HoverEvent hover = findHoverEventAtMouse();
+            if (hover == null) {
+                return;
+            }
+            HoverTooltips tooltips = buildHoverTooltips(hover);
+            if (tooltips == null || tooltips.tooltipTexts().isEmpty()) {
+                return;
+            }
+            event.hoverTooltips = tooltips;
+        }
+
+        private @Nullable HoverEvent findHoverEventAtMouse() {
+            var ui = getModularUI();
+            if (ui == null) {
+                return null;
+            }
+            return findHoverEventAt(ui.getLastMouseX(), ui.getLastMouseY());
+        }
+
+        private @Nullable HoverEvent findHoverEventAt(float mouseX, float mouseY) {
+            Component text = getText();
+            if (text == null) {
+                return null;
+            }
+            float width = getContentWidth();
+            if (width <= 0.0F) {
+                return null;
+            }
+
+            Font font = getFont();
+            float lineHeight = getTextStyle().fontSize();
+            float lineSpacing = getTextStyle().lineSpacing();
+            float scale = lineHeight / font.lineHeight;
+
+            List<Tuple<FormattedCharSequence, Float>> lines =
+                    TextUtilities.computeFormattedLines(font, text, lineHeight, width);
+            if (lines.isEmpty()) {
+                return null;
+            }
+
+            List<Tuple<FormattedCharSequence, Float>> displayLines = lines;
+            TextWrap textWrap = getTextStyle().textWrap();
+            if (textWrap == TextWrap.HIDE) {
+                displayLines = lines.subList(0, Math.min(1, lines.size()));
+            }
+
+            float totalTextHeight = displayLines.size() * (lineHeight + lineSpacing) - lineSpacing;
+            float startY = getContentY();
+            switch (getTextStyle().textAlignVertical()) {
+                case TOP -> startY = getContentY();
+                case CENTER -> startY = getContentY() + (getContentHeight() - totalTextHeight) / 2;
+                case BOTTOM -> startY = getContentY() + (getContentHeight() - totalTextHeight);
+            }
+
+            boolean roll = textWrap == TextWrap.ROLL || (textWrap == TextWrap.HOVER_ROLL && isSelfOrChildHover());
+            for (Tuple<FormattedCharSequence, Float> tuple : displayLines) {
+                FormattedCharSequence line = tuple.getA();
+                float lineWidth = tuple.getB();
+                float lineX = getContentX();
+
+                if (roll && lineWidth > width) {
+                    float rollSpeed = getTextStyle().rollSpeed();
+                    float totalW = width + lineWidth + 10;
+                    float t = rollSpeed > 0
+                            ? (((rollSpeed * Math.abs((int) (System.currentTimeMillis() % 1000000)) / 10)
+                            % (totalW)) / (totalW))
+                            : 0.5F;
+                    lineX = getContentX() + width - totalW * t;
+                } else {
+                    switch (getTextStyle().textAlignHorizontal()) {
+                        case LEFT -> lineX = getContentX();
+                        case CENTER -> lineX = (lineWidth > width) ? getContentX()
+                                : (getContentX() + (width - lineWidth) / 2);
+                        case RIGHT -> lineX = getContentX() + (width - lineWidth);
+                    }
+                }
+
+                float lineY = startY;
+                if (mouseY < lineY || mouseY > lineY + lineHeight) {
+                    startY += lineHeight + lineSpacing;
+                    continue;
+                }
+
+                HoverEvent hover = findHoverEventInLine(font, line, lineX, lineWidth, scale, mouseX);
+                if (hover != null) {
+                    return hover;
+                }
+                startY += lineHeight + lineSpacing;
+            }
+            return null;
+        }
+
+        private @Nullable HoverEvent findHoverEventInLine(
+                @NotNull Font font,
+                @NotNull FormattedCharSequence line,
+                float lineX,
+                float lineWidth,
+                float scale,
+                float mouseX
+        ) {
+            float relativeX = mouseX - lineX;
+            if (relativeX < 0.0F || relativeX > lineWidth) {
+                return null;
+            }
+            float[] cursor = new float[]{0.0F};
+            HoverEvent[] found = new HoverEvent[1];
+            line.accept((index, style, codePoint) -> {
+                if (found[0] != null) {
+                    return false;
+                }
+                float charWidth = font.width(new String(Character.toChars(codePoint))) * scale;
+                float next = cursor[0] + charWidth;
+                if (relativeX >= cursor[0] && relativeX <= next) {
+                    if (isReplySuggestionStyle(style)) {
+                        return false;
+                    }
+                    HoverEvent hover = style.getHoverEvent();
+                    if (hover != null) {
+                        found[0] = hover;
+                        return false;
+                    }
+                    return false;
+                }
+                cursor[0] = next;
+                return true;
+            });
+            return found[0];
+        }
+
+        private @Nullable HoverTooltips buildHoverTooltips(@NotNull HoverEvent hover) {
+            if (hover.getAction() == HoverEvent.Action.SHOW_ITEM) {
+                HoverEvent.ItemStackInfo info = hover.getValue(HoverEvent.Action.SHOW_ITEM);
+                ItemStack stack = info != null ? info.getItemStack() : ItemStack.EMPTY;
+                if (stack.isEmpty()) {
+                    stack = new ItemStack(Blocks.BARRIER);
+                }
+                return new HoverTooltips(
+                        DrawerHelper.getItemToolTip(stack),
+                        stack.getTooltipImage().orElse(null),
+                        null,
+                        stack
+                );
+            }
+            if (hover.getAction() == HoverEvent.Action.SHOW_TEXT) {
+                Component hoverText = hover.getValue(HoverEvent.Action.SHOW_TEXT);
+                if (hoverText == null) {
+                    return null;
+                }
+                Component sanitized = stripSpotAddLine(hoverText);
+                if (sanitized == null) {
+                    return null;
+                }
+                return new HoverTooltips(List.of(sanitized), null, null, ItemStack.EMPTY);
+            }
+            return null;
+        }
+
+        private boolean isReplySuggestionStyle(@NotNull Style style) {
+            ClickEvent clickEvent = style.getClickEvent();
+            return clickEvent != null && clickEvent.getAction() == ClickEvent.Action.SUGGEST_COMMAND;
+        }
+
+        private @Nullable Component stripSpotAddLine(@NotNull Component hoverText) {
+            if (isSpotAddComponent(hoverText)) {
+                return null;
+            }
+            if (hoverText.getSiblings().isEmpty()) {
+                return hoverText;
+            }
+            MutableComponent sanitized = hoverText.copy();
+            List<Component> siblings = sanitized.getSiblings();
+            for (int i = 0; i < siblings.size(); i++) {
+                Component part = siblings.get(i);
+                if (!isSpotAddComponent(part)) {
+                    continue;
+                }
+                if (i > 0 && isNewLineComponent(siblings.get(i - 1))) {
+                    siblings.remove(i - 1);
+                    i--;
+                }
+                siblings.remove(i);
+                i--;
+            }
+            return sanitized;
+        }
+
+        private boolean isSpotAddComponent(@NotNull Component component) {
+            return Component.translatable(SPOT_FTB_ADD_TOOLTIP_KEY)
+                    .getString()
+                    .equals(component.getString());
+        }
+
+        private boolean isNewLineComponent(@NotNull Component component) {
+            return "\n".equals(component.getString());
         }
 
         private @Nullable ItemIconPlacement findItemIconPlacement() {

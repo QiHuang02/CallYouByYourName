@@ -23,7 +23,11 @@ public final class MentionLogHandler {
             int unread = data.countUnread(player.getUUID());
             if (unread > 0) {
                 player.sendSystemMessage(
-                        Component.translatable("message.callyou.unread_mentions", unread)
+                        Component.translatable(
+                                "message.callyou.unread_mentions",
+                                unread,
+                                Component.keybind("key.callyou.mention_preferences")
+                        )
                 );
             }
         }

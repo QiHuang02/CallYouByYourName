@@ -4,12 +4,16 @@ import cn.qihuang02.callyou.core.mention.executor.MentionDispatcher;
 import cn.qihuang02.callyou.core.mention.executor.MentionHistoryRecorder;
 import cn.qihuang02.callyou.core.mention.executor.MentionMessageComposer;
 import cn.qihuang02.callyou.core.mention.executor.MentionPermissionValidator;
+import net.minecraft.network.chat.ChatType;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.OutgoingChatMessage;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.event.ServerChatEvent;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 public final class MentionExecutor {
     private static final MentionGuard GUARD = new MentionGuard();
@@ -62,9 +66,31 @@ public final class MentionExecutor {
             List<ServerPlayer> allTargetsHit = TOOLS.dispatcher()
                     .dispatchAll(composeResult.pendingMentions(), nowTick, composeResult.rebuilt());
             GUARD.recordUsage(sender, allTargetsHit, nowTick);
+
+            if (!allTargetsHit.isEmpty()) {
+                event.setCanceled(true);
+                sendChatToTargets(sender, composeResult.rebuilt(), allTargetsHit);
+            }
         } catch (MentionCancelException cancel) {
             sender.sendSystemMessage(cancel.getReason());
             event.setCanceled(true);
+        }
+    }
+
+    private static void sendChatToTargets(
+            @NotNull ServerPlayer sender,
+            @NotNull Component message,
+            @NotNull List<ServerPlayer> targets
+    ) {
+        Set<ServerPlayer> recipients = new LinkedHashSet<>(targets.size() + 1);
+        recipients.addAll(targets);
+        // Ensure the sender still sees their own message.
+        recipients.add(sender);
+
+        ChatType.Bound boundType = ChatType.bind(ChatType.CHAT, sender);
+        OutgoingChatMessage outgoing = new OutgoingChatMessage.Disguised(message);
+        for (ServerPlayer recipient : recipients) {
+            recipient.sendChatMessage(outgoing, sender.shouldFilterMessageTo(recipient), boundType);
         }
     }
 

@@ -1,5 +1,6 @@
 package cn.qihuang02.callyou.util;
 
+import cn.qihuang02.callyou.api.PlayerList;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.client.multiplayer.PlayerInfo;
@@ -11,7 +12,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class OnlinePlayerList {
+public class OnlinePlayerList implements PlayerList {
     private static ClientPacketListener cachedClientConnection;
     private static List<String> cachedClientNames = List.of();
     private static int cachedOnlinePlayerCount = -1;
@@ -75,6 +76,7 @@ public class OnlinePlayerList {
         cachedSelfName = "";
     }
 
+    @Override
     public void clear() {
         onlinePlayerUUIDs.clear();
         nameCache.clear();
@@ -82,6 +84,7 @@ public class OnlinePlayerList {
         prefixIndex.clear();
     }
 
+    @Override
     public void refreshFromServer(@NotNull MinecraftServer server) {
         clear();
 
@@ -90,22 +93,27 @@ public class OnlinePlayerList {
         }
     }
 
+    @Override
     public void onPlayerLoggedIn(@NotNull ServerPlayer player) {
         cacheOnlinePlayer(player.getUUID(), player.getGameProfile().getName());
     }
 
+    @Override
     public void onPlayerLoggedOut(@NotNull ServerPlayer player) {
         removeOnlinePlayer(player.getUUID(), player.getGameProfile().getName());
     }
 
-    public List<UUID> getOnlinePlayerUUIDs() {
+    @Override
+    public List<UUID> getPlayerUUIDs() {
         return Collections.unmodifiableList(onlinePlayerUUIDs);
     }
 
-    public UUID findOnlinePlayerByExactName(@NotNull MinecraftServer server, @NotNull String name) {
+    @Override
+    public UUID findPlayerByExactName(@NotNull MinecraftServer server, @NotNull String name) {
         return nameToUUID.get(name.toLowerCase(Locale.ROOT));
     }
 
+    @Override
     public String getPlayerName(@NotNull MinecraftServer server, @NotNull UUID uuid) {
         ServerPlayer player = server.getPlayerList().getPlayer(uuid);
         if (player != null) {
@@ -116,7 +124,8 @@ public class OnlinePlayerList {
         return nameCache.getOrDefault(uuid, "Unknown");
     }
 
-    public List<UUID> findOnlinePlayersByName(@NotNull MinecraftServer server, @NotNull String name) {
+    @Override
+    public List<UUID> findPlayersByName(@NotNull MinecraftServer server, @NotNull String name) {
         String lower = name.toLowerCase(Locale.ROOT);
         if (lower.isEmpty()) {
             return new ArrayList<>(onlinePlayerUUIDs);
@@ -124,14 +133,16 @@ public class OnlinePlayerList {
         return prefixIndex.find(lower);
     }
 
-    public List<UUID> getOnlinePlayersSorted(@NotNull MinecraftServer server) {
+    @Override
+    public List<UUID> getPlayersSorted(@NotNull MinecraftServer server) {
         return onlinePlayerUUIDs.stream()
                 .sorted(Comparator.comparing(uuid -> getPlayerName(server, uuid), String.CASE_INSENSITIVE_ORDER))
                 .collect(Collectors.toList());
     }
 
-    public List<String> getOnlinePlayerNamesSorted(@NotNull MinecraftServer server) {
-        return getOnlinePlayersSorted(server).stream()
+    @Override
+    public List<String> getPlayerNamesSorted(@NotNull MinecraftServer server) {
+        return getPlayersSorted(server).stream()
                 .map(uuid -> getPlayerName(server, uuid))
                 .toList();
     }

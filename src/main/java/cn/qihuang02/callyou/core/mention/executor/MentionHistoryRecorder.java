@@ -32,11 +32,14 @@ public final class MentionHistoryRecorder {
             @NotNull Component formattedMessage
     ) {
         Component messageCopy = formattedMessage.copy();
+        List<UUID> readTargets = targetIds;
         return MentionRecord.create(
                 context.senderId(),
+                context.senderName(),
                 messageCopy,
                 System.currentTimeMillis(),
-                targetIds
+                targetIds,
+                readTargets
         );
     }
 }

@@ -1,5 +1,56 @@
 # Update Log
 
+[release] Version 2101.2.1-build.38
+feat(core): 提及消息仅发送给命中目标并保留发送者回显
+
+- MentionExecutor 在提及时取消广播，改为仅向命中玩家与发送者发送消息
+
+refactor(storage): 历史记录补充发送者名称
+
+- MentionRecord 新增 senderName 字段，历史列表离线时也能显示发送者名称
+
+feat(server): 增加离线玩家缓存基础设施
+
+- 新增 PlayerList 接口与 OfflinePlayerList/KnownPlayerSavedData，实现在线/离线玩家列表统一管理
+
+fix(client): 提及历史交互细节优化
+
+- 历史列表支持提及悬浮提示，过滤可回复/Spot 的重复提示，并让物品提及占位符也能显示物品信息
+- FTB 临时路点创建后在设置界面显示轻量提示
+
+chore(lang): 未读提及提示支持显示快捷键
+
+- 未读提及消息改为动态显示按键绑定提示
+
+chore(build): 排除生成资源缓存目录
+
+- 打包资源时忽略 src/generated/resources/.cache
+
+feat(core): Send mention messages only to matched targets while keeping sender echo
+
+- MentionExecutor now cancels broadcast and sends only to matched targets plus the sender
+
+refactor(storage): Add sender name to history records
+
+- MentionRecord adds senderName so history can show sender even when offline
+
+feat(server): Add offline player cache infrastructure
+
+- Introduce PlayerList and OfflinePlayerList/KnownPlayerSavedData to unify online/offline player lists
+
+fix(client): Improve mention history interactions
+
+- History list supports hover hints, filters duplicate reply/spot tips, and lets item placeholders show item tooltips
+- Show a lightweight toast in settings after creating an FTB transient waypoint
+
+chore(lang): Unread mention prompt now shows the keybind
+
+- Unread mention message now displays the bound key dynamically
+
+chore(build): Exclude generated resource cache
+
+- Skip src/generated/resources/.cache during packaging
+
 [dev] Version 2101.2.0-build.37
 refactor(core): 拆分提及执行流程为权限/组装/派发模块，并独立历史记录器
 
@@ -44,6 +95,7 @@ chore(build): Update build config and metadata generation
 
 - Move to NeoForge moddev plugin and adjust dependency scopes
 - Add templated mods.toml generation and update Gradle wrapper to 9.2.1
+- Exclude src/generated/resources/.cache from jar packaging
 
 [dev] Version 2101.2.0-build.36
 refactor(storage): 迁移数据存储系统使用原版Codec序列化

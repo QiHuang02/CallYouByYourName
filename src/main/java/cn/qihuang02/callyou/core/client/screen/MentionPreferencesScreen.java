@@ -12,6 +12,7 @@ import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
 import com.lowdragmc.lowdraglib2.gui.ui.UI;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.data.Horizontal;
+import com.lowdragmc.lowdraglib2.gui.ui.data.Vertical;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.*;
 import com.lowdragmc.lowdraglib2.gui.ui.style.LayoutStyle;
 import com.lowdragmc.lowdraglib2.gui.ui.style.Stylesheet;
@@ -29,6 +30,7 @@ import net.minecraft.resources.ResourceLocation;
 import org.appliedenergistics.yoga.YogaAlign;
 import org.appliedenergistics.yoga.YogaFlexDirection;
 import org.appliedenergistics.yoga.YogaJustify;
+import org.appliedenergistics.yoga.YogaPositionType;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -38,6 +40,9 @@ import java.util.*;
 public class MentionPreferencesScreen extends ModularUIScreen {
     private static final int PANEL_WIDTH = 280;
     private static final int PANEL_HEIGHT = 220;
+    private static final int TOAST_HEIGHT = 20;
+    private static final int TOAST_PADDING = 6;
+    private static final long TOAST_DURATION_MS = 2000L;
 
     private static final Component TITLE = Component.translatable("screen.callyou.mention_preferences.title");
 
@@ -84,11 +89,14 @@ public class MentionPreferencesScreen extends ModularUIScreen {
     private final ScrollerView historyList;
     private final Label historyEmptyLabel;
     private final Button doneButton;
+    private final Label toastLabel;
+    private final UIElement toastLayer;
     private MentionPreferences workingCopy;
     private List<MentionRecord> cachedHistory = new ArrayList<>();
     private Tab currentTab = Tab.GENERAL;
     private long lastUiRefreshTime = -1;
     private long lastHistoryRefreshTime = -1;
+    private long toastHideAt = -1;
 
     public MentionPreferencesScreen(@Nullable Screen parent) {
         this(parent, new UIBuilder());
@@ -123,6 +131,8 @@ public class MentionPreferencesScreen extends ModularUIScreen {
         this.historyEmptyLabel = builder.historyEmptyLabel;
 
         this.doneButton = builder.doneButton;
+        this.toastLabel = builder.toastLabel;
+        this.toastLayer = builder.toastLayer;
 
         this.configureActions();
     }
@@ -225,6 +235,7 @@ public class MentionPreferencesScreen extends ModularUIScreen {
         super.tick();
         this.getModularUI().tick();
         this.refreshHistoryIfNeeded();
+        this.updateToast();
         if (ClientMentionPreferences.isSyncPending()) {
             return;
         }
@@ -247,6 +258,47 @@ public class MentionPreferencesScreen extends ModularUIScreen {
             this.populateMentionTypeList();
         }
         this.updateBlockControls();
+    }
+
+    public void showTransientMessage(@NotNull Component message) {
+        toastLabel.setText(message);
+        layoutToastForMessage(message);
+        toastLabel.setVisible(true);
+        toastLabel.setDisplay(true);
+        toastLayer.setVisible(true);
+        toastLayer.setDisplay(true);
+        toastHideAt = Util.getMillis() + TOAST_DURATION_MS;
+    }
+
+    private void updateToast() {
+        if (toastHideAt <= 0) {
+            return;
+        }
+        if (Util.getMillis() < toastHideAt) {
+            return;
+        }
+        toastHideAt = -1;
+        toastLabel.setVisible(false);
+        toastLabel.setDisplay(false);
+        toastLayer.setVisible(false);
+        toastLayer.setDisplay(false);
+    }
+
+    private void layoutToastForMessage(@NotNull Component message) {
+        Minecraft minecraft = Minecraft.getInstance();
+        int textWidth = minecraft.font.width(message);
+        int maxWidth = PANEL_WIDTH - TOAST_PADDING * 2;
+        int toastWidth = Math.min(maxWidth, textWidth + TOAST_PADDING * 2);
+        int left = Math.max(0, (PANEL_WIDTH - toastWidth) / 2);
+        toastLayer.layout(style -> style.positionType(YogaPositionType.ABSOLUTE)
+                .left(left)
+                .top((PANEL_HEIGHT - TOAST_HEIGHT) / 2)
+                .width(toastWidth)
+                .height(TOAST_HEIGHT)
+                .alignItems(YogaAlign.STRETCH)
+                .justifyItems(YogaJustify.CENTER)
+                .paddingLeft(TOAST_PADDING)
+                .paddingRight(TOAST_PADDING));
     }
 
     @Override
@@ -582,6 +634,8 @@ public class MentionPreferencesScreen extends ModularUIScreen {
 
         // Shared
         Button doneButton;
+        Label toastLabel;
+        UIElement toastLayer;
 
         UIBuilder() {
             build();
@@ -649,6 +703,32 @@ public class MentionPreferencesScreen extends ModularUIScreen {
                             .widthStretch())
                     .addChildren(doneButton);
 
+            // --- Toast ---
+            toastLabel = new Label();
+            toastLabel.setText(Component.empty());
+            toastLabel.layout(style -> style.widthStretch().height(TOAST_HEIGHT));
+            toastLabel.textStyle(style -> style.textAlignHorizontal(Horizontal.CENTER)
+                    .textAlignVertical(Vertical.CENTER)
+                    .textColor(0xFFFFFF));
+            toastLabel.setVisible(false);
+            toastLabel.setDisplay(false);
+
+            UIElement toastLayer = new UIElement()
+                    .layout(style -> style.positionType(YogaPositionType.ABSOLUTE)
+                            .left(0)
+                            .top((PANEL_HEIGHT - TOAST_HEIGHT) / 2)
+                            .height(TOAST_HEIGHT)
+                            .alignItems(YogaAlign.STRETCH)
+                            .justifyItems(YogaJustify.CENTER)
+                            .width(PANEL_WIDTH)
+                            .paddingLeft(TOAST_PADDING)
+                            .paddingRight(TOAST_PADDING))
+                    .style(style -> style.background(Sprites.RECT_RD_LIGHT))
+                    .addChildren(toastLabel);
+            toastLayer.setVisible(false);
+            toastLayer.setDisplay(false);
+            this.toastLayer = toastLayer;
+
             // --- Root ---
             UIElement root = new UIElement()
                     .layout(style -> style.width(PANEL_WIDTH)
@@ -658,7 +738,7 @@ public class MentionPreferencesScreen extends ModularUIScreen {
                             .paddingAll(5)
                             .gapAll(4))
                     .style(style -> style.background(Sprites.RECT_SOLID))
-                    .addChildren(header, contentArea, footer);
+                    .addChildren(header, contentArea, footer, toastLayer);
 
             Stylesheet mcStyle = StylesheetManager.INSTANCE.getStylesheetSafe(StylesheetManager.MC);
             modularUI = ModularUI.of(UI.of(root, mcStyle));
