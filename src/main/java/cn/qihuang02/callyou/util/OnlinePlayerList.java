@@ -104,7 +104,7 @@ public class OnlinePlayerList implements PlayerList {
     }
 
     @Override
-    public List<UUID> getPlayerUUIDs() {
+    public @NotNull List<UUID> getPlayerUUIDs() {
         return Collections.unmodifiableList(onlinePlayerUUIDs);
     }
 
@@ -114,7 +114,7 @@ public class OnlinePlayerList implements PlayerList {
     }
 
     @Override
-    public String getPlayerName(@NotNull MinecraftServer server, @NotNull UUID uuid) {
+    public @NotNull String getPlayerName(@NotNull MinecraftServer server, @NotNull UUID uuid) {
         ServerPlayer player = server.getPlayerList().getPlayer(uuid);
         if (player != null) {
             String name = player.getGameProfile().getName();
@@ -125,7 +125,7 @@ public class OnlinePlayerList implements PlayerList {
     }
 
     @Override
-    public List<UUID> findPlayersByName(@NotNull MinecraftServer server, @NotNull String name) {
+    public @NotNull List<UUID> findPlayersByName(@NotNull MinecraftServer server, @NotNull String name) {
         String lower = name.toLowerCase(Locale.ROOT);
         if (lower.isEmpty()) {
             return new ArrayList<>(onlinePlayerUUIDs);
@@ -134,14 +134,14 @@ public class OnlinePlayerList implements PlayerList {
     }
 
     @Override
-    public List<UUID> getPlayersSorted(@NotNull MinecraftServer server) {
+    public @NotNull List<UUID> getPlayersSorted(@NotNull MinecraftServer server) {
         return onlinePlayerUUIDs.stream()
                 .sorted(Comparator.comparing(uuid -> getPlayerName(server, uuid), String.CASE_INSENSITIVE_ORDER))
                 .collect(Collectors.toList());
     }
 
     @Override
-    public List<String> getPlayerNamesSorted(@NotNull MinecraftServer server) {
+    public @NotNull List<String> getPlayerNamesSorted(@NotNull MinecraftServer server) {
         return getPlayersSorted(server).stream()
                 .map(uuid -> getPlayerName(server, uuid))
                 .toList();

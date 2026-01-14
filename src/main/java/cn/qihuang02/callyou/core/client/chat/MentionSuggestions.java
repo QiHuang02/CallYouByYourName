@@ -14,7 +14,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 public class MentionSuggestions extends CommandSuggestions {
@@ -97,15 +99,16 @@ public class MentionSuggestions extends CommandSuggestions {
     }
 
     private @NotNull List<String> collectCandidates(@NotNull String prefix) {
-        List<String> result = new ArrayList<>();
         List<String> typeKeys = this.mentionContext.getMentionTypeKeysSorted();
+        List<String> playerNames = OnlinePlayerList.getClientOnlinePlayerNames(this.minecraft);
+        Set<String> result = new LinkedHashSet<>();
         if (prefix.isEmpty()) {
             for (String typeKey : typeKeys) {
                 if ("player".equals(typeKey)) continue;
                 result.add(typeKey);
             }
-            result.addAll(OnlinePlayerList.getClientOnlinePlayerNames(this.minecraft));
-            return result;
+            result.addAll(playerNames);
+            return new ArrayList<>(result);
         }
 
         for (String typeKey : typeKeys) {
@@ -116,12 +119,12 @@ public class MentionSuggestions extends CommandSuggestions {
             }
         }
 
-        for (String playerName : OnlinePlayerList.getClientOnlinePlayerNames(this.minecraft)) {
+        for (String playerName : playerNames) {
             if (playerName.regionMatches(true, 0, prefix, 0, prefix.length())) {
                 result.add(playerName);
             }
         }
-        return result;
+        return new ArrayList<>(result);
     }
 
     private void buildSuggestions(String fullInput, List<String> candidates) {

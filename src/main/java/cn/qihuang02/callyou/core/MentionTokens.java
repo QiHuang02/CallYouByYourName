@@ -19,14 +19,17 @@ public final class MentionTokens {
             return List.of();
         }
 
-        List<Token> tokens = new ArrayList<>();
         Matcher matcher = PATTERN.matcher(text);
-        while (matcher.find()) {
+        if (!matcher.find()) {
+            return List.of();
+        }
+        List<Token> tokens = new ArrayList<>();
+        do {
             int start = matcher.start();
             int end = matcher.end();
             String key = matcher.group(1);
             tokens.add(new Token(start, end, key));
-        }
+        } while (matcher.find());
         return tokens;
     }
 

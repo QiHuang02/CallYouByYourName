@@ -2,6 +2,8 @@ package cn.qihuang02.callyou.core.handler;
 
 import cn.qihuang02.callyou.CallYouByYourName;
 import cn.qihuang02.callyou.config.CallYouConfig;
+import cn.qihuang02.callyou.core.attachment.CallYouAttachments;
+import cn.qihuang02.callyou.core.attachment.MentionPreferences;
 import cn.qihuang02.callyou.core.saveddata.MentionSavedData;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -20,6 +22,8 @@ public final class MentionLogHandler {
         if (event.getEntity() instanceof ServerPlayer player) {
             MentionSavedData data = MentionSavedData.get(player.serverLevel());
             data.pruneOldLogs();
+            MentionPreferences preferences = player.getData(CallYouAttachments.MENTION_PREFERENCES.get());
+            data.applyPreferences(player.getUUID(), preferences, player.server.registryAccess());
             int unread = data.countUnread(player.getUUID());
             if (unread > 0) {
                 player.sendSystemMessage(

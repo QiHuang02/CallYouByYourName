@@ -20,6 +20,8 @@ public record ClientMentionContext(
         @NotNull Set<String> mentionTypeKeys,
         @NotNull Map<String, Style> mentionTypeStyles
 ) {
+    private static boolean warnedMissingRegistry;
+
     public ClientMentionContext {
         mentionTypeKeys = Set.copyOf(mentionTypeKeys);
         mentionTypeStyles = Collections.unmodifiableMap(new LinkedHashMap<>(mentionTypeStyles));
@@ -36,7 +38,10 @@ public record ClientMentionContext(
         var registryAccess = minecraft.level.registryAccess();
         var optRegistry = registryAccess.registry(CallYouMentionRegistries.MENTION_TYPE_REGISTRY_KEY);
         if (optRegistry.isEmpty()) {
-            CallYouByYourName.LOGGER.warn("[CallYou] Mention type registry is not available on the client.");
+            if (!warnedMissingRegistry) {
+                CallYouByYourName.LOGGER.warn("[CallYou] Mention type registry is not available on the client.");
+                warnedMissingRegistry = true;
+            }
             return new ClientMentionContext(keys, styles);
         }
 

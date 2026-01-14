@@ -1,12 +1,18 @@
 package cn.qihuang02.callyou.core.saveddata;
 
 import cn.qihuang02.callyou.CallYouByYourName;
+import cn.qihuang02.callyou.api.MentionType;
 import cn.qihuang02.callyou.config.CallYouConfig;
+import cn.qihuang02.callyou.core.attachment.MentionPreferences;
+import cn.qihuang02.callyou.registry.CallYouMentionRegistries;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.Registry;
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.resources.RegistryOps;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.saveddata.SavedData;
@@ -117,7 +123,9 @@ public final class MentionSavedData extends SavedData {
             return;
         }
         allLogs.add(record);
-        prune();
+        if (shouldPrune()) {
+            prune();
+        }
         setDirty();
     }
 
@@ -219,10 +227,67 @@ public final class MentionSavedData extends SavedData {
         return removed;
     }
 
+    public boolean applyPreferences(
+            @NotNull UUID targetId,
+            @NotNull MentionPreferences preferences,
+            @NotNull RegistryAccess registryAccess
+    ) {
+        if (allLogs.isEmpty()) {
+            return false;
+        }
+
+        Registry<MentionType> mentionRegistry = registryAccess
+                .registry(CallYouMentionRegistries.MENTION_TYPE_REGISTRY_KEY)
+                .orElse(null);
+
+        boolean changed = false;
+        for (int i = 0; i < allLogs.size(); i++) {
+            MentionRecord record = allLogs.get(i);
+            if (!record.isTarget(targetId)) {
+                continue;
+            }
+
+            boolean allowed = false;
+            ResourceLocation typeId = record.mentionTypeId();
+            if (mentionRegistry != null && typeId != null) {
+                MentionType type = mentionRegistry.get(typeId);
+                if (type != null && preferences.isMentionAllowed(type, typeId, record.senderId())) {
+                    allowed = true;
+                }
+            }
+
+            if (allowed) {
+                continue;
+            }
+
+            MentionRecord updated = record.withoutTarget(targetId);
+            if (updated == null) {
+                allLogs.set(i, null);
+            } else if (updated != record) {
+                allLogs.set(i, updated);
+            }
+            changed = true;
+        }
+
+        if (changed) {
+            allLogs.removeIf(Objects::isNull);
+            setDirty();
+        }
+        return changed;
+    }
+
     public void pruneOldLogs() {
+        if (!shouldPrune()) {
+            return;
+        }
         if (prune()) {
             setDirty();
         }
+    }
+
+    private boolean shouldPrune() {
+        return CallYouConfig.COMMON.historyRetentionDays.get() > 0
+                || CallYouConfig.COMMON.maxHistoryPerPlayer.get() > 0;
     }
 
     private boolean prune() {

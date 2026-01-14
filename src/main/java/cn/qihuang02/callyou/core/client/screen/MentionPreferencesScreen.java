@@ -292,7 +292,7 @@ public class MentionPreferencesScreen extends ModularUIScreen {
         int left = Math.max(0, (PANEL_WIDTH - toastWidth) / 2);
         toastLayer.layout(style -> style.positionType(YogaPositionType.ABSOLUTE)
                 .left(left)
-                .top((PANEL_HEIGHT - TOAST_HEIGHT) / 2)
+                .top((float) (PANEL_HEIGHT - TOAST_HEIGHT) / 2)
                 .width(toastWidth)
                 .height(TOAST_HEIGHT)
                 .alignItems(YogaAlign.STRETCH)
@@ -716,7 +716,7 @@ public class MentionPreferencesScreen extends ModularUIScreen {
             UIElement toastLayer = new UIElement()
                     .layout(style -> style.positionType(YogaPositionType.ABSOLUTE)
                             .left(0)
-                            .top((PANEL_HEIGHT - TOAST_HEIGHT) / 2)
+                            .top((float) (PANEL_HEIGHT - TOAST_HEIGHT) / 2)
                             .height(TOAST_HEIGHT)
                             .alignItems(YogaAlign.STRETCH)
                             .justifyItems(YogaJustify.CENTER)

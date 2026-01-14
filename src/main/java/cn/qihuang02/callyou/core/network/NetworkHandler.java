@@ -56,8 +56,7 @@ public class NetworkHandler {
             if (!(context.player() instanceof ServerPlayer player)) {
                 return;
             }
-            if (!CallYouConfig.COMMON.enableServerSideHistory.get()) {
-                PacketDistributor.sendToPlayer(player, new MentionLogResponsePayload(List.of()));
+            if (!ensureHistoryEnabledOrSendEmpty(player)) {
                 return;
             }
             MentionSavedData data = MentionSavedData.get(player.serverLevel());
@@ -75,17 +74,14 @@ public class NetworkHandler {
             if (!(context.player() instanceof ServerPlayer player)) {
                 return;
             }
-            if (!CallYouConfig.COMMON.enableServerSideHistory.get()) {
-                PacketDistributor.sendToPlayer(player, new MentionLogResponsePayload(List.of()));
+            if (!ensureHistoryEnabledOrSendEmpty(player)) {
                 return;
             }
             MentionSavedData data = MentionSavedData.get(player.serverLevel());
-            if (payload.action() == MentionLogActionPayload.MentionLogAction.MARK_ALL_READ) {
-                data.markAsRead(player.getUUID());
-            } else if (payload.action() == MentionLogActionPayload.MentionLogAction.DELETE_SINGLE) {
-                data.removeRecord(player.getUUID(), payload.targetHistoryId());
-            } else if (payload.action() == MentionLogActionPayload.MentionLogAction.MARK_SINGLE_READ) {
-                data.markAsRead(player.getUUID(), payload.targetHistoryId());
+            switch (payload.action()) {
+                case MARK_ALL_READ -> data.markAsRead(player.getUUID());
+                case DELETE_SINGLE -> data.removeRecord(player.getUUID(), payload.targetHistoryId());
+                case MARK_SINGLE_READ -> data.markAsRead(player.getUUID(), payload.targetHistoryId());
             }
             data.pruneOldLogs();
             sendLogSnapshot(player, data);
@@ -120,6 +116,14 @@ public class NetworkHandler {
     ) {
         ClientMentionHistory.markAwaitingResponse();
         PacketDistributor.sendToServer(new MentionLogActionPayload(action, targetHistoryId));
+    }
+
+    private static boolean ensureHistoryEnabledOrSendEmpty(@NotNull ServerPlayer player) {
+        if (CallYouConfig.COMMON.enableServerSideHistory.get()) {
+            return true;
+        }
+        PacketDistributor.sendToPlayer(player, new MentionLogResponsePayload(List.of()));
+        return false;
     }
 
     private static void sendLogSnapshot(@NotNull ServerPlayer player, @NotNull MentionSavedData data) {

@@ -3,6 +3,7 @@ package cn.qihuang02.callyou.core;
 import cn.qihuang02.callyou.api.MentionType;
 import cn.qihuang02.callyou.core.handler.OnlinePlayersHandler;
 import cn.qihuang02.callyou.registry.CallYouMentionRegistries;
+import cn.qihuang02.callyou.util.OfflinePlayerList;
 import cn.qihuang02.callyou.util.OnlinePlayerList;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
@@ -29,11 +30,13 @@ public final class MentionResolver {
                 access.registry(CallYouMentionRegistries.MENTION_TYPE_REGISTRY_KEY);
         Registry<MentionType> registry = optionalRegistry.orElse(null);
 
-        CachedType playerMentionEntry = registry != null ? getLookup(registry).get("player") : null;
+        Map<String, CachedType> lookup = registry != null ? getLookup(registry) : Map.of();
+        CachedType playerMentionEntry = lookup.get("player");
         MentionType playerMentionType = playerMentionEntry != null ? playerMentionEntry.type : null;
         ResourceLocation playerMentionId = playerMentionEntry != null ? playerMentionEntry.id : null;
 
         OnlinePlayerList onlinePlayers = OnlinePlayersHandler.getOnlinePlayers();
+        OfflinePlayerList offlinePlayers = OnlinePlayersHandler.getOfflinePlayers();
 
         for (MentionTokens.Token token : MentionTokens.scan(rawText)) {
             String key = token.key();
@@ -44,9 +47,9 @@ public final class MentionResolver {
             ResourceLocation typeId = null;
             ServerPlayer playerTarget = null;
 
-            if (registry != null) {
+            if (!lookup.isEmpty()) {
                 String lowered = key.toLowerCase(Locale.ROOT);
-                CachedType cached = getLookup(registry).get(lowered);
+                CachedType cached = lookup.get(lowered);
                 if (cached != null) {
                     type = cached.type;
                     typeId = cached.id;
@@ -62,6 +65,14 @@ public final class MentionResolver {
                         type = playerMentionType;
                         typeId = playerMentionId;
                     }
+                }
+            }
+
+            if (type == null && playerMentionType != null) {
+                UUID targetID = offlinePlayers.findPlayerByExactName(server, key);
+                if (targetID != null) {
+                    type = playerMentionType;
+                    typeId = playerMentionId;
                 }
             }
 

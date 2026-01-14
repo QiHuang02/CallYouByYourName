@@ -4,6 +4,7 @@ import cn.qihuang02.callyou.api.MentionContext;
 import cn.qihuang02.callyou.api.components.TargetProvider;
 import cn.qihuang02.callyou.core.handler.OnlinePlayersHandler;
 import cn.qihuang02.callyou.registry.BuiltInCallYouRegistries;
+import cn.qihuang02.callyou.util.OfflinePlayerList;
 import cn.qihuang02.callyou.util.OnlinePlayerList;
 import com.mojang.serialization.MapCodec;
 import net.minecraft.server.MinecraftServer;
@@ -48,5 +49,30 @@ public final class PlayerNameTargetProvider implements TargetProvider {
         }
 
         return List.of(target);
+    }
+
+    @Override
+    public @NotNull List<UUID> getOfflineTargets(@NotNull MentionContext context) {
+        String targetName = context.mentionKey();
+        if (targetName == null || targetName.isEmpty()) {
+            return List.of();
+        }
+
+        MinecraftServer server = context.server();
+        if (server == null) {
+            return List.of();
+        }
+
+        OfflinePlayerList offlinePlayerList = OnlinePlayersHandler.getOfflinePlayers();
+        UUID targetId = offlinePlayerList.findPlayerByExactName(server, targetName);
+        if (targetId == null || targetId.equals(context.senderId())) {
+            return List.of();
+        }
+
+        if (server.getPlayerList().getPlayer(targetId) != null) {
+            return List.of();
+        }
+
+        return List.of(targetId);
     }
 }
