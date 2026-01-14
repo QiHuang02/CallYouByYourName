@@ -73,8 +73,7 @@ public final class CallYouDatapackProvider extends DatapackBuiltinEntriesProvide
                 ),
                 new MentionRules(
                         0,
-                        true,
-                        false
+                        true
                 )
         );
 
@@ -88,11 +87,7 @@ public final class CallYouDatapackProvider extends DatapackBuiltinEntriesProvide
                         1.0F,
                         1.0F
                 ),
-                new MentionRules(
-                        0,
-                        false,
-                        true
-                )
+                MentionRules.DEFAULT
         );
 
         context.register(PLAYER_MENTION, playerMention);
@@ -119,8 +114,7 @@ public final class CallYouDatapackProvider extends DatapackBuiltinEntriesProvide
                 ),
                 new MentionRules(
                         0,
-                        true,
-                        false
+                        true
                 )
         );
         context.register(HERE_MENTION, hereMention);
@@ -149,7 +143,6 @@ public final class CallYouDatapackProvider extends DatapackBuiltinEntriesProvide
                 ),
                 new MentionRules(
                         0,
-                        true,
                         true
                 )
         );

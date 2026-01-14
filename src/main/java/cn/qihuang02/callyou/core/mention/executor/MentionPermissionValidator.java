@@ -3,6 +3,7 @@ package cn.qihuang02.callyou.core.mention.executor;
 import cn.qihuang02.callyou.api.MentionType;
 import cn.qihuang02.callyou.core.MentionGuard;
 import cn.qihuang02.callyou.core.MentionResolver;
+import cn.qihuang02.callyou.core.mention.components.formatter.ItemTextFormatter;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.NotNull;
@@ -29,7 +30,7 @@ public final class MentionPermissionValidator {
             if (type == null) {
                 continue;
             }
-            if (MentionExecutionSupport.isItemMention(type)) {
+            if (isItemMention(type)) {
                 if (itemMentionUsed) {
                     continue;
                 }
@@ -46,6 +47,10 @@ public final class MentionPermissionValidator {
         }
 
         return new ValidationResult(effectiveMentionCount, null);
+    }
+
+    private boolean isItemMention(@NotNull MentionType type) {
+        return type.textFormatter() instanceof ItemTextFormatter;
     }
 
     public record ValidationResult(int effectiveMentionCount, @Nullable Component errorMessage) {

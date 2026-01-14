@@ -4,6 +4,7 @@ import cn.qihuang02.callyou.api.MentionContext;
 import cn.qihuang02.callyou.api.MentionType;
 import cn.qihuang02.callyou.api.components.TextFormatter;
 import cn.qihuang02.callyou.core.MentionResolver;
+import cn.qihuang02.callyou.core.mention.components.formatter.ItemTextFormatter;
 import net.minecraft.network.chat.*;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
@@ -47,7 +48,7 @@ public final class MentionMessageComposer {
                 lastIndex = end;
                 continue;
             }
-            if (MentionExecutionSupport.isItemMention(type)) {
+            if (isItemMention(type)) {
                 if (itemMentionUsed) {
                     rebuilt.append(substring);
                     lastIndex = end;
@@ -112,6 +113,10 @@ public final class MentionMessageComposer {
             }
             return updated;
         });
+    }
+
+    private boolean isItemMention(@NotNull MentionType type) {
+        return type.textFormatter() instanceof ItemTextFormatter;
     }
 
     public record ComposeResult(@NotNull Component rebuilt, @NotNull List<MentionExecution> pendingMentions) {

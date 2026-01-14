@@ -18,7 +18,6 @@ public class CallYouConfig {
     public static final class Common {
         public final ModConfigSpec.IntValue maxMentionsPerMessage;
         public final ModConfigSpec.IntValue maxTargetsPerMention;
-        public final ModConfigSpec.IntValue maxOfflineTargetsPerMention;
         public final ModConfigSpec.IntValue globalCooldownTicks;
         public final ModConfigSpec.IntValue perTargetCooldownTicks;
         public final ModConfigSpec.BooleanValue renderItemIconAndPlaceholder;
@@ -36,10 +35,6 @@ public class CallYouConfig {
             maxTargetsPerMention = builder
                     .comment("Maximum number of target players a single mention is allowed to ping. 0 = no limit.")
                     .defineInRange("maxTargetsPerMention", 16, 0, 200);
-
-            maxOfflineTargetsPerMention = builder
-                    .comment("Maximum number of offline targets recorded per mention. 0 = no limit.")
-                    .defineInRange("maxOfflineTargetsPerMention", 100, 0, 1000);
 
             globalCooldownTicks = builder
                     .comment("Global cooldown in ticks between chat messages that contain at least one mention. 0 = no limit.")

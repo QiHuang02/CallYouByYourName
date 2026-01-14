@@ -86,7 +86,7 @@ public final class MentionDispatcher {
 
         NeoForge.EVENT_BUS.post(new MentionEvent.Post(context, type, finalTargets));
 
-        historyRecorder.record(type, context, finalTargets, formattedMessage);
+        historyRecorder.record(context, finalTargets, formattedMessage);
 
         return finalTargets;
     }

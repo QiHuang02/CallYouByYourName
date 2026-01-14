@@ -44,7 +44,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Predicate;
 
 public final class MentionHistoryRow {
     private static final DateTimeFormatter DATE_FORMATTER =
@@ -115,11 +114,7 @@ public final class MentionHistoryRow {
             coordsButton.setText(COORDS_LABEL);
             coordsButton.layout(style -> style.width(70).height(14));
             MentionUIStyles.applyButtonStyle(coordsButton);
-            coordsButton.setOnClick(event -> {
-                if (waypointCommand != null) {
-                    createTransientWaypoint(waypointCommand);
-                }
-            });
+            coordsButton.setOnClick(event -> createTransientWaypoint(waypointCommand));
             actionRow.addChildren(coordsButton);
         }
 
@@ -226,60 +221,72 @@ public final class MentionHistoryRow {
     }
 
     private @Nullable String findTransientWaypointCommand(@NotNull Component component) {
-        return findClickEventValue(
-                component,
-                ClickEvent.Action.RUN_COMMAND,
-                value -> value.startsWith(FTBChunksAPIWrapper.TRANSIENT_WAYPOINT_COMMAND)
-        );
-    }
-
-    private @Nullable String findReplySuggestion(@NotNull Component component) {
-        return findClickEventValue(
-                component,
-                ClickEvent.Action.SUGGEST_COMMAND,
-                value -> !value.isBlank()
-        );
-    }
-
-    private @Nullable String findClickEventValue(
-            @NotNull Component component,
-            @NotNull ClickEvent.Action action,
-            @NotNull Predicate<String> validator
-    ) {
-        String value = getClickEventValue(component.getStyle(), action, validator);
-        if (value != null) {
-            return value;
+        String command = getTransientWaypointCommand(component.getStyle());
+        if (command != null) {
+            return command;
         }
         if (component.getContents() instanceof TranslatableContents translatable) {
             for (Object arg : translatable.getArgs()) {
                 if (arg instanceof Component nested) {
-                    value = findClickEventValue(nested, action, validator);
-                    if (value != null) {
-                        return value;
+                    command = findTransientWaypointCommand(nested);
+                    if (command != null) {
+                        return command;
                     }
                 }
             }
         }
         for (Component sibling : component.getSiblings()) {
-            value = findClickEventValue(sibling, action, validator);
-            if (value != null) {
-                return value;
+            command = findTransientWaypointCommand(sibling);
+            if (command != null) {
+                return command;
             }
         }
         return null;
     }
 
-    private @Nullable String getClickEventValue(
-            @NotNull Style style,
-            @NotNull ClickEvent.Action action,
-            @NotNull Predicate<String> validator
-    ) {
+    private @Nullable String getTransientWaypointCommand(@NotNull Style style) {
         ClickEvent clickEvent = style.getClickEvent();
-        if (clickEvent == null || clickEvent.getAction() != action) {
+        if (clickEvent == null || clickEvent.getAction() != ClickEvent.Action.RUN_COMMAND) {
             return null;
         }
         String value = clickEvent.getValue();
-        if (value == null || !validator.test(value)) {
+        if (value == null || !value.startsWith(FTBChunksAPIWrapper.TRANSIENT_WAYPOINT_COMMAND)) {
+            return null;
+        }
+        return value;
+    }
+
+    private @Nullable String findReplySuggestion(@NotNull Component component) {
+        String suggestion = getReplySuggestion(component.getStyle());
+        if (suggestion != null) {
+            return suggestion;
+        }
+        if (component.getContents() instanceof TranslatableContents translatable) {
+            for (Object arg : translatable.getArgs()) {
+                if (arg instanceof Component nested) {
+                    suggestion = findReplySuggestion(nested);
+                    if (suggestion != null) {
+                        return suggestion;
+                    }
+                }
+            }
+        }
+        for (Component sibling : component.getSiblings()) {
+            suggestion = findReplySuggestion(sibling);
+            if (suggestion != null) {
+                return suggestion;
+            }
+        }
+        return null;
+    }
+
+    private @Nullable String getReplySuggestion(@NotNull Style style) {
+        ClickEvent clickEvent = style.getClickEvent();
+        if (clickEvent == null || clickEvent.getAction() != ClickEvent.Action.SUGGEST_COMMAND) {
+            return null;
+        }
+        String value = clickEvent.getValue();
+        if (value == null || value.isBlank()) {
             return null;
         }
         return value;

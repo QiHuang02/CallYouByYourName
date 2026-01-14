@@ -49,7 +49,7 @@ public class FTBChunksAPIWrapper {
             return Optional.empty();
         }
 
-        String[] parts = rawCommand.substring(TRANSIENT_WAYPOINT_COMMAND.length()).trim().split("\\s+");
+        String[] parts = rawCommand.substring(TRANSIENT_WAYPOINT_COMMAND.length()).trim().split(" ");
         if (parts.length < 5) {
             return Optional.empty();
         }

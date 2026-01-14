@@ -12,9 +12,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 public class FTBTeamTargetProvider implements TargetProvider {
@@ -54,36 +52,5 @@ public class FTBTeamTargetProvider implements TargetProvider {
         }
 
         return targets;
-    }
-
-    @Override
-    public @NotNull List<UUID> getOfflineTargets(@NotNull MentionContext context) {
-        ServerPlayer sender = context.sender();
-
-        if (!FTBTeamsAPIWrapper.isLoaded()) {
-            return Collections.emptyList();
-        }
-
-        List<UUID> memberUUIDs = FTBTeamsAPIWrapper.getTeamMembers(sender);
-        if (memberUUIDs.isEmpty()) {
-            return Collections.emptyList();
-        }
-
-        MinecraftServer server = context.server();
-        if (server == null) {
-            return Collections.emptyList();
-        }
-
-        UUID senderId = context.senderId();
-        Set<UUID> offlineTargets = new LinkedHashSet<>();
-        for (UUID uuid : memberUUIDs) {
-            if (uuid.equals(senderId)) {
-                continue;
-            }
-            if (server.getPlayerList().getPlayer(uuid) == null) {
-                offlineTargets.add(uuid);
-            }
-        }
-        return List.copyOf(offlineTargets);
     }
 }
