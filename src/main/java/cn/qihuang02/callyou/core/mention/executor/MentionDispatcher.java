@@ -49,11 +49,15 @@ public final class MentionDispatcher {
         Notifier notifier = type.notifier();
 
         List<ServerPlayer> rawTargets = new ArrayList<>(targetProvider.getTargets(context));
+        boolean hadRawTargets = !rawTargets.isEmpty();
 
         MentionEvent.Pre preEvent = new MentionEvent.Pre(context, type, rawTargets);
         NeoForge.EVENT_BUS.post(preEvent);
 
-        if (preEvent.isCanceled() || preEvent.getTargets().isEmpty()) {
+        if (preEvent.isCanceled()) {
+            return List.of();
+        }
+        if (preEvent.getTargets().isEmpty() && hadRawTargets) {
             return List.of();
         }
 
@@ -63,6 +67,7 @@ public final class MentionDispatcher {
                 guard.filterTargets(context.sender(), type, context.typeId(), context, preFiltered, nowTick);
 
         if (filteredTargets.isEmpty()) {
+            historyRecorder.record(type, context, List.of(), formattedMessage);
             return List.of();
         }
 
@@ -79,6 +84,7 @@ public final class MentionDispatcher {
         }
 
         if (finalTargets.isEmpty()) {
+            historyRecorder.record(type, context, List.of(), formattedMessage);
             return List.of();
         }
 
@@ -86,7 +92,7 @@ public final class MentionDispatcher {
 
         NeoForge.EVENT_BUS.post(new MentionEvent.Post(context, type, finalTargets));
 
-        historyRecorder.record(context, finalTargets, formattedMessage);
+        historyRecorder.record(type, context, finalTargets, formattedMessage);
 
         return finalTargets;
     }

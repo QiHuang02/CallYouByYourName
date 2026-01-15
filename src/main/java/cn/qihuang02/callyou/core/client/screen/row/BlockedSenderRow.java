@@ -1,5 +1,6 @@
-package cn.qihuang02.callyou.core.client.screen;
+package cn.qihuang02.callyou.core.client.screen.row;
 
+import cn.qihuang02.callyou.core.client.screen.MentionUIStyles;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Button;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
@@ -42,10 +43,9 @@ public class BlockedSenderRow {
 
         return new UIElement()
                 .layout(style -> style.flexDirection(YogaFlexDirection.ROW)
-                        .alignItems(YogaAlign.CENTER)
-                        .gapColumn(8)
+                        .gapColumn(4)
                         .widthStretch()
-                        .height(28))
+                        .alignItems(YogaAlign.CENTER))
                 .addChildren(info, unblockButton);
     }
 }

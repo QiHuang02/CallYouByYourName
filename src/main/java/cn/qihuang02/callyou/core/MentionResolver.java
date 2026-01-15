@@ -3,6 +3,7 @@ package cn.qihuang02.callyou.core;
 import cn.qihuang02.callyou.api.MentionType;
 import cn.qihuang02.callyou.core.handler.OnlinePlayersHandler;
 import cn.qihuang02.callyou.registry.CallYouMentionRegistries;
+import cn.qihuang02.callyou.util.OfflinePlayerList;
 import cn.qihuang02.callyou.util.OnlinePlayerList;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
@@ -34,6 +35,7 @@ public final class MentionResolver {
         ResourceLocation playerMentionId = playerMentionEntry != null ? playerMentionEntry.id : null;
 
         OnlinePlayerList onlinePlayers = OnlinePlayersHandler.getOnlinePlayers();
+        OfflinePlayerList offlinePlayers = OnlinePlayersHandler.getOfflinePlayers();
 
         for (MentionTokens.Token token : MentionTokens.scan(rawText)) {
             String key = token.key();
@@ -62,6 +64,13 @@ public final class MentionResolver {
                         type = playerMentionType;
                         typeId = playerMentionId;
                     }
+                }
+            }
+            if (type == null && playerMentionType != null) {
+                UUID targetID = offlinePlayers.findPlayerByExactName(server, key);
+                if (targetID != null) {
+                    type = playerMentionType;
+                    typeId = playerMentionId;
                 }
             }
 

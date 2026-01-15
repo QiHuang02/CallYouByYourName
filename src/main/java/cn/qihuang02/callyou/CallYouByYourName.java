@@ -22,6 +22,7 @@ public class CallYouByYourName {
         BuiltInCallYouRegistries.register(modEventBus);
         CallYouAttachments.ATTACHMENT_TYPES.register(modEventBus);
         modContainer.registerConfig(ModConfig.Type.COMMON, CallYouConfig.COMMON_SPEC);
+        modContainer.registerConfig(ModConfig.Type.CLIENT, CallYouConfig.CLIENT_SPEC);
     }
 
     @Contract("_ -> new")

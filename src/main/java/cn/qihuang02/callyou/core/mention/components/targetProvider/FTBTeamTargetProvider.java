@@ -53,4 +53,36 @@ public class FTBTeamTargetProvider implements TargetProvider {
 
         return targets;
     }
+
+    @Override
+    public List<UUID> getOfflineTargets(@NotNull MentionContext context) {
+        if (!FTBTeamsAPIWrapper.isLoaded()) {
+            return Collections.emptyList();
+        }
+
+        ServerPlayer sender = context.sender();
+        List<UUID> memberUUIDs = FTBTeamsAPIWrapper.getTeamMembers(sender);
+        if (memberUUIDs.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        MinecraftServer server = context.server();
+        if (server == null) {
+            return Collections.emptyList();
+        }
+
+        List<UUID> targets = new ArrayList<>();
+        UUID senderId = context.senderId();
+        for (UUID uuid : memberUUIDs) {
+            if (uuid.equals(senderId)) {
+                continue;
+            }
+            ServerPlayer target = server.getPlayerList().getPlayer(uuid);
+            if (target == null) {
+                targets.add(uuid);
+            }
+        }
+
+        return targets;
+    }
 }

@@ -1,8 +1,9 @@
-package cn.qihuang02.callyou.core.client.screen;
+package cn.qihuang02.callyou.core.client.screen.row;
 
 import cn.qihuang02.callyou.api.MentionType;
 import cn.qihuang02.callyou.api.components.Notifier;
 import cn.qihuang02.callyou.core.attachment.MentionPreferences;
+import cn.qihuang02.callyou.core.client.screen.MentionUIStyles;
 import cn.qihuang02.callyou.registry.CallYouMentionRegistries;
 import cn.qihuang02.callyou.registry.CallYouRegistries;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
@@ -70,7 +71,8 @@ public class MentionTypeRow {
                     this.resolvedNotifierId = CallYouRegistries.NOTIFICATION_RULE_TYPES.getKey(notifier.type());
 
                     if (this.resolvedNotifierId != null) {
-                        String transKey = "notifier." + this.resolvedNotifierId.getNamespace() + "." + this.resolvedNotifierId.getPath();
+                        String transKey = "notifier." + this.resolvedNotifierId.getNamespace() + "."
+                                + this.resolvedNotifierId.getPath();
                         this.notifierSwitch.style(style -> style.tooltips(Component.translatable(transKey)));
                         this.notifierSwitch.setVisible(true);
                         this.notifierSwitch.setDisplay(true);

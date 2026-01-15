@@ -21,6 +21,7 @@ public final class MentionMessageComposer {
             @NotNull List<MentionResolver.ResolvedMention> mentions
     ) {
         MutableComponent rebuilt = Component.literal("");
+        MutableComponent rebuiltForSender = Component.literal("");
         int lastIndex = 0;
 
         List<MentionExecution> pendingMentions = new ArrayList<>();
@@ -38,6 +39,7 @@ public final class MentionMessageComposer {
                 String before = raw.substring(lastIndex, start);
                 if (!before.isEmpty()) {
                     rebuilt.append(before);
+                    rebuiltForSender.append(before);
                 }
             }
 
@@ -45,12 +47,14 @@ public final class MentionMessageComposer {
             String substring = raw.substring(start, Math.min(end, raw.length()));
             if (type == null) {
                 rebuilt.append(substring);
+                rebuiltForSender.append(substring);
                 lastIndex = end;
                 continue;
             }
             if (isItemMention(type)) {
                 if (itemMentionUsed) {
                     rebuilt.append(substring);
+                    rebuiltForSender.append(substring);
                     lastIndex = end;
                     continue;
                 }
@@ -70,9 +74,10 @@ public final class MentionMessageComposer {
             TextFormatter formatter = type.textFormatter();
 
             Component formattedMention = formatter.format(context);
-            formattedMention = applyReplyStyle(formatter, context, formattedMention);
+            Component mentionForTargets = applyReplyStyle(formatter, context, formattedMention);
 
-            rebuilt.append(formattedMention);
+            rebuilt.append(mentionForTargets);
+            rebuiltForSender.append(formattedMention);
             pendingMentions.add(new MentionExecution(type, context));
 
             lastIndex = end;
@@ -82,10 +87,11 @@ public final class MentionMessageComposer {
             String tail = raw.substring(lastIndex);
             if (!tail.isEmpty()) {
                 rebuilt.append(tail);
+                rebuiltForSender.append(tail);
             }
         }
 
-        return new ComposeResult(rebuilt, pendingMentions);
+        return new ComposeResult(rebuilt, rebuiltForSender, pendingMentions);
     }
 
     private @NotNull Component applyReplyStyle(
@@ -119,6 +125,10 @@ public final class MentionMessageComposer {
         return type.textFormatter() instanceof ItemTextFormatter;
     }
 
-    public record ComposeResult(@NotNull Component rebuilt, @NotNull List<MentionExecution> pendingMentions) {
+    public record ComposeResult(
+            @NotNull Component rebuilt,
+            @NotNull Component senderView,
+            @NotNull List<MentionExecution> pendingMentions
+    ) {
     }
 }

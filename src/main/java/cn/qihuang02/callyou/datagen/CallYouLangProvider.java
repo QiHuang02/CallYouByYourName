@@ -12,17 +12,20 @@ import java.util.function.Function;
 public class CallYouLangProvider extends LanguageProvider {
     private static final List<TranslationEntry> ENTRIES = List.of(
             // Config Titles and Comments
-            new TranslationEntry("callyou.config.mentions", "Mentions Settings", "提及设置"),
-            new TranslationEntry("callyou.config.mentions.maxMentionsPerMessage", "Max Mentions Per Message", "每条消息最大提及数"),
-            new TranslationEntry("callyou.config.mentions.maxMentionsPerMessage.comment", "Maximum number of effective mentions (i.e. tokens that resolve to a MentionType) allowed per single chat message. 0 = no limit.", "单条聊天消息中允许的有效提及（即解析为提及类型的令牌）数量上限。0 = 不限制。"),
-            new TranslationEntry("callyou.config.mentions.maxTargetsPerMention", "Max Targets Per Mention", "单次提及最多目标"),
-            new TranslationEntry("callyou.config.mentions.maxTargetsPerMention.comment", "Maximum number of target players a single mention is allowed to ping. 0 = no limit.", "单个提及允许提醒的目标玩家数量上限。0 = 不限制。"),
-            new TranslationEntry("callyou.config.mentions.globalCooldownTicks", "Global Cooldown Ticks", "全局冷却（刻）"),
-            new TranslationEntry("callyou.config.mentions.globalCooldownTicks.comment", "Global cooldown in ticks between chat messages that contain at least one mention. 0 = no limit.", "含有至少一个提及的两条聊天消息之间的全局冷却（以刻为单位）。0 = 不限制。"),
-            new TranslationEntry("callyou.config.mentions.perTargetCooldownTicks", "Per Target Cooldown Ticks", "单目标冷却（刻）"),
-            new TranslationEntry("callyou.config.mentions.perTargetCooldownTicks.comment", "Cooldown in ticks between mentions from the same sender to the same target. 0 = no limit.", "同一发送者对同一目标的两次提及之间的冷却（以刻为单位）。0 = 不限制。"),
-            new TranslationEntry("callyou.config.mentions.renderItemIconAndPlaceholder", "Render Item Icon and Placeholder for @item", "为 @item 渲染物品图标与占位符"),
-            new TranslationEntry("callyou.config.mentions.renderItemIconAndPlaceholder.comment", "Whether to enable rendering of item icons and placeholder spaces after an @item mention.", "是否在 @item 提及后渲染物品图标与占位空格。"),
+            new TranslationEntry("callyou.configuration.mentions", "Mentions Settings", "提及设置"),
+            new TranslationEntry("callyou.configuration.maxMentionsPerMessage", "Max Mentions Per Message", "每条消息最大提及数"),
+            new TranslationEntry("callyou.configuration.maxMentionsPerMessage.comment", "Maximum number of effective mentions (i.e. tokens that resolve to a MentionType) allowed per single chat message. 0 = no limit.", "单条聊天消息中允许的有效提及（即解析为提及类型的令牌）数量上限。0 = 不限制。"),
+            new TranslationEntry("callyou.configuration.maxTargetsPerMention", "Max Targets Per Mention", "单次提及最多目标"),
+            new TranslationEntry("callyou.configuration.maxTargetsPerMention.comment", "Maximum number of target players a single mention is allowed to ping. 0 = no limit.", "单个提及允许提醒的目标玩家数量上限。0 = 不限制。"),
+            new TranslationEntry("callyou.configuration.globalCooldownTicks", "Global Cooldown Ticks", "全局冷却（刻）"),
+            new TranslationEntry("callyou.configuration.globalCooldownTicks.comment", "Global cooldown in ticks between chat messages that contain at least one mention. 0 = no limit.", "含有至少一个提及的两条聊天消息之间的全局冷却（以刻为单位）。0 = 不限制。"),
+            new TranslationEntry("callyou.configuration.perTargetCooldownTicks", "Per Target Cooldown Ticks", "单目标冷却（刻）"),
+            new TranslationEntry("callyou.configuration.perTargetCooldownTicks.comment", "Cooldown in ticks between mentions from the same sender to the same target. 0 = no limit.", "同一发送者对同一目标的两次提及之间的冷却（以刻为单位）。0 = 不限制。"),
+            new TranslationEntry("callyou.configuration.itemIconRenderMode", "Item Icon Render Mode (@item)", "物品图标渲染模式 (@item)"),
+            new TranslationEntry("callyou.configuration.itemIconRenderMode.comment", "Where to render @item icons: INLINE = in chat line, HOVER = left of cursor, NONE = disable icon rendering.", "指定 @item 的物品图标渲染位置：INLINE = 聊天行内，HOVER = 鼠标左侧，NONE = 禁用图标渲染。"),
+            new TranslationEntry("callyou.configuration.itemIconRenderMode.inline", "Inline", "行内"),
+            new TranslationEntry("callyou.configuration.itemIconRenderMode.hover", "Hover", "悬浮"),
+            new TranslationEntry("callyou.configuration.itemIconRenderMode.none", "None", "不渲染"),
 
             // Messages
             new TranslationEntry("message.callyou.no_permission", "You do not have permission to mention %s", "你没有权限提及 %s"),

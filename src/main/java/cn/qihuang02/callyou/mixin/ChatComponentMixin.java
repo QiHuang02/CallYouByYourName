@@ -1,35 +1,25 @@
 package cn.qihuang02.callyou.mixin;
 
 import cn.qihuang02.callyou.config.CallYouConfig;
+import cn.qihuang02.callyou.core.client.render.ItemIconRenderUtil;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.ChatComponent;
-import net.minecraft.network.chat.HoverEvent;
+import net.minecraft.client.StringSplitter;
 import net.minecraft.network.chat.Style;
 import net.minecraft.util.FormattedCharSequence;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.Blocks;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 
 @OnlyIn(Dist.CLIENT)
 @Mixin(ChatComponent.class)
 public abstract class ChatComponentMixin {
-    @Unique
-    private static final float CALLYOU_ITEM_ICON_SCALE = 0.6F;
-    @Unique
-    private static final float CALLYOU_ITEM_ICON_EXTRA_SHIFT = 1.0F;
-    @Unique
-    private static final String CALLYOU_ITEM_ICON_PLACEHOLDER = "  ";
-
     @WrapOperation(
             method = "render",
             at = @At(
@@ -45,112 +35,36 @@ public abstract class ChatComponentMixin {
             int x,
             int y,
             int color,
-            Operation<Integer> original
+            @NotNull Operation<Integer> original
     ) {
-        callyou$renderItemIconsInLine(guiGraphics, font, line, x, y, color);
-        return original.call(guiGraphics, font, line, x, y, color);
+        ItemIconRenderUtil.renderItemIconsInLine(guiGraphics, font, line, x, y, color);
+        FormattedCharSequence padded = ItemIconRenderUtil.padItemIconText(line, font);
+        return original.call(guiGraphics, font, padded, x, y, color);
     }
 
-    @Unique
-    private void callyou$renderItemIconsInLine(
-            GuiGraphics guiGraphics,
-            Font font,
+    @WrapOperation(
+            method = "getClickedComponentStyleAt",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/client/StringSplitter;componentStyleAtWidth(Lnet/minecraft/util/FormattedCharSequence;I)Lnet/minecraft/network/chat/Style;"
+            ),
+            require = 0
+    )
+    private Style callyou$expandHoverRangeForItemIcons(
+            StringSplitter splitter,
             FormattedCharSequence line,
-            int baseX,
-            int baseY,
-            int color
+            int width,
+            @NotNull Operation<Style> original
     ) {
-        if (!CallYouConfig.COMMON.renderItemIconAndPlaceholder.get()) {
-            return;
+        if (CallYouConfig.CLIENT.itemIconRenderMode.get() != CallYouConfig.ItemIconRenderMode.INLINE) {
+            return original.call(splitter, line, width);
         }
-
-        if (Minecraft.getInstance() == null) {
-            return;
+        Minecraft minecraft = Minecraft.getInstance();
+        if (minecraft == null) {
+            return original.call(splitter, line, width);
         }
-
-        if (!callyou$hasItemPlaceholder(line)) {
-            return;
-        }
-
-        StringBuilder before = new StringBuilder();
-        int halfSpace = font.width("  ") / 2;
-
-        line.accept((index, style, codePoint) -> {
-            String soFar = before.toString();
-
-            if (codePoint != ' ' && soFar.endsWith(CALLYOU_ITEM_ICON_PLACEHOLDER)) {
-                String beforeText = soFar.substring(0, soFar.length() - CALLYOU_ITEM_ICON_PLACEHOLDER.length());
-
-                float extraShift = -halfSpace;
-
-                callyou$renderSingleItemIcon(guiGraphics, font, beforeText,
-                        extraShift, baseX, baseY, style, color);
-            }
-
-            before.appendCodePoint(codePoint);
-            return true;
-        });
-    }
-
-    @Unique
-    private boolean callyou$hasItemPlaceholder(@NotNull FormattedCharSequence line) {
-        boolean[] found = {false};
-        boolean[] prevSpace = {false};
-
-        line.accept((index, style, codePoint) -> {
-            if (codePoint == ' ') {
-                if (prevSpace[0]) {
-                    found[0] = true;
-                    return false;
-                }
-                prevSpace[0] = true;
-            } else {
-                prevSpace[0] = false;
-            }
-            return true;
-        });
-
-        return found[0];
-    }
-
-    @Unique
-    private void callyou$renderSingleItemIcon(
-            GuiGraphics guiGraphics,
-            Font font,
-            String beforeText,
-            float extraShift,
-            int baseX,
-            int baseY,
-            @NotNull Style style,
-            int color
-    ) {
-        HoverEvent hover = style.getHoverEvent();
-        if (hover == null || hover.getAction() != HoverEvent.Action.SHOW_ITEM) {
-            return;
-        }
-
-        HoverEvent.ItemStackInfo info = hover.getValue(HoverEvent.Action.SHOW_ITEM);
-        ItemStack stack = info != null ? info.getItemStack() : ItemStack.EMPTY;
-        if (stack.isEmpty()) {
-            stack = new ItemStack(Blocks.BARRIER);
-        }
-
-        float alpha = (color >> 24 & 0xFF) / 255.0F;
-        if (alpha <= 0.0F) {
-            return;
-        }
-
-        float shift = font.width(beforeText) + extraShift + CALLYOU_ITEM_ICON_EXTRA_SHIFT;
-
-        PoseStack pose = guiGraphics.pose();
-        pose.pushPose();
-
-        pose.translate(baseX + shift, baseY - 1, 200.0F);
-        pose.scale(CALLYOU_ITEM_ICON_SCALE, CALLYOU_ITEM_ICON_SCALE, 1.0F);
-
-        guiGraphics.renderItem(stack, 0, 0);
-
-        pose.popPose();
+        Font font = minecraft.font;
+        FormattedCharSequence padded = ItemIconRenderUtil.padItemIconText(line, font);
+        return original.call(splitter, padded, width);
     }
 }
-

@@ -1,5 +1,57 @@
 # Update Log
 
+[dev] Version 2101.2.2-build.39
+feat(client): 客户端补偿与 @item 图标渲染模式
+
+- 新增 ClientMentionCompensator，在客户端补偿 @item/@spot 占位并保留样式信息
+- 统一聊天与悬浮图标渲染逻辑，支持行内/悬浮模式并扩展 hover 命中范围
+
+refactor(client): 提及历史界面拆分与组件遍历复用
+
+- 提取历史记录行到 row 包，新增 BodyLabel/RowUtils 并优化结构
+- 新增 ComponentTraversal 统一组件树遍历逻辑，复用 reply/waypoint/hover 解析
+
+feat(core): 离线目标提及与历史记录补全
+
+- TargetProvider 增加 getOfflineTargets，玩家名与 FTB 团队支持离线成员
+- MentionHistoryRecorder 支持离线目标记录，MentionDispatcher 在无在线目标时也写入
+- MentionResolver 支持离线玩家名解析
+
+fix(core): 回复建议仅对被提及玩家可见
+
+- 发送者使用无回复提示版本，避免自我回复与误触
+
+chore(config,lang): 客户端配置与语言项更新
+
+- 新增 CLIENT 配置与 itemIconRenderMode，并迁移相关配置键名
+- 更新语言条目与数据包 mention id（ftb_team → team）
+
+feat(client): Client-side compensation and @item icon render modes
+
+- Add ClientMentionCompensator to rebuild @item/@spot placeholders on the client with proper styles
+- Unify chat/hover icon rendering to support inline/hover modes and expand hover hit ranges
+
+refactor(client): Split history UI and reuse component traversal
+
+- Move history row logic into the row package with BodyLabel/RowUtils
+- Add ComponentTraversal to unify component-tree traversal for reply/waypoint/hover
+
+feat(core): Offline target mentions and history coverage
+
+- Add getOfflineTargets to TargetProvider; player name and FTB team support offline members
+- MentionHistoryRecorder now records offline targets; MentionDispatcher records even when no online targets
+- MentionResolver now resolves offline player names
+
+fix(core): Reply suggestions only visible to mentioned targets
+
+- Sender receives a non-reply version to avoid self-reply
+
+chore(config,lang): Client config and language updates
+
+- Add CLIENT config with itemIconRenderMode and migrate config keys
+- Update language entries and datapack mention id (ftb_team → team)
+
+
 [release] Version 2101.2.1-build.38
 feat(core): 提及消息仅发送给命中目标并保留发送者回显
 

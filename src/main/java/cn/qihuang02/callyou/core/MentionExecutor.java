@@ -69,7 +69,12 @@ public final class MentionExecutor {
 
             if (!allTargetsHit.isEmpty()) {
                 event.setCanceled(true);
-                sendChatToTargets(sender, composeResult.rebuilt(), allTargetsHit);
+                sendChatToTargets(
+                        sender,
+                        composeResult.rebuilt(),
+                        composeResult.senderView(),
+                        allTargetsHit
+                );
             }
         } catch (MentionCancelException cancel) {
             sender.sendSystemMessage(cancel.getReason());
@@ -80,6 +85,7 @@ public final class MentionExecutor {
     private static void sendChatToTargets(
             @NotNull ServerPlayer sender,
             @NotNull Component message,
+            @NotNull Component senderMessage,
             @NotNull List<ServerPlayer> targets
     ) {
         Set<ServerPlayer> recipients = new LinkedHashSet<>(targets.size() + 1);
@@ -88,8 +94,9 @@ public final class MentionExecutor {
         recipients.add(sender);
 
         ChatType.Bound boundType = ChatType.bind(ChatType.CHAT, sender);
-        OutgoingChatMessage outgoing = new OutgoingChatMessage.Disguised(message);
         for (ServerPlayer recipient : recipients) {
+            Component selected = recipient == sender ? senderMessage : message;
+            OutgoingChatMessage outgoing = new OutgoingChatMessage.Disguised(selected);
             recipient.sendChatMessage(outgoing, sender.shouldFilterMessageTo(recipient), boundType);
         }
     }

@@ -7,12 +7,19 @@ import org.jetbrains.annotations.NotNull;
 public class CallYouConfig {
     public static final ModConfigSpec COMMON_SPEC;
     public static final Common COMMON;
+    public static final ModConfigSpec CLIENT_SPEC;
+    public static final Client CLIENT;
 
     static {
         Pair<Common, ModConfigSpec> pair =
                 new ModConfigSpec.Builder().configure(Common::new);
         COMMON = pair.getLeft();
         COMMON_SPEC = pair.getRight();
+
+        Pair<Client, ModConfigSpec> clientPair =
+                new ModConfigSpec.Builder().configure(Client::new);
+        CLIENT = clientPair.getLeft();
+        CLIENT_SPEC = clientPair.getRight();
     }
 
     public static final class Common {
@@ -20,7 +27,6 @@ public class CallYouConfig {
         public final ModConfigSpec.IntValue maxTargetsPerMention;
         public final ModConfigSpec.IntValue globalCooldownTicks;
         public final ModConfigSpec.IntValue perTargetCooldownTicks;
-        public final ModConfigSpec.BooleanValue renderItemIconAndPlaceholder;
         public final ModConfigSpec.BooleanValue enableServerSideHistory;
         public final ModConfigSpec.IntValue historyRetentionDays;
         public final ModConfigSpec.IntValue maxHistoryPerPlayer;
@@ -44,10 +50,6 @@ public class CallYouConfig {
                     .comment("Cooldown in ticks between mentions from the same sender to the same target. 0 = no limit.")
                     .defineInRange("perTargetCooldownTicks", 40, 0, 20 * 60);
 
-            renderItemIconAndPlaceholder = builder
-                    .comment("Whether to enable rendering of item icons and placeholder spaces after an @item mention.")
-                    .define("renderItemIconAndPlaceholder", true);
-
             enableServerSideHistory = builder
                     .comment("Whether to store mention history on the server for players to review later.")
                     .define("enableServerSideHistory", true);
@@ -62,5 +64,25 @@ public class CallYouConfig {
 
             builder.pop();
         }
+    }
+
+    public static final class Client {
+        public final ModConfigSpec.EnumValue<ItemIconRenderMode> itemIconRenderMode;
+
+        Client(ModConfigSpec.@NotNull Builder builder) {
+            builder.push("mentions");
+
+            itemIconRenderMode = builder
+                    .comment("Client-only: where to render @item icons. INLINE = in chat line, HOVER = left of cursor, NONE = disable icon rendering.")
+                    .defineEnum("itemIconRenderMode", ItemIconRenderMode.INLINE);
+
+            builder.pop();
+        }
+    }
+
+    public enum ItemIconRenderMode {
+        INLINE,
+        HOVER,
+        NONE
     }
 }

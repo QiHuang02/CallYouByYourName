@@ -1,6 +1,7 @@
 package cn.qihuang02.callyou;
 
 import cn.qihuang02.callyou.core.client.screen.MentionPreferencesScreen;
+import cn.qihuang02.callyou.core.client.chat.ClientMentionCompensator;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
@@ -10,6 +11,7 @@ import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
+import net.neoforged.neoforge.client.event.ClientChatReceivedEvent;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import net.neoforged.neoforge.client.gui.ConfigurationScreen;
@@ -38,6 +40,19 @@ public class CallYouByYourNameClient {
     @SubscribeEvent
     static void registerKeyMappings(@NotNull RegisterKeyMappingsEvent event) {
         event.register(MENTION_PREFS_KEY);
+    }
+
+    @SubscribeEvent
+    static void onClientChatReceived(@NotNull ClientChatReceivedEvent event) {
+        Minecraft minecraft = Minecraft.getInstance();
+        if (minecraft == null) {
+            return;
+        }
+        var message = event.getMessage();
+        var compensated = ClientMentionCompensator.compensate(minecraft, message);
+        if (compensated != message) {
+            event.setMessage(compensated);
+        }
     }
 
     @EventBusSubscriber(modid = CallYouByYourName.MODID, value = Dist.CLIENT)

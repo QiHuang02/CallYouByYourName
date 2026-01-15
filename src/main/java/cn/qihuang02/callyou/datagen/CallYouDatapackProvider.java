@@ -50,7 +50,7 @@ public final class CallYouDatapackProvider extends DatapackBuiltinEntriesProvide
     );
     private static final ResourceKey<MentionType> FTB_TEAM_MENTION = ResourceKey.create(
             CallYouMentionRegistries.MENTION_TYPE_REGISTRY_KEY,
-            ResourceLocation.fromNamespaceAndPath(CallYouByYourName.MODID, "ftb_team")
+            ResourceLocation.fromNamespaceAndPath(CallYouByYourName.MODID, "team")
     );
     private static final RegistrySetBuilder BUILDER = new RegistrySetBuilder()
             .add(

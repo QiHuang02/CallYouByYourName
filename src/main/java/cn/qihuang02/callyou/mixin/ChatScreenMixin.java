@@ -1,7 +1,7 @@
 package cn.qihuang02.callyou.mixin;
 
-import cn.qihuang02.callyou.core.client.chat.ClientMentionContext;
 import cn.qihuang02.callyou.core.client.chat.MentionSuggestions;
+import cn.qihuang02.callyou.core.client.render.ItemIconRenderUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -36,14 +36,11 @@ public abstract class ChatScreenMixin extends Screen {
         Font font = minecraft.font;
         ChatScreen self = (ChatScreen) (Object) this;
 
-        ClientMentionContext mentionContext = ClientMentionContext.create(minecraft);
-
         this.callyou$mentionSuggestions = new MentionSuggestions(
                 minecraft,
                 self,
                 this.input,
-                font,
-                mentionContext
+                font
         );
     }
 
@@ -56,6 +53,7 @@ public abstract class ChatScreenMixin extends Screen {
 
     @Inject(method = "render", at = @At("TAIL"))
     private void callyou$render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick, CallbackInfo ci) {
+        ItemIconRenderUtil.renderHoverItemIcon(graphics, this.minecraft, mouseX, mouseY);
         if (this.callyou$mentionSuggestions != null) {
             this.callyou$mentionSuggestions.renderWithUpdate(graphics, mouseX, mouseY);
         }

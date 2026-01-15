@@ -20,7 +20,6 @@ import java.util.concurrent.CompletableFuture;
 public class MentionSuggestions extends CommandSuggestions {
     private final Minecraft minecraft;
     private final EditBox input;
-    private final ClientMentionContext mentionContext;
 
     @Nullable
     private MentionTokens.Token currentToken;
@@ -29,8 +28,7 @@ public class MentionSuggestions extends CommandSuggestions {
             Minecraft minecraft,
             ChatScreen screen,
             EditBox input,
-            Font font,
-            ClientMentionContext mentionContext
+            Font font
     ) {
         super(
                 minecraft,
@@ -47,7 +45,6 @@ public class MentionSuggestions extends CommandSuggestions {
 
         this.minecraft = minecraft;
         this.input = input;
-        this.mentionContext = mentionContext;
 
         this.setAllowSuggestions(false);
         this.setAllowHiding(true);
@@ -98,7 +95,8 @@ public class MentionSuggestions extends CommandSuggestions {
 
     private @NotNull List<String> collectCandidates(@NotNull String prefix) {
         List<String> result = new ArrayList<>();
-        List<String> typeKeys = this.mentionContext.getMentionTypeKeysSorted();
+        ClientMentionContext mentionContext = ClientMentionContext.ClientMentionContextCache.get(this.minecraft);
+        List<String> typeKeys = mentionContext.getMentionTypeKeysSorted();
         if (prefix.isEmpty()) {
             for (String typeKey : typeKeys) {
                 if ("player".equals(typeKey)) continue;

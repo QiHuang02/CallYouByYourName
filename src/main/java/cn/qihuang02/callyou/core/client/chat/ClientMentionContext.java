@@ -104,4 +104,37 @@ public record ClientMentionContext(
         }
         return mentionTypeStyles.getOrDefault(normalizeKey(key), Style.EMPTY);
     }
+
+    public static final class ClientMentionContextCache {
+        private static final Object LOCK = new Object();
+        private static ClientMentionContext cached = new ClientMentionContext(Set.of(), Map.of());
+        private static Object lastLevel;
+        private static Object lastRegistryAccess;
+
+        public static @NotNull ClientMentionContext get(@NotNull Minecraft minecraft) {
+            synchronized (LOCK) {
+                if (minecraft.level == null) {
+                    cached = new ClientMentionContext(Set.of(), Map.of());
+                    lastLevel = null;
+                    lastRegistryAccess = null;
+                    return cached;
+                }
+                Object level = minecraft.level;
+                Object registryAccess = minecraft.level.registryAccess();
+                if (level != lastLevel || registryAccess != lastRegistryAccess) {
+                    cached = create(minecraft);
+                    lastLevel = level;
+                    lastRegistryAccess = registryAccess;
+                }
+                return cached;
+            }
+        }
+
+        public static void invalidate() {
+            synchronized (LOCK) {
+                lastLevel = null;
+                lastRegistryAccess = null;
+            }
+        }
+    }
 }
