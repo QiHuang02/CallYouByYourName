@@ -2,6 +2,7 @@ package cn.qihuang02.callyou.core.mention.executor;
 
 import cn.qihuang02.callyou.api.MentionContext;
 import cn.qihuang02.callyou.api.MentionType;
+import cn.qihuang02.callyou.core.mention.executor.MentionResult.MentionStatus;
 import cn.qihuang02.callyou.api.components.Notifier;
 import cn.qihuang02.callyou.api.components.TargetProvider;
 import cn.qihuang02.callyou.api.event.MentionEvent;
@@ -34,18 +35,20 @@ public final class MentionDispatcher {
     ) {
         List<ServerPlayer> allTargetsHit = new ArrayList<>();
         for (MentionExecution pending : pendingMentions) {
-            List<ServerPlayer> hit = dispatchSingle(pending.type(), pending.context(), nowTick, formattedMessage);
+            List<ServerPlayer> hit = dispatchSingle(pending, nowTick, formattedMessage);
             allTargetsHit.addAll(hit);
         }
         return allTargetsHit;
     }
 
     private @NotNull List<ServerPlayer> dispatchSingle(
-            @NotNull MentionType type,
-            @NotNull MentionContext context,
+            @NotNull MentionExecution pending,
             long nowTick,
             @NotNull Component formattedMessage
     ) {
+        MentionType type = pending.type();
+        MentionContext context = pending.context();
+        MentionStatus status = pending.status();
         TargetProvider targetProvider = type.targetProvider();
         Notifier notifier = type.notifier();
 
@@ -69,7 +72,7 @@ public final class MentionDispatcher {
                 guard.filterTargets(context.sender(), type, context.typeId(), context, resolvedOnline, nowTick);
 
         if (filteredTargets.isEmpty()) {
-            historyRecorder.record(context, eventTargets, resolvedOnline, List.of(), formattedMessage);
+            historyRecorder.record(status, context, eventTargets, resolvedOnline, List.of(), formattedMessage);
             return List.of();
         }
 
@@ -86,7 +89,7 @@ public final class MentionDispatcher {
         }
 
         if (finalTargets.isEmpty()) {
-            historyRecorder.record(context, eventTargets, resolvedOnline, List.of(), formattedMessage);
+            historyRecorder.record(status, context, eventTargets, resolvedOnline, List.of(), formattedMessage);
             return List.of();
         }
 
@@ -94,7 +97,7 @@ public final class MentionDispatcher {
 
         NeoForge.EVENT_BUS.post(new MentionEvent.Post(context, type, TargetCollection.ofPlayers(finalTargets)));
 
-        historyRecorder.record(context, eventTargets, resolvedOnline, finalTargets, formattedMessage);
+        historyRecorder.record(status, context, eventTargets, resolvedOnline, finalTargets, formattedMessage);
 
         return finalTargets;
     }

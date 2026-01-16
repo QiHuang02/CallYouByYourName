@@ -1,8 +1,7 @@
 package cn.qihuang02.callyou.core.client.chat;
 
-import cn.qihuang02.callyou.api.client.ClientMentionMetadata;
+import cn.qihuang02.callyou.api.client.ClientMentionContext;
 import cn.qihuang02.callyou.core.MentionTokens;
-import cn.qihuang02.callyou.util.OnlinePlayerList;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import net.minecraft.client.Minecraft;
@@ -96,14 +95,15 @@ public class MentionSuggestions extends CommandSuggestions {
 
     private @NotNull List<String> collectCandidates(@NotNull String prefix) {
         List<String> result = new ArrayList<>();
-        ClientMentionMetadata mentionContext = ClientMentionMetadata.ClientMentionMetadataCache.get(this.minecraft);
-        List<String> typeKeys = mentionContext.getMentionTypeKeysSorted();
+        ClientMentionContext context = ClientMentionContext.get(this.minecraft);
+        List<String> typeKeys = context.getMentionTypeKeysSorted();
+        List<String> onlinePlayers = context.getOnlinePlayerNames();
         if (prefix.isEmpty()) {
             for (String typeKey : typeKeys) {
                 if ("player".equals(typeKey)) continue;
                 result.add(typeKey);
             }
-            result.addAll(OnlinePlayerList.getClientOnlinePlayerNames(this.minecraft));
+            result.addAll(onlinePlayers);
             return result;
         }
 
@@ -115,7 +115,7 @@ public class MentionSuggestions extends CommandSuggestions {
             }
         }
 
-        for (String playerName : OnlinePlayerList.getClientOnlinePlayerNames(this.minecraft)) {
+        for (String playerName : onlinePlayers) {
             if (playerName.regionMatches(true, 0, prefix, 0, prefix.length())) {
                 result.add(playerName);
             }

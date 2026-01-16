@@ -439,8 +439,6 @@ final class MentionHistoryBodyLabel extends Label {
     ) {
         StringBuilder before = new StringBuilder();
         ItemIconPlacement[] placement = new ItemIconPlacement[1];
-        float spaceWidth = font.width(" ") * scale;
-
         line.accept((index, style, codePoint) -> {
             if (placement[0] != null) {
                 return false;
@@ -449,9 +447,6 @@ final class MentionHistoryBodyLabel extends Label {
             if (stack != null) {
                 float beforeWidth = font.width(before.toString()) * scale;
                 float shift = beforeWidth + ITEM_ICON_EXTRA_SHIFT * scale;
-                if (before.length() > 0 && before.charAt(before.length() - 1) == ' ') {
-                    shift -= spaceWidth;
-                }
                 placement[0] = new ItemIconPlacement(stack, lineX + shift, lineY - 1.0F);
                 return false;
             }

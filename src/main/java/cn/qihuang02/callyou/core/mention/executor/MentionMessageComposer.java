@@ -4,6 +4,8 @@ import cn.qihuang02.callyou.api.MentionContext;
 import cn.qihuang02.callyou.api.MentionType;
 import cn.qihuang02.callyou.api.components.TextFormatter;
 import cn.qihuang02.callyou.core.MentionResolver;
+import cn.qihuang02.callyou.core.mention.executor.MentionResult.MentionEntry;
+import cn.qihuang02.callyou.core.mention.executor.MentionResult.MentionStatus;
 import cn.qihuang02.callyou.core.mention.components.formatter.ItemTextFormatter;
 import net.minecraft.network.chat.*;
 import net.minecraft.resources.ResourceLocation;
@@ -18,7 +20,7 @@ public final class MentionMessageComposer {
             @NotNull ServerPlayer sender,
             @NotNull Component originalMessage,
             @NotNull String raw,
-            @NotNull List<MentionResolver.ResolvedMention> mentions
+            @NotNull List<MentionEntry> entries
     ) {
         MutableComponent rebuilt = Component.literal("");
         MutableComponent rebuiltForSender = Component.literal("");
@@ -27,7 +29,8 @@ public final class MentionMessageComposer {
         List<MentionExecution> pendingMentions = new ArrayList<>();
         boolean itemMentionUsed = false;
 
-        for (MentionResolver.ResolvedMention parsed : mentions) {
+        for (MentionEntry entry : entries) {
+            MentionResolver.ResolvedMention parsed = entry.mention();
             int start = parsed.startIndex();
             int end = parsed.endIndex();
 
@@ -43,9 +46,10 @@ public final class MentionMessageComposer {
                 }
             }
 
-            MentionType type = parsed.mentionType();
             String substring = raw.substring(start, Math.min(end, raw.length()));
-            if (type == null) {
+            MentionStatus status = entry.status();
+            MentionType type = parsed.mentionType();
+            if (!status.isAllowed() || type == null) {
                 rebuilt.append(substring);
                 rebuiltForSender.append(substring);
                 lastIndex = end;
@@ -78,7 +82,7 @@ public final class MentionMessageComposer {
 
             rebuilt.append(mentionForTargets);
             rebuiltForSender.append(formattedMention);
-            pendingMentions.add(new MentionExecution(type, context));
+            pendingMentions.add(new MentionExecution(type, context, status));
 
             lastIndex = end;
         }
