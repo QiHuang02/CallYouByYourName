@@ -1,7 +1,7 @@
 package cn.qihuang02.callyou.core.mention.executor;
 
 import cn.qihuang02.callyou.api.MentionContext;
-import cn.qihuang02.callyou.api.MentionType;
+import cn.qihuang02.callyou.api.TargetCollection;
 import cn.qihuang02.callyou.config.CallYouConfig;
 import cn.qihuang02.callyou.core.saveddata.MentionRecord;
 import cn.qihuang02.callyou.core.saveddata.MentionSavedData;
@@ -16,21 +16,24 @@ import java.util.UUID;
 
 public final class MentionHistoryRecorder {
     public void record(
-            @NotNull MentionType type,
             @NotNull MentionContext context,
-            @NotNull List<ServerPlayer> targets,
+            @NotNull TargetCollection targets,
+            @NotNull List<ServerPlayer> onlineTargets,
+            @NotNull List<ServerPlayer> readTargets,
             @NotNull Component formattedMessage
     ) {
         if (!CallYouConfig.COMMON.enableServerSideHistory.get()) {
             return;
         }
-        List<UUID> onlineTargetIds = targets.stream().map(ServerPlayer::getUUID).toList();
-        List<UUID> offlineTargetIds = collectOfflineTargets(type, context, onlineTargetIds);
-        if (onlineTargetIds.isEmpty() && offlineTargetIds.isEmpty()) {
+        List<UUID> onlineTargetIds = onlineTargets.stream().map(ServerPlayer::getUUID).toList();
+        List<UUID> readTargetIds = readTargets.stream().map(ServerPlayer::getUUID).toList();
+        List<UUID> offlineTargetIds = collectOfflineTargets(targets, onlineTargetIds, context.senderId());
+        if (readTargetIds.isEmpty() && offlineTargetIds.isEmpty()) {
             return;
         }
         MentionSavedData savedData = MentionSavedData.get(context.level());
-        for (UUID targetId : onlineTargetIds) {
+        Set<UUID> uniqueReadTargets = new LinkedHashSet<>(readTargetIds);
+        for (UUID targetId : uniqueReadTargets) {
             MentionRecord record = buildMentionRecord(
                     context,
                     List.of(targetId),
@@ -68,18 +71,16 @@ public final class MentionHistoryRecorder {
     }
 
     private @NotNull List<UUID> collectOfflineTargets(
-            @NotNull MentionType type,
-            @NotNull MentionContext context,
-            @NotNull List<UUID> onlineTargetIds
+            @NotNull TargetCollection targets,
+            @NotNull List<UUID> onlineTargetIds,
+            @NotNull UUID senderId
     ) {
-        List<UUID> candidates = type.targetProvider().getOfflineTargets(context);
-        if (candidates.isEmpty()) {
+        if (targets.isEmpty()) {
             return List.of();
         }
         Set<UUID> onlineTargets = new LinkedHashSet<>(onlineTargetIds);
         Set<UUID> unique = new LinkedHashSet<>();
-        UUID senderId = context.senderId();
-        for (UUID id : candidates) {
+        for (UUID id : targets.allIds()) {
             if (id == null || id.equals(senderId) || onlineTargets.contains(id)) {
                 continue;
             }

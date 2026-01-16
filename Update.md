@@ -1,5 +1,46 @@
 # Update Log
 
+[dev] Version 2101.2.2-build.40
+refactor(api): 统一提及目标集合与事件接口
+
+- 新增 TargetCollection，TargetProvider 统一返回在线/离线目标
+- MentionEvent 现在携带 TargetCollection，Pre 事件支持按条件移除目标
+
+refactor(core): 提及派发与历史记录适配目标集合
+
+- MentionDispatcher 与 MentionHistoryRecorder 统一使用目标集合并去重记录
+- 目标提供器实现（玩家/维度/半径/FTB 团队）更新为 TargetCollection
+
+refactor(client): 客户端提及元数据与 key 规范化
+
+- ClientMentionContext 更名为 ClientMentionMetadata 并调整缓存入口
+- 新增 MentionKeyUtils，统一 key 归一化/匹配与补偿渲染
+
+refactor(storage): 提及偏好序列化改用原生 Codec
+
+- MentionPreferences/TypePreference 移除 LowDragLib2 Persisted 依赖
+- 使用 RecordCodecBuilder 定义字段与默认值
+
+refactor(api): Unify target collection and event API
+
+- Add TargetCollection and make TargetProvider return unified online/offline targets
+- MentionEvent now carries TargetCollection; Pre event supports predicate-based removals
+
+refactor(core): Dispatch and history adapt to target collections
+
+- MentionDispatcher/MentionHistoryRecorder use target collections and de-duplicate records
+- Target providers (player/dimension/radius/FTB team) now return TargetCollection
+
+refactor(client): Client mention metadata and key normalization
+
+- Rename ClientMentionContext to ClientMentionMetadata and update cache entry points
+- Add MentionKeyUtils to normalize/match keys and reuse in compensation
+
+refactor(storage): Mention preferences now use native Codec
+
+- MentionPreferences/TypePreference drop LowDragLib2 Persisted usage
+- Define fields/defaults via RecordCodecBuilder
+
 [dev] Version 2101.2.2-build.39
 feat(client): 客户端补偿与 @item 图标渲染模式
 

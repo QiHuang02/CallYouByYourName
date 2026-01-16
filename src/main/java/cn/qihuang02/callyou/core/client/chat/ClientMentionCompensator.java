@@ -1,5 +1,7 @@
 package cn.qihuang02.callyou.core.client.chat;
 
+import cn.qihuang02.callyou.api.client.ClientMentionMetadata;
+import cn.qihuang02.callyou.util.MentionKeyUtils;
 import cn.qihuang02.callyou.core.MentionTokens;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
@@ -13,18 +15,16 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 public final class ClientMentionCompensator {
     private static final String ITEM_KEY = "item";
     private static final String SPOT_KEY = "spot";
-    private static final String ITEM_LABEL_KEY = "message.callyou.item.label";
 
     public static @NotNull Component compensate(
             @NotNull Minecraft minecraft,
             @NotNull Component message
     ) {
-        ClientMentionContext context = ClientMentionContext.ClientMentionContextCache.get(minecraft);
+        ClientMentionMetadata context = ClientMentionMetadata.ClientMentionMetadataCache.get(minecraft);
         if (message.getString().indexOf('@') < 0) {
             return message;
         }
@@ -34,7 +34,7 @@ public final class ClientMentionCompensator {
 
     private static @NotNull RewriteResult rewriteComponent(
             @NotNull Component input,
-            @NotNull ClientMentionContext context
+            @NotNull ClientMentionMetadata context
     ) {
         RewriteResult base = rewriteContents(input, context);
         List<Component> siblings = input.getSiblings();
@@ -71,7 +71,7 @@ public final class ClientMentionCompensator {
 
     private static @NotNull RewriteResult rewriteContents(
             @NotNull Component input,
-            @NotNull ClientMentionContext context
+            @NotNull ClientMentionMetadata context
     ) {
         if (input.getContents() instanceof PlainTextContents plain) {
             return rewritePlainText(input, plain.text(), context);
@@ -108,7 +108,7 @@ public final class ClientMentionCompensator {
     private static @NotNull RewriteResult rewritePlainText(
             @NotNull Component input,
             @NotNull String text,
-            @NotNull ClientMentionContext context
+            @NotNull ClientMentionMetadata context
     ) {
         if (text.indexOf('@') < 0) {
             return new RewriteResult(input, false);
@@ -163,15 +163,15 @@ public final class ClientMentionCompensator {
     private static @NotNull Style mergeStyle(
             @NotNull Style baseStyle,
             @NotNull String key,
-            @NotNull ClientMentionContext context
+            @NotNull ClientMentionMetadata context
     ) {
         return context.findStyle(key).map(style -> style.applyTo(baseStyle)).orElse(baseStyle);
     }
 
     private static @Nullable Component replacementForToken(@NotNull String key) {
-        String normalized = key.toLowerCase(Locale.ROOT);
+        String normalized = MentionKeyUtils.normalize(key);
         if (ITEM_KEY.equals(normalized)) {
-            return Component.translatable(ITEM_LABEL_KEY);
+            return Component.translatable("message.callyou.item.label");
         }
         if (SPOT_KEY.equals(normalized)) {
             return Component.translatable("message.callyou.spot.label");

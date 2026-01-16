@@ -2,6 +2,7 @@ package cn.qihuang02.callyou.core.mention.components.targetProvider;
 
 import cn.qihuang02.callyou.api.MentionContext;
 import cn.qihuang02.callyou.api.components.TargetProvider;
+import cn.qihuang02.callyou.api.TargetCollection;
 import cn.qihuang02.callyou.registry.BuiltInCallYouRegistries;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
@@ -24,7 +25,7 @@ public record DimensionTargetProvider(@Nullable ResourceLocation dimensionId) im
             ).apply(instance, opt -> new DimensionTargetProvider(opt.orElse(null)))
     );
 
-    public static @NotNull List<ServerPlayer> collectTargets(
+    public static @NotNull TargetCollection collectTargets(
             @NotNull MentionContext context,
             @Nullable ResourceLocation dimensionId
     ) {
@@ -39,7 +40,7 @@ public record DimensionTargetProvider(@Nullable ResourceLocation dimensionId) im
                     result.add(p);
                 }
             }
-            return result;
+            return TargetCollection.ofPlayers(result);
         }
 
         List<ServerPlayer> result = new ArrayList<>();
@@ -53,7 +54,7 @@ public record DimensionTargetProvider(@Nullable ResourceLocation dimensionId) im
                 break;
             }
         }
-        return result;
+        return TargetCollection.ofPlayers(result);
     }
 
     @Override
@@ -62,7 +63,7 @@ public record DimensionTargetProvider(@Nullable ResourceLocation dimensionId) im
     }
 
     @Override
-    public @NotNull List<ServerPlayer> getTargets(@NotNull MentionContext context) {
+    public @NotNull TargetCollection resolveTargets(@NotNull MentionContext context) {
         return collectTargets(context, this.dimensionId);
     }
 }

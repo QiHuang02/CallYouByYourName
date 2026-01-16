@@ -2,12 +2,10 @@ package cn.qihuang02.callyou.core.mention.components.targetProvider;
 
 import cn.qihuang02.callyou.api.MentionContext;
 import cn.qihuang02.callyou.api.components.TargetProvider;
+import cn.qihuang02.callyou.api.TargetCollection;
 import cn.qihuang02.callyou.registry.BuiltInCallYouRegistries;
 import com.mojang.serialization.MapCodec;
-import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.List;
 
 public class SameDimensionTargetProvider implements TargetProvider {
     public static final MapCodec<SameDimensionTargetProvider> MAP_CODEC =
@@ -19,7 +17,7 @@ public class SameDimensionTargetProvider implements TargetProvider {
     }
 
     @Override
-    public @NotNull List<ServerPlayer> getTargets(@NotNull MentionContext context) {
+    public @NotNull TargetCollection resolveTargets(@NotNull MentionContext context) {
         // 复用 DimensionTargetProvider 的通用逻辑，传 null 表示“当前维度”
         return DimensionTargetProvider.collectTargets(context, null);
     }

@@ -1,5 +1,6 @@
 package cn.qihuang02.callyou.core.client.chat;
 
+import cn.qihuang02.callyou.api.client.ClientMentionMetadata;
 import cn.qihuang02.callyou.core.MentionTokens;
 import cn.qihuang02.callyou.util.OnlinePlayerList;
 import com.mojang.brigadier.suggestion.Suggestions;
@@ -95,7 +96,7 @@ public class MentionSuggestions extends CommandSuggestions {
 
     private @NotNull List<String> collectCandidates(@NotNull String prefix) {
         List<String> result = new ArrayList<>();
-        ClientMentionContext mentionContext = ClientMentionContext.ClientMentionContextCache.get(this.minecraft);
+        ClientMentionMetadata mentionContext = ClientMentionMetadata.ClientMentionMetadataCache.get(this.minecraft);
         List<String> typeKeys = mentionContext.getMentionTypeKeysSorted();
         if (prefix.isEmpty()) {
             for (String typeKey : typeKeys) {

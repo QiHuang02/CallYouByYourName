@@ -2,25 +2,25 @@ package cn.qihuang02.callyou.api.event;
 
 import cn.qihuang02.callyou.api.MentionContext;
 import cn.qihuang02.callyou.api.MentionType;
+import cn.qihuang02.callyou.api.TargetCollection;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.Event;
 import net.neoforged.bus.api.ICancellableEvent;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.UUID;
+import java.util.function.Predicate;
 
 public abstract class MentionEvent extends Event {
     private final MentionContext context;
     private final MentionType mentionType;
-    private final List<ServerPlayer> targets;
+    private TargetCollection targets;
 
-    protected MentionEvent(@NotNull MentionContext context, @NotNull MentionType mentionType, @NotNull List<ServerPlayer> targets) {
+    protected MentionEvent(@NotNull MentionContext context, @NotNull MentionType mentionType, @NotNull TargetCollection targets) {
         this.context = context;
         this.mentionType = mentionType;
-        this.targets = new ArrayList<>(targets);
+        this.targets = targets;
     }
 
     public @NotNull MentionContext getContext() {
@@ -31,7 +31,7 @@ public abstract class MentionEvent extends Event {
         return mentionType;
     }
 
-    public @NotNull List<ServerPlayer> getTargets() {
+    public @NotNull TargetCollection getTargets() {
         return targets;
     }
 
@@ -51,26 +51,31 @@ public abstract class MentionEvent extends Event {
         return context.mentionKey();
     }
 
-    public @Nullable String getSingleTargetPlayerName() {
-        if (targets.size() != 1) {
-            return null;
-        }
-        return targets.getFirst().getScoreboardName();
-    }
-
-    public boolean isSingleTarget() {
-        return targets.size() == 1;
-    }
-
-    public static class Pre extends MentionEvent implements ICancellableEvent {
-        public Pre(@NotNull MentionContext context, @NotNull MentionType mentionType, @NotNull List<ServerPlayer> targets) {
-            super(context, mentionType, targets);
-        }
+    protected void setTargetsInternal(@NotNull TargetCollection targets) {
+        this.targets = targets;
     }
 
     public static class Post extends MentionEvent {
-        public Post(@NotNull MentionContext context, @NotNull MentionType mentionType, @NotNull List<ServerPlayer> targets) {
+        public Post(@NotNull MentionContext context, @NotNull MentionType mentionType, @NotNull TargetCollection targets) {
             super(context, mentionType, targets);
+        }
+    }
+
+    public static final class Pre extends MentionEvent implements ICancellableEvent {
+        public Pre(
+                @NotNull MentionContext context,
+                @NotNull MentionType mentionType,
+                @NotNull TargetCollection targets
+        ) {
+            super(context, mentionType, targets);
+        }
+
+        public void setTargets(@NotNull TargetCollection newTargets) {
+            setTargetsInternal(newTargets);
+        }
+
+        public void removeTargets(@NotNull Predicate<UUID> predicate) {
+            setTargetsInternal(getTargets().removeIf(predicate));
         }
     }
 }

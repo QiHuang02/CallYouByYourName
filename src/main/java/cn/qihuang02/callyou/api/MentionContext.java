@@ -1,5 +1,6 @@
 package cn.qihuang02.callyou.api;
 
+import cn.qihuang02.callyou.util.MentionKeyUtils;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
@@ -11,7 +12,6 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Locale;
 import java.util.UUID;
 
 public record MentionContext(
@@ -39,29 +39,12 @@ public record MentionContext(
     }
 
     @Contract(pure = true)
-    public @NotNull String mentionKeyLower() {
-        if (mentionKey == null) {
-            return "";
-        }
-        return mentionKey.toLowerCase(Locale.ROOT);
+    public @NotNull String normalizedKey() {
+        return MentionKeyUtils.normalize(mentionKey);
     }
 
-    public boolean isMentionKey(String key) {
-        return isMentionKey(key, false);
-    }
-
-    public boolean isMentionKey(String key, boolean ignoreCase) {
-        if (mentionKey == null || key == null) {
-            return false;
-        }
-        return ignoreCase ? mentionKey.equalsIgnoreCase(key) : mentionKey.equals(key);
-    }
-
-    public boolean isSelfMentionKey() {
-        if (mentionKey == null) {
-            return false;
-        }
-        return mentionKey.equals(senderName());
+    public boolean matchesKey(String key) {
+        return MentionKeyUtils.matches(mentionKey, key);
     }
 
     public MinecraftServer server() {

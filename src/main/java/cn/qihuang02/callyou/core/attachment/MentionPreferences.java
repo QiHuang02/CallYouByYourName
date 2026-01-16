@@ -5,11 +5,9 @@ import cn.qihuang02.callyou.api.components.MentionRules;
 import cn.qihuang02.callyou.api.components.Notifier;
 import cn.qihuang02.callyou.registry.CallYouMentionRegistries;
 import cn.qihuang02.callyou.registry.CallYouRegistries;
-import com.lowdragmc.lowdraglib2.syncdata.IPersistedSerializable;
-import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
-import com.lowdragmc.lowdraglib2.syncdata.annotation.SkipPersistedValue;
-import com.lowdragmc.lowdraglib2.utils.PersistedParser;
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.minecraft.core.UUIDUtil;
 import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.network.RegistryFriendlyByteBuf;
@@ -23,44 +21,52 @@ import org.jetbrains.annotations.UnmodifiableView;
 
 import java.util.*;
 
-public final class MentionPreferences implements IPersistedSerializable {
-    public static final Codec<MentionPreferences> CODEC = PersistedParser.createCodec(MentionPreferences::new);
+public final class MentionPreferences {
+    public static final Codec<MentionPreferences> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+            UUIDUtil.CODEC.listOf().optionalFieldOf("blocked_senders", List.of())
+                    .forGetter(preferences -> List.copyOf(preferences.blockedSenders)),
+            ResourceLocation.CODEC.listOf().optionalFieldOf("blocked_types", List.of())
+                    .forGetter(preferences -> List.copyOf(preferences.blockedTypes)),
+            Codec.unboundedMap(ResourceLocation.CODEC, TypePreference.CODEC)
+                    .optionalFieldOf("type_preferences", Map.of())
+                    .forGetter(preferences -> Map.copyOf(preferences.typePreferences)),
+            Codec.BOOL.optionalFieldOf("allow_mentions", true).forGetter(preferences -> preferences.allowMentions),
+            Codec.BOOL.optionalFieldOf("allow_mass_mentions", true).forGetter(preferences -> preferences.allowMassMentions)
+    ).apply(instance, MentionPreferences::fromCodec));
     public static final StreamCodec<RegistryFriendlyByteBuf, MentionPreferences> STREAM_CODEC =
             ByteBufCodecs.fromCodecWithRegistries(CODEC);
-    @Persisted(key = "blocked_senders")
     final Set<UUID> blockedSenders = new HashSet<>();
-    @Persisted(key = "blocked_types")
     private final Set<ResourceLocation> blockedTypes = new HashSet<>();
-    @Persisted(key = "type_preferences")
     private final Map<ResourceLocation, TypePreference> typePreferences = new HashMap<>();
-    @Persisted(key = "allow_mentions")
     private boolean allowMentions = true;
-    @Persisted(key = "allow_mass_mentions")
     private boolean allowMassMentions = true;
 
-    @SkipPersistedValue(field = "blockedSenders")
-    private boolean skipEmptySenders(Set<UUID> senders) {
-        return senders.isEmpty();
-    }
-
-    @SkipPersistedValue(field = "blockedTypes")
-    private boolean skipEmptyTypes(Set<ResourceLocation> types) {
-        return types.isEmpty();
-    }
-
-    @SkipPersistedValue(field = "typePreferences")
-    private boolean skipEmptyPreferences(Map<ResourceLocation, TypePreference> preferences) {
-        return preferences.isEmpty();
-    }
-
-    @SkipPersistedValue(field = "allowMentions")
-    private boolean skipDefaultAllowMentions(boolean value) {
-        return value;
-    }
-
-    @SkipPersistedValue(field = "allowMassMentions")
-    private boolean skipDefaultAllowMassMentions(boolean value) {
-        return value;
+    private static @NotNull MentionPreferences fromCodec(
+            @NotNull List<UUID> blockedSenders,
+            @NotNull List<ResourceLocation> blockedTypes,
+            @NotNull Map<ResourceLocation, TypePreference> typePreferences,
+            boolean allowMentions,
+            boolean allowMassMentions
+    ) {
+        MentionPreferences preferences = new MentionPreferences();
+        preferences.allowMentions = allowMentions;
+        preferences.allowMassMentions = allowMassMentions;
+        for (UUID sender : blockedSenders) {
+            if (sender != null) {
+                preferences.blockedSenders.add(sender);
+            }
+        }
+        for (ResourceLocation type : blockedTypes) {
+            if (type != null) {
+                preferences.blockedTypes.add(type);
+            }
+        }
+        for (Map.Entry<ResourceLocation, TypePreference> entry : typePreferences.entrySet()) {
+            if (entry.getKey() != null && entry.getValue() != null) {
+                preferences.typePreferences.put(entry.getKey(), entry.getValue());
+            }
+        }
+        return preferences;
     }
 
     public boolean isAllowMentions() {
@@ -195,11 +201,14 @@ public final class MentionPreferences implements IPersistedSerializable {
         return allowMassMentions || rules == null || !rules.isMass();
     }
 
-    public static final class TypePreference implements IPersistedSerializable {
+    public static final class TypePreference {
         public static final TypePreference DEFAULT = new TypePreference(Map.of());
-        public static final Codec<TypePreference> CODEC = PersistedParser.createCodec(TypePreference::new);
+        public static final Codec<TypePreference> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+                Codec.unboundedMap(ResourceLocation.CODEC, Codec.BOOL)
+                        .optionalFieldOf("notifiers", Map.of())
+                        .forGetter(preference -> preference.enabledNotifiers)
+        ).apply(instance, TypePreference::new));
 
-        @Persisted(key = "notifiers")
         private Map<ResourceLocation, Boolean> enabledNotifiers = new HashMap<>();
 
         public TypePreference() {
@@ -208,11 +217,6 @@ public final class MentionPreferences implements IPersistedSerializable {
 
         public TypePreference(Map<ResourceLocation, Boolean> enabledNotifiers) {
             this.enabledNotifiers = Map.copyOf(enabledNotifiers);
-        }
-
-        @SkipPersistedValue(field = "enabledNotifiers")
-        private boolean skipEmptyNotifiers(Map<ResourceLocation, Boolean> notifiers) {
-            return notifiers.isEmpty();
         }
 
         @Contract("_, _ -> new")

@@ -2,6 +2,7 @@ package cn.qihuang02.callyou.core.mention.components.targetProvider;
 
 import cn.qihuang02.callyou.api.MentionContext;
 import cn.qihuang02.callyou.api.components.TargetProvider;
+import cn.qihuang02.callyou.api.TargetCollection;
 import cn.qihuang02.callyou.core.handler.OnlinePlayersHandler;
 import cn.qihuang02.callyou.registry.BuiltInCallYouRegistries;
 import cn.qihuang02.callyou.util.OfflinePlayerList;
@@ -10,7 +11,6 @@ import com.mojang.serialization.MapCodec;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.List;
 import java.util.UUID;
@@ -25,54 +25,37 @@ public final class PlayerNameTargetProvider implements TargetProvider {
     }
 
     @Override
-    public @NotNull @Unmodifiable List<ServerPlayer> getTargets(@NotNull MentionContext context) {
+    public @NotNull TargetCollection resolveTargets(@NotNull MentionContext context) {
         String targetName = context.mentionKey();
         if (targetName == null || targetName.isEmpty()) {
-            return List.of();
+            return TargetCollection.empty();
         }
 
         ServerPlayer sender = context.sender();
         MinecraftServer server = context.server();
         if (server == null) {
-            return List.of();
+            return TargetCollection.empty();
         }
 
         OnlinePlayerList onlinePlayerList = OnlinePlayersHandler.getOnlinePlayers();
         UUID targetID = onlinePlayerList.findPlayerByExactName(server, targetName);
-        if (targetID == null) {
-            return List.of();
-        }
-
-        ServerPlayer target = server.getPlayerList().getPlayer(targetID);
-        if (target == null || target.equals(sender)) {
-            return List.of();
-        }
-
-        return List.of(target);
-    }
-
-    @Override
-    public @NotNull List<UUID> getOfflineTargets(@NotNull MentionContext context) {
-        String targetName = context.mentionKey();
-        if (targetName == null || targetName.isEmpty()) {
-            return List.of();
-        }
-
-        MinecraftServer server = context.server();
-        if (server == null) {
-            return List.of();
+        if (targetID != null) {
+            ServerPlayer target = server.getPlayerList().getPlayer(targetID);
+            if (target != null && !target.equals(sender)) {
+                return TargetCollection.ofPlayers(List.of(target));
+            }
         }
 
         OfflinePlayerList offlinePlayerList = OnlinePlayersHandler.getOfflinePlayers();
         UUID targetId = offlinePlayerList.findPlayerByExactName(server, targetName);
         if (targetId == null || targetId.equals(context.senderId())) {
-            return List.of();
+            return TargetCollection.empty();
         }
 
         if (server.getPlayerList().getPlayer(targetId) != null) {
-            return List.of();
+            return TargetCollection.empty();
         }
 
-        return List.of(targetId);
+        return TargetCollection.ofIds(List.of(targetId));
     }
 }

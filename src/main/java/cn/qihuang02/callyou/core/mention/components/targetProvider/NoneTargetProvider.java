@@ -2,15 +2,11 @@ package cn.qihuang02.callyou.core.mention.components.targetProvider;
 
 import cn.qihuang02.callyou.api.MentionContext;
 import cn.qihuang02.callyou.api.components.TargetProvider;
+import cn.qihuang02.callyou.api.TargetCollection;
 import cn.qihuang02.callyou.registry.BuiltInCallYouRegistries;
 import com.mojang.serialization.MapCodec;
-import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Unmodifiable;
-
-import java.util.Collections;
-import java.util.List;
 
 public enum NoneTargetProvider implements TargetProvider {
     INSTANCE;
@@ -24,7 +20,7 @@ public enum NoneTargetProvider implements TargetProvider {
 
     @Contract(pure = true)
     @Override
-    public @NotNull @Unmodifiable List<ServerPlayer> getTargets(MentionContext context) {
-        return Collections.emptyList();
+    public @NotNull TargetCollection resolveTargets(MentionContext context) {
+        return TargetCollection.empty();
     }
 }
