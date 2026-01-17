@@ -1,52 +1,5 @@
 # Update Log
 
-[dev] Version 2101.2.3-build.41
-refactor(core): 统一提及结果并贯穿权限/回复/历史链路
-
-- 新增 MentionResult/MentionStatus，评估阶段输出统一结果并驱动流程
-- 权限校验、消息组装与派发统一消费状态结果
-- TARGETLESS 提及不写历史，NO_TARGETS 计入失败并影响消息级结果
-
-feat(storage): 离线提及偏好缓存
-
-- 新增 MentionPreferencesSavedData，登录/重生/偏好更新时写入
-- 离线玩家提及评估读取缓存偏好决定是否允许
-
-refactor(client): 客户端提及上下文整合
-
-- 新增 ClientMentionContext，合并提及元数据与在线玩家列表
-- 补偿渲染与候选建议统一使用上下文数据
-
-fix(client): 物品提及渲染间距与悬浮命中
-
-- 调整行内图标占位与名称间距，修正 hover 命中范围
-- 提及历史行内物品图标移除多余空格偏移
-
-chore(lang): 新增提及拒绝提示语
-
-refactor(core): Unify mention results across permission/reply/history flow
-
-- Add MentionResult/MentionStatus to emit unified evaluation results
-- Permission checks, message composition, and dispatch now consume status results
-- Targetless mentions skip history; NO_TARGETS counts as failures for message-level outcome
-
-feat(storage): Offline mention preference cache
-
-- Add MentionPreferencesSavedData and update on login/respawn/preference sync
-- Mention evaluation reads cached preferences for offline targets
-
-refactor(client): Client mention context consolidation
-
-- Add ClientMentionContext to bundle mention metadata and online player names
-- Compensation and suggestion logic now use the unified context
-
-fix(client): Item mention spacing and hover hitbox
-
-- Adjust inline icon padding/name spacing to align hover hit area
-- Remove extra spacing offset in history item icon rendering
-
-chore(lang): Add mention-disallowed prompt
-
 [dev] Version 2101.2.2-build.40
 refactor(api): 统一提及目标集合与事件接口
 

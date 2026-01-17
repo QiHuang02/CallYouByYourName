@@ -5,7 +5,6 @@ import cn.qihuang02.callyou.api.TargetCollection;
 import cn.qihuang02.callyou.config.CallYouConfig;
 import cn.qihuang02.callyou.core.saveddata.MentionRecord;
 import cn.qihuang02.callyou.core.saveddata.MentionSavedData;
-import cn.qihuang02.callyou.core.mention.executor.MentionResult.MentionStatus;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.NotNull;
@@ -17,16 +16,12 @@ import java.util.UUID;
 
 public final class MentionHistoryRecorder {
     public void record(
-            @NotNull MentionStatus status,
             @NotNull MentionContext context,
             @NotNull TargetCollection targets,
             @NotNull List<ServerPlayer> onlineTargets,
             @NotNull List<ServerPlayer> readTargets,
             @NotNull Component formattedMessage
     ) {
-        if (status == MentionStatus.TARGETLESS_ALLOWED) {
-            return;
-        }
         if (!CallYouConfig.COMMON.enableServerSideHistory.get()) {
             return;
         }

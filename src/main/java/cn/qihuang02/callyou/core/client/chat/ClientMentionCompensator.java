@@ -1,6 +1,6 @@
 package cn.qihuang02.callyou.core.client.chat;
 
-import cn.qihuang02.callyou.api.client.ClientMentionContext;
+import cn.qihuang02.callyou.api.client.ClientMentionMetadata;
 import cn.qihuang02.callyou.util.MentionKeyUtils;
 import cn.qihuang02.callyou.core.MentionTokens;
 import net.minecraft.client.Minecraft;
@@ -24,7 +24,7 @@ public final class ClientMentionCompensator {
             @NotNull Minecraft minecraft,
             @NotNull Component message
     ) {
-        ClientMentionContext context = ClientMentionContext.get(minecraft);
+        ClientMentionMetadata context = ClientMentionMetadata.ClientMentionMetadataCache.get(minecraft);
         if (message.getString().indexOf('@') < 0) {
             return message;
         }
@@ -34,7 +34,7 @@ public final class ClientMentionCompensator {
 
     private static @NotNull RewriteResult rewriteComponent(
             @NotNull Component input,
-            @NotNull ClientMentionContext context
+            @NotNull ClientMentionMetadata context
     ) {
         RewriteResult base = rewriteContents(input, context);
         List<Component> siblings = input.getSiblings();
@@ -71,7 +71,7 @@ public final class ClientMentionCompensator {
 
     private static @NotNull RewriteResult rewriteContents(
             @NotNull Component input,
-            @NotNull ClientMentionContext context
+            @NotNull ClientMentionMetadata context
     ) {
         if (input.getContents() instanceof PlainTextContents plain) {
             return rewritePlainText(input, plain.text(), context);
@@ -108,7 +108,7 @@ public final class ClientMentionCompensator {
     private static @NotNull RewriteResult rewritePlainText(
             @NotNull Component input,
             @NotNull String text,
-            @NotNull ClientMentionContext context
+            @NotNull ClientMentionMetadata context
     ) {
         if (text.indexOf('@') < 0) {
             return new RewriteResult(input, false);
@@ -163,7 +163,7 @@ public final class ClientMentionCompensator {
     private static @NotNull Style mergeStyle(
             @NotNull Style baseStyle,
             @NotNull String key,
-            @NotNull ClientMentionContext context
+            @NotNull ClientMentionMetadata context
     ) {
         return context.findStyle(key).map(style -> style.applyTo(baseStyle)).orElse(baseStyle);
     }

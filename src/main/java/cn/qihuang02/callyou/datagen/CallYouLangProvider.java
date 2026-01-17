@@ -29,7 +29,6 @@ public class CallYouLangProvider extends LanguageProvider {
 
             // Messages
             new TranslationEntry("message.callyou.no_permission", "You do not have permission to mention %s", "你没有权限提及 %s"),
-            new TranslationEntry("message.callyou.mention.disallowed", "Player %s does not allow mentions.", "玩家 %s 不允许玩家提及"),
             new TranslationEntry("message.callyou.too_many_mentions", "Too many mentions in one message!", "单条消息中提及过多！"),
             new TranslationEntry("message.callyou.spot.label", "Spot", "位置"),
             new TranslationEntry("message.callyou.spot", "at X: %s Y: %s Z: %s", "位置 X: %s Y: %s Z: %s"),

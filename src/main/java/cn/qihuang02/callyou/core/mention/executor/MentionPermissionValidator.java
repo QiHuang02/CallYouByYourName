@@ -2,15 +2,13 @@ package cn.qihuang02.callyou.core.mention.executor;
 
 import cn.qihuang02.callyou.api.MentionType;
 import cn.qihuang02.callyou.core.MentionGuard;
+import cn.qihuang02.callyou.core.MentionResolver;
 import cn.qihuang02.callyou.core.mention.components.formatter.ItemTextFormatter;
-import cn.qihuang02.callyou.core.mention.executor.MentionResult.MentionEntry;
-import cn.qihuang02.callyou.core.mention.executor.MentionResult.MentionStatus;
-import cn.qihuang02.callyou.core.mention.executor.MentionResult.PermissionResult;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public final class MentionPermissionValidator {
@@ -20,45 +18,41 @@ public final class MentionPermissionValidator {
         this.guard = guard;
     }
 
-    public @NotNull PermissionResult applyPermissions(
+    public @NotNull ValidationResult validate(
             @NotNull ServerPlayer sender,
-            @NotNull List<MentionEntry> entries
+            @NotNull List<MentionResolver.ResolvedMention> mentions
     ) {
         int effectiveMentionCount = 0;
         boolean itemMentionUsed = false;
-        List<MentionEntry> updatedEntries = new ArrayList<>(entries.size());
 
-        for (MentionEntry entry : entries) {
-            MentionStatus status = entry.status();
-            MentionType type = entry.mention().mentionType();
-            if (!status.isAllowed() || type == null) {
-                updatedEntries.add(entry);
+        for (MentionResolver.ResolvedMention parsed : mentions) {
+            MentionType type = parsed.mentionType();
+            if (type == null) {
                 continue;
             }
             if (isItemMention(type)) {
                 if (itemMentionUsed) {
-                    updatedEntries.add(entry);
                     continue;
                 }
                 itemMentionUsed = true;
             }
             effectiveMentionCount++;
 
-            if (!guard.canUseMentionType(sender, type, entry.mention().typeId())) {
-                String key = entry.mention().key();
+            if (!guard.canUseMentionType(sender, type, parsed.typeId())) {
+                String key = parsed.key();
                 Component display = Component.literal("@" + key);
                 Component error = Component.translatable("message.callyou.no_permission", display);
-                updatedEntries.add(entry.withStatus(MentionStatus.NO_PERMISSION));
-                return new PermissionResult(updatedEntries, effectiveMentionCount, error);
+                return new ValidationResult(effectiveMentionCount, error);
             }
-            updatedEntries.add(entry);
         }
 
-        return new PermissionResult(updatedEntries, effectiveMentionCount, null);
+        return new ValidationResult(effectiveMentionCount, null);
     }
 
     private boolean isItemMention(@NotNull MentionType type) {
         return type.textFormatter() instanceof ItemTextFormatter;
     }
 
+    public record ValidationResult(int effectiveMentionCount, @Nullable Component errorMessage) {
+    }
 }

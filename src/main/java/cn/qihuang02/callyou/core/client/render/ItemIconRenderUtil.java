@@ -29,8 +29,8 @@ public final class ItemIconRenderUtil {
         }
         int iconWidth = Math.round(16.0F * ITEM_ICON_SCALE + ITEM_ICON_EXTRA_SHIFT);
         int paddingCount = Math.max(1, (int) Math.floor(iconWidth / (float) Math.max(1, font.width(" "))));
-        paddingCount += 1;
         String padding = " ".repeat(paddingCount);
+
         return sink -> {
             boolean[] inItem = new boolean[]{false};
             return line.accept((index, style, codePoint) -> {
@@ -42,7 +42,6 @@ public final class ItemIconRenderUtil {
                         }
                     }
                 }
-
                 if (!sink.accept(index, style, codePoint)) {
                     return false;
                 }
@@ -70,14 +69,20 @@ public final class ItemIconRenderUtil {
         }
 
         StringBuilder before = new StringBuilder();
+        int spaceWidth = font.width(" ");
 
         line.accept((index, style, codePoint) -> {
             HoverEvent hover = style.getHoverEvent();
             boolean isItem = hover != null && hover.getAction() == HoverEvent.Action.SHOW_ITEM;
 
             if (isItem) {
+                float extraShift = 0.0F;
+                if (before.length() > 0 && before.charAt(before.length() - 1) == ' ') {
+                    extraShift = -spaceWidth;
+                }
+
                 if (renderSingleItemIcon(guiGraphics, font, before.toString(),
-                        0.0F, baseX, baseY, style, color)) {
+                        extraShift, baseX, baseY, style, color)) {
                     return false;
                 }
             }
@@ -178,5 +183,4 @@ public final class ItemIconRenderUtil {
         }
         return stack;
     }
-
 }
