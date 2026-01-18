@@ -1,4 +1,4 @@
-package cn.qihuang02.callyou.core;
+package cn.qihuang02.callyou.core.mention;
 
 import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.NotNull;

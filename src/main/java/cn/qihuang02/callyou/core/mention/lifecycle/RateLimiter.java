@@ -4,7 +4,7 @@ import cn.qihuang02.callyou.api.DeliveryStatus;
 import cn.qihuang02.callyou.api.MentionCandidate;
 import cn.qihuang02.callyou.api.MentionContext;
 import cn.qihuang02.callyou.api.ResolveStatus;
-import cn.qihuang02.callyou.core.MentionGuard;
+import cn.qihuang02.callyou.core.mention.MentionGuard;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.NotNull;

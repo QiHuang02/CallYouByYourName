@@ -1,4 +1,4 @@
-package cn.qihuang02.callyou.core.mention;
+package cn.qihuang02.callyou.util;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;

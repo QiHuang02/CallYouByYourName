@@ -1,7 +1,7 @@
 package cn.qihuang02.callyou.core.client.chat;
 
 import cn.qihuang02.callyou.api.client.ClientMentionMetadata;
-import cn.qihuang02.callyou.core.MentionTokens;
+import cn.qihuang02.callyou.core.mention.MentionTokens;
 import cn.qihuang02.callyou.util.OnlinePlayerList;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;

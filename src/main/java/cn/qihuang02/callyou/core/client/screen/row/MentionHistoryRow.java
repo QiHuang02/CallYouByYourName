@@ -3,7 +3,7 @@ package cn.qihuang02.callyou.core.client.screen.row;
 import cn.qihuang02.callyou.compat.ftb.FTBChunksAPIWrapper;
 import cn.qihuang02.callyou.core.client.screen.MentionPreferencesScreen;
 import cn.qihuang02.callyou.core.client.screen.MentionUIStyles;
-import cn.qihuang02.callyou.core.mention.ComponentTraversal;
+import cn.qihuang02.callyou.util.ComponentTraversal;
 import cn.qihuang02.callyou.core.saveddata.MentionRecord;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Button;

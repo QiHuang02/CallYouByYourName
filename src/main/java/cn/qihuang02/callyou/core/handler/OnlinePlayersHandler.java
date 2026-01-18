@@ -1,7 +1,7 @@
 package cn.qihuang02.callyou.core.handler;
 
 import cn.qihuang02.callyou.CallYouByYourName;
-import cn.qihuang02.callyou.core.MentionExecutor;
+import cn.qihuang02.callyou.core.mention.MentionExecutor;
 import cn.qihuang02.callyou.util.OfflinePlayerList;
 import cn.qihuang02.callyou.util.OnlinePlayerList;
 import net.minecraft.server.level.ServerPlayer;

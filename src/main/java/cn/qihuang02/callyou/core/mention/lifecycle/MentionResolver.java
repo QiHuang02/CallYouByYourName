@@ -5,7 +5,7 @@ import cn.qihuang02.callyou.api.MentionContext;
 import cn.qihuang02.callyou.api.MentionType;
 import cn.qihuang02.callyou.api.ResolveStatus;
 import cn.qihuang02.callyou.api.components.TargetProvider;
-import cn.qihuang02.callyou.core.MentionTokens;
+import cn.qihuang02.callyou.core.mention.MentionTokens;
 import cn.qihuang02.callyou.core.mention.components.targetProvider.NoneTargetProvider;
 import cn.qihuang02.callyou.registry.CallYouMentionRegistries;
 import net.minecraft.core.Registry;

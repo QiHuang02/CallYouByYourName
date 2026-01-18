@@ -3,7 +3,7 @@ package cn.qihuang02.callyou.core.client.screen.row;
 import cn.qihuang02.callyou.config.CallYouConfig;
 import cn.qihuang02.callyou.core.client.render.ItemIconRenderUtil;
 import cn.qihuang02.callyou.core.client.screen.MentionUIStyles;
-import cn.qihuang02.callyou.core.mention.ComponentTraversal;
+import cn.qihuang02.callyou.util.ComponentTraversal;
 import com.lowdragmc.lowdraglib2.gui.ui.data.TextWrap;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.ItemSlot;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;

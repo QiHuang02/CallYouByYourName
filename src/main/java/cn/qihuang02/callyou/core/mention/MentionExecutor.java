@@ -1,4 +1,4 @@
-package cn.qihuang02.callyou.core;
+package cn.qihuang02.callyou.core.mention;
 
 import cn.qihuang02.callyou.api.DeliveryStatus;
 import cn.qihuang02.callyou.api.MentionCandidate;

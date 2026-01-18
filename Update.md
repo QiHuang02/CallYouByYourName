@@ -1,5 +1,18 @@
 # Update Log
 
+[dev] Version 2101.3.0-build.43
+refactor(core): 提及核心逻辑包结构重组与工具类迁移
+
+- 将 MentionExecutor/Guard/RateLimiter/Tokens 移入 mention 包，实现业务逻辑内聚
+- 将 ComponentTraversal 移至 util 包，解耦通用组件遍历逻辑
+- 优化 core 顶层包结构，仅保留子模块容器职能
+
+refactor(core): Restructure mention core logic and migrate utilities
+
+- Move MentionExecutor/Guard/RateLimiter/Tokens into the mention package for better cohesion
+- Relocate ComponentTraversal to the util package to decouple generic traversal logic
+- Clean up the core package to act solely as a module container
+
 [dev] Version 2101.3.0-build.41
 refactor(core): 提及生命周期管线与包结构统一
 

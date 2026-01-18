@@ -3,7 +3,7 @@ package cn.qihuang02.callyou.core.mention.lifecycle;
 import cn.qihuang02.callyou.api.*;
 import cn.qihuang02.callyou.api.components.Notifier;
 import cn.qihuang02.callyou.api.event.MentionEvent;
-import cn.qihuang02.callyou.core.MentionGuard;
+import cn.qihuang02.callyou.core.mention.MentionGuard;
 import cn.qihuang02.callyou.core.attachment.CallYouAttachments;
 import cn.qihuang02.callyou.core.attachment.MentionPreferences;
 import net.minecraft.resources.ResourceLocation;

@@ -1,7 +1,7 @@
 package cn.qihuang02.callyou.core.handler;
 
 import cn.qihuang02.callyou.CallYouByYourName;
-import cn.qihuang02.callyou.core.MentionExecutor;
+import cn.qihuang02.callyou.core.mention.MentionExecutor;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.ServerChatEvent;
