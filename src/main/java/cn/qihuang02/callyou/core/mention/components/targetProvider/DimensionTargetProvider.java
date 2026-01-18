@@ -1,8 +1,8 @@
 package cn.qihuang02.callyou.core.mention.components.targetProvider;
 
+import cn.qihuang02.callyou.api.MentionCandidate;
 import cn.qihuang02.callyou.api.MentionContext;
 import cn.qihuang02.callyou.api.components.TargetProvider;
-import cn.qihuang02.callyou.api.TargetCollection;
 import cn.qihuang02.callyou.registry.BuiltInCallYouRegistries;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
@@ -25,7 +25,7 @@ public record DimensionTargetProvider(@Nullable ResourceLocation dimensionId) im
             ).apply(instance, opt -> new DimensionTargetProvider(opt.orElse(null)))
     );
 
-    public static @NotNull TargetCollection collectTargets(
+    public static @NotNull List<ServerPlayer> collectTargets(
             @NotNull MentionContext context,
             @Nullable ResourceLocation dimensionId
     ) {
@@ -40,7 +40,7 @@ public record DimensionTargetProvider(@Nullable ResourceLocation dimensionId) im
                     result.add(p);
                 }
             }
-            return TargetCollection.ofPlayers(result);
+            return result;
         }
 
         List<ServerPlayer> result = new ArrayList<>();
@@ -54,7 +54,7 @@ public record DimensionTargetProvider(@Nullable ResourceLocation dimensionId) im
                 break;
             }
         }
-        return TargetCollection.ofPlayers(result);
+        return result;
     }
 
     @Override
@@ -63,7 +63,9 @@ public record DimensionTargetProvider(@Nullable ResourceLocation dimensionId) im
     }
 
     @Override
-    public @NotNull TargetCollection resolveTargets(@NotNull MentionContext context) {
-        return collectTargets(context, this.dimensionId);
+    public void resolveTargets(@NotNull MentionContext context, @NotNull MentionCandidate candidate) {
+        for (ServerPlayer player : collectTargets(context, this.dimensionId)) {
+            candidate.addTarget(player.getUUID());
+        }
     }
 }

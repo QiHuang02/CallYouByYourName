@@ -1,8 +1,8 @@
 package cn.qihuang02.callyou.core.mention.components.targetProvider;
 
+import cn.qihuang02.callyou.api.MentionCandidate;
 import cn.qihuang02.callyou.api.MentionContext;
 import cn.qihuang02.callyou.api.components.TargetProvider;
-import cn.qihuang02.callyou.api.TargetCollection;
 import cn.qihuang02.callyou.registry.BuiltInCallYouRegistries;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
@@ -25,7 +25,7 @@ public record RadiusTargetProvider(double range) implements TargetProvider {
     }
 
     @Override
-    public @NotNull TargetCollection resolveTargets(@NotNull MentionContext context) {
+    public void resolveTargets(@NotNull MentionContext context, @NotNull MentionCandidate candidate) {
         ServerPlayer sender = context.sender();
         ServerLevel level = context.level();
 
@@ -36,6 +36,8 @@ public record RadiusTargetProvider(double range) implements TargetProvider {
                 result.add(player);
             }
         }
-        return TargetCollection.ofPlayers(result);
+        for (ServerPlayer player : result) {
+            candidate.addTarget(player.getUUID());
+        }
     }
 }

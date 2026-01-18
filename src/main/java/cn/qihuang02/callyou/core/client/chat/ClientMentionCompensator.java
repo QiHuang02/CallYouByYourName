@@ -1,8 +1,8 @@
 package cn.qihuang02.callyou.core.client.chat;
 
 import cn.qihuang02.callyou.api.client.ClientMentionMetadata;
-import cn.qihuang02.callyou.util.MentionKeyUtils;
 import cn.qihuang02.callyou.core.MentionTokens;
+import cn.qihuang02.callyou.util.MentionKeyUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;

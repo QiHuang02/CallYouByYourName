@@ -1,11 +1,10 @@
 package cn.qihuang02.callyou.core.mention.components.targetProvider;
 
+import cn.qihuang02.callyou.api.MentionCandidate;
 import cn.qihuang02.callyou.api.MentionContext;
 import cn.qihuang02.callyou.api.components.TargetProvider;
-import cn.qihuang02.callyou.api.TargetCollection;
 import cn.qihuang02.callyou.registry.BuiltInCallYouRegistries;
 import com.mojang.serialization.MapCodec;
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 public enum NoneTargetProvider implements TargetProvider {
@@ -18,9 +17,7 @@ public enum NoneTargetProvider implements TargetProvider {
         return BuiltInCallYouRegistries.NONE_TARGET_TYPE.get();
     }
 
-    @Contract(pure = true)
     @Override
-    public @NotNull TargetCollection resolveTargets(MentionContext context) {
-        return TargetCollection.empty();
+    public void resolveTargets(@NotNull MentionContext context, @NotNull MentionCandidate candidate) {
     }
 }

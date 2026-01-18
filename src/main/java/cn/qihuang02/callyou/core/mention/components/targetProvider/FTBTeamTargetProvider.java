@@ -1,8 +1,8 @@
 package cn.qihuang02.callyou.core.mention.components.targetProvider;
 
+import cn.qihuang02.callyou.api.MentionCandidate;
 import cn.qihuang02.callyou.api.MentionContext;
 import cn.qihuang02.callyou.api.components.TargetProvider;
-import cn.qihuang02.callyou.api.TargetCollection;
 import cn.qihuang02.callyou.compat.ftb.FTBTeamsAPIWrapper;
 import cn.qihuang02.callyou.registry.BuiltInCallYouRegistries;
 import com.mojang.serialization.MapCodec;
@@ -22,15 +22,15 @@ public class FTBTeamTargetProvider implements TargetProvider {
     }
 
     @Override
-    public @NotNull TargetCollection resolveTargets(@NotNull MentionContext context) {
+    public void resolveTargets(@NotNull MentionContext context, @NotNull MentionCandidate candidate) {
         if (!FTBTeamsAPIWrapper.isLoaded()) {
             context.sender().sendSystemMessage(Component.translatable("message.callyou.ftbteams_missing"));
-            return TargetCollection.empty();
+            return;
         }
 
         List<UUID> memberUUIDs = FTBTeamsAPIWrapper.getTeamMembers(context.sender());
         if (memberUUIDs.isEmpty()) {
-            return TargetCollection.empty();
+            return;
         }
 
         List<UUID> targets = new ArrayList<>();
@@ -43,8 +43,10 @@ public class FTBTeamTargetProvider implements TargetProvider {
         }
 
         if (targets.isEmpty()) {
-            return TargetCollection.empty();
+            return;
         }
-        return TargetCollection.ofIds(targets);
+        for (UUID targetId : targets) {
+            candidate.addTarget(targetId);
+        }
     }
 }

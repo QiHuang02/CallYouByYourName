@@ -1,5 +1,6 @@
 package cn.qihuang02.callyou.core.mention.components.formatter;
 
+import cn.qihuang02.callyou.api.MentionCandidate;
 import cn.qihuang02.callyou.api.MentionContext;
 import cn.qihuang02.callyou.api.components.TextFormatter;
 import cn.qihuang02.callyou.registry.BuiltInCallYouRegistries;
@@ -28,9 +29,11 @@ public record PlayerNameTextFormatter(ChatFormatting color) implements TextForma
     }
 
     @Override
-    public @NotNull Component format(@NotNull MentionContext context) {
-        String key = context.mentionKey();
-        String token = key == null || key.isEmpty() ? "@player" : context.mentionToken();
+    public @NotNull Component format(@NotNull MentionContext context, @NotNull MentionCandidate candidate) {
+        String token = candidate.mentionToken();
+        if ("@".equals(token)) {
+            token = "@player";
+        }
         return Component.literal(token).withStyle(this.color);
     }
 
@@ -40,7 +43,11 @@ public record PlayerNameTextFormatter(ChatFormatting color) implements TextForma
     }
 
     @Override
-    public @NotNull String buildReplySuggestion(@NotNull MentionContext context, @NotNull Component formattedMention) {
+    public @NotNull String buildReplySuggestion(
+            @NotNull MentionContext context,
+            @NotNull MentionCandidate candidate,
+            @NotNull Component formattedMention
+    ) {
         String senderName = context.senderName();
         if (senderName == null || senderName.isBlank()) {
             return "";

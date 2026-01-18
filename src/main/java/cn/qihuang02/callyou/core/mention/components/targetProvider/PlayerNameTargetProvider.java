@@ -1,8 +1,8 @@
 package cn.qihuang02.callyou.core.mention.components.targetProvider;
 
+import cn.qihuang02.callyou.api.MentionCandidate;
 import cn.qihuang02.callyou.api.MentionContext;
 import cn.qihuang02.callyou.api.components.TargetProvider;
-import cn.qihuang02.callyou.api.TargetCollection;
 import cn.qihuang02.callyou.core.handler.OnlinePlayersHandler;
 import cn.qihuang02.callyou.registry.BuiltInCallYouRegistries;
 import cn.qihuang02.callyou.util.OfflinePlayerList;
@@ -12,7 +12,6 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.List;
 import java.util.UUID;
 
 public final class PlayerNameTargetProvider implements TargetProvider {
@@ -25,16 +24,16 @@ public final class PlayerNameTargetProvider implements TargetProvider {
     }
 
     @Override
-    public @NotNull TargetCollection resolveTargets(@NotNull MentionContext context) {
-        String targetName = context.mentionKey();
-        if (targetName == null || targetName.isEmpty()) {
-            return TargetCollection.empty();
+    public void resolveTargets(@NotNull MentionContext context, @NotNull MentionCandidate candidate) {
+        String targetName = candidate.key();
+        if (targetName.isEmpty()) {
+            return;
         }
 
         ServerPlayer sender = context.sender();
         MinecraftServer server = context.server();
         if (server == null) {
-            return TargetCollection.empty();
+            return;
         }
 
         OnlinePlayerList onlinePlayerList = OnlinePlayersHandler.getOnlinePlayers();
@@ -42,20 +41,21 @@ public final class PlayerNameTargetProvider implements TargetProvider {
         if (targetID != null) {
             ServerPlayer target = server.getPlayerList().getPlayer(targetID);
             if (target != null && !target.equals(sender)) {
-                return TargetCollection.ofPlayers(List.of(target));
+                candidate.addTarget(target.getUUID());
+                return;
             }
         }
 
         OfflinePlayerList offlinePlayerList = OnlinePlayersHandler.getOfflinePlayers();
         UUID targetId = offlinePlayerList.findPlayerByExactName(server, targetName);
         if (targetId == null || targetId.equals(context.senderId())) {
-            return TargetCollection.empty();
+            return;
         }
 
         if (server.getPlayerList().getPlayer(targetId) != null) {
-            return TargetCollection.empty();
+            return;
         }
 
-        return TargetCollection.ofIds(List.of(targetId));
+        candidate.addTarget(targetId);
     }
 }

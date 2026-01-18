@@ -22,6 +22,12 @@ public class CallYouConfig {
         CLIENT_SPEC = clientPair.getRight();
     }
 
+    public enum ItemIconRenderMode {
+        INLINE,
+        HOVER,
+        NONE
+    }
+
     public static final class Common {
         public final ModConfigSpec.IntValue maxMentionsPerMessage;
         public final ModConfigSpec.IntValue maxTargetsPerMention;
@@ -78,11 +84,5 @@ public class CallYouConfig {
 
             builder.pop();
         }
-    }
-
-    public enum ItemIconRenderMode {
-        INLINE,
-        HOVER,
-        NONE
     }
 }

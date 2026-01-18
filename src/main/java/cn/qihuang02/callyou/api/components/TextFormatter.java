@@ -1,5 +1,6 @@
 package cn.qihuang02.callyou.api.components;
 
+import cn.qihuang02.callyou.api.MentionCandidate;
 import cn.qihuang02.callyou.api.MentionContext;
 import cn.qihuang02.callyou.registry.CallYouRegistries;
 import com.mojang.serialization.Codec;
@@ -12,13 +13,17 @@ public interface TextFormatter extends IDispatchedComponent<TextFormatter, TextF
 
     @NotNull TextFormatterType type();
 
-    @NotNull Component format(MentionContext context);
+    @NotNull Component format(@NotNull MentionContext context, @NotNull MentionCandidate candidate);
 
     default boolean supportReply() {
         return false;
     }
 
-    default String buildReplySuggestion(@NotNull MentionContext context, @NotNull Component formattedMention) {
+    default String buildReplySuggestion(
+            @NotNull MentionContext context,
+            @NotNull MentionCandidate candidate,
+            @NotNull Component formattedMention
+    ) {
         return "";
     }
 
