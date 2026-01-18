@@ -1,6 +1,7 @@
 package cn.qihuang02.callyou.core.mention.components.notifier;
 
 import cn.qihuang02.callyou.CallYouByYourName;
+import cn.qihuang02.callyou.api.MentionCandidate;
 import cn.qihuang02.callyou.api.MentionContext;
 import cn.qihuang02.callyou.api.components.Notifier;
 import cn.qihuang02.callyou.core.network.NetworkHandler;
@@ -46,7 +47,11 @@ public record ToastNotifier(
     }
 
     @Override
-    public void apply(MentionContext context, @NotNull List<ServerPlayer> targets) {
+    public void apply(
+            @NotNull MentionContext context,
+            @NotNull MentionCandidate candidate,
+            @NotNull List<ServerPlayer> targets
+    ) {
         Component title = buildComponent(titleKey, context);
         Component description = buildComponent(descriptionKey, context);
         Item safeIcon = icon == Items.AIR ? Items.NAME_TAG : icon;

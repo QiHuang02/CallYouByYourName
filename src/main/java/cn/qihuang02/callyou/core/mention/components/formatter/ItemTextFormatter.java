@@ -1,11 +1,10 @@
 package cn.qihuang02.callyou.core.mention.components.formatter;
 
+import cn.qihuang02.callyou.api.MentionCandidate;
 import cn.qihuang02.callyou.api.MentionContext;
 import cn.qihuang02.callyou.api.components.TextFormatter;
-import cn.qihuang02.callyou.core.MentionCancelException;
 import cn.qihuang02.callyou.registry.BuiltInCallYouRegistries;
 import com.mojang.serialization.MapCodec;
-import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentUtils;
 import net.minecraft.network.chat.HoverEvent;
@@ -26,7 +25,7 @@ public enum ItemTextFormatter implements TextFormatter {
     }
 
     @Override
-    public @NotNull Component format(@NotNull MentionContext context) {
+    public @NotNull Component format(@NotNull MentionContext context, @NotNull MentionCandidate candidate) {
         ServerPlayer sender = context.sender();
         if (sender == null) {
             return Component.literal("@item");
@@ -34,10 +33,7 @@ public enum ItemTextFormatter implements TextFormatter {
 
         ItemStack stack = sender.getMainHandItem();
         if (stack.isEmpty()) {
-            Component reason = Component
-                    .translatable("message.callyou.item.empty")
-                    .withStyle(ChatFormatting.RED);
-            throw new MentionCancelException(reason);
+            return Component.literal(candidate.mentionToken());
         }
 
         ItemStack copy = stack.copy();

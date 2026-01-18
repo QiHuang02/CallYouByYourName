@@ -1,5 +1,6 @@
 package cn.qihuang02.callyou.core.mention.components.notifier;
 
+import cn.qihuang02.callyou.api.MentionCandidate;
 import cn.qihuang02.callyou.api.MentionContext;
 import cn.qihuang02.callyou.api.components.Notifier;
 import cn.qihuang02.callyou.registry.BuiltInCallYouRegistries;
@@ -25,7 +26,11 @@ public record ActionBarNotifier(String messageKey, boolean useSenderName) implem
     }
 
     @Override
-    public void apply(MentionContext context, List<ServerPlayer> targets) {
+    public void apply(
+            @NotNull MentionContext context,
+            @NotNull MentionCandidate candidate,
+            @NotNull List<ServerPlayer> targets
+    ) {
         Component text;
         if (useSenderName) {
             text = Component.translatable(messageKey, context.senderDisplayName()).withStyle(ChatFormatting.GOLD);

@@ -2,8 +2,8 @@ package cn.qihuang02.callyou.core.client.screen.row;
 
 import cn.qihuang02.callyou.config.CallYouConfig;
 import cn.qihuang02.callyou.core.client.render.ItemIconRenderUtil;
-import cn.qihuang02.callyou.core.mention.ComponentTraversal;
 import cn.qihuang02.callyou.core.client.screen.MentionUIStyles;
+import cn.qihuang02.callyou.core.mention.ComponentTraversal;
 import com.lowdragmc.lowdraglib2.gui.ui.data.TextWrap;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.ItemSlot;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
@@ -13,11 +13,7 @@ import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
 import com.lowdragmc.lowdraglib2.gui.util.DrawerHelper;
 import com.lowdragmc.lowdraglib2.utils.TextUtilities;
 import net.minecraft.client.gui.Font;
-import net.minecraft.network.chat.ClickEvent;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.HoverEvent;
-import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.network.chat.Style;
+import net.minecraft.network.chat.*;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Tuple;
 import net.minecraft.world.item.ItemStack;
@@ -439,7 +435,6 @@ final class MentionHistoryBodyLabel extends Label {
     ) {
         StringBuilder before = new StringBuilder();
         ItemIconPlacement[] placement = new ItemIconPlacement[1];
-        float spaceWidth = font.width(" ") * scale;
 
         line.accept((index, style, codePoint) -> {
             if (placement[0] != null) {
@@ -449,9 +444,6 @@ final class MentionHistoryBodyLabel extends Label {
             if (stack != null) {
                 float beforeWidth = font.width(before.toString()) * scale;
                 float shift = beforeWidth + ITEM_ICON_EXTRA_SHIFT * scale;
-                if (before.length() > 0 && before.charAt(before.length() - 1) == ' ') {
-                    shift -= spaceWidth;
-                }
                 placement[0] = new ItemIconPlacement(stack, lineX + shift, lineY - 1.0F);
                 return false;
             }

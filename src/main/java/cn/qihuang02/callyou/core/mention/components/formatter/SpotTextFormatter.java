@@ -1,5 +1,6 @@
 package cn.qihuang02.callyou.core.mention.components.formatter;
 
+import cn.qihuang02.callyou.api.MentionCandidate;
 import cn.qihuang02.callyou.api.MentionContext;
 import cn.qihuang02.callyou.api.components.TextFormatter;
 import cn.qihuang02.callyou.compat.ftb.FTBChunksAPIWrapper;
@@ -23,7 +24,7 @@ public enum SpotTextFormatter implements TextFormatter {
     }
 
     @Override
-    public @NotNull Component format(@NotNull MentionContext context) {
+    public @NotNull Component format(@NotNull MentionContext context, @NotNull MentionCandidate candidate) {
         BlockPos pos = context.sender().blockPosition();
 
         MutableComponent location = Component.translatable("message.callyou.spot", pos.getX(), pos.getY(), pos.getZ());

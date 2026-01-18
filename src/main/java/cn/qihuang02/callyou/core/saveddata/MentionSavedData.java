@@ -2,6 +2,7 @@ package cn.qihuang02.callyou.core.saveddata;
 
 import cn.qihuang02.callyou.CallYouByYourName;
 import cn.qihuang02.callyou.config.CallYouConfig;
+import net.minecraft.Util;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -42,6 +43,10 @@ public final class MentionSavedData extends SavedData {
             RegistryOps<Tag> ops = RegistryOps.create(NbtOps.INSTANCE, registries);
             for (int i = 0; i < list.size(); i++) {
                 CompoundTag recordTag = list.getCompound(i);
+                if (MentionRecord.isLegacyTag(recordTag)) {
+                    data.allLogs.addAll(MentionRecord.fromLegacyTag(recordTag, ops));
+                    continue;
+                }
                 MentionRecord.CODEC.parse(ops, recordTag)
                         .resultOrPartial(CallYouByYourName.LOGGER::error)
                         .ifPresent(data.allLogs::add);
@@ -93,9 +98,35 @@ public final class MentionSavedData extends SavedData {
                 }
                 for (int i = 0; i < records.size(); i++) {
                     CompoundTag recordTag = records.getCompound(i);
+                    if (MentionRecord.isLegacyTag(recordTag)) {
+                        for (MentionRecord record : MentionRecord.fromLegacyTag(recordTag, ops)) {
+                            allLogs.add(new MentionRecord(
+                                    record.historyId(),
+                                    record.senderId(),
+                                    record.senderName(),
+                                    record.message(),
+                                    record.timestamp(),
+                                    targetId,
+                                    record.read(),
+                                    record.status(),
+                                    record.originalKey()
+                            ));
+                        }
+                        continue;
+                    }
                     MentionRecord.CODEC.parse(ops, recordTag)
                             .resultOrPartial(CallYouByYourName.LOGGER::error)
-                            .ifPresent(record -> allLogs.add(record.withTargets(List.of(targetId))));
+                            .ifPresent(record -> allLogs.add(new MentionRecord(
+                                    record.historyId(),
+                                    record.senderId(),
+                                    record.senderName(),
+                                    record.message(),
+                                    record.timestamp(),
+                                    targetId,
+                                    record.read(),
+                                    record.status(),
+                                    record.originalKey()
+                            )));
                 }
             }
         }
@@ -113,7 +144,7 @@ public final class MentionSavedData extends SavedData {
     }
 
     public void addLog(@NotNull MentionRecord record) {
-        if (record.targetIds().isEmpty()) {
+        if (record.targetId() == null || Util.NIL_UUID.equals(record.targetId())) {
             return;
         }
         allLogs.add(record);
@@ -128,7 +159,7 @@ public final class MentionSavedData extends SavedData {
         List<MentionRecord> filtered = new ArrayList<>();
         for (MentionRecord record : allLogs) {
             if (record.isTarget(target)) {
-                filtered.add(record.withTargets(List.of(target)));
+                filtered.add(record);
             }
         }
         return List.copyOf(filtered);
@@ -140,7 +171,7 @@ public final class MentionSavedData extends SavedData {
         }
         int unread = 0;
         for (MentionRecord record : allLogs) {
-            if (record.isTarget(target) && !record.isRead(target)) {
+            if (record.isTarget(target) && !record.read()) {
                 unread++;
             }
         }
@@ -157,7 +188,7 @@ public final class MentionSavedData extends SavedData {
             if (!record.isTarget(target)) {
                 continue;
             }
-            MentionRecord marked = record.markRead(target);
+            MentionRecord marked = record.markRead();
             if (marked != record) {
                 allLogs.set(i, marked);
                 changed = true;
@@ -179,7 +210,7 @@ public final class MentionSavedData extends SavedData {
             if (!record.isTarget(target) || !record.historyId().equals(historyId)) {
                 continue;
             }
-            MentionRecord marked = record.markRead(target);
+            MentionRecord marked = record.markRead();
             if (marked != record) {
                 allLogs.set(i, marked);
                 changed = true;
@@ -196,23 +227,9 @@ public final class MentionSavedData extends SavedData {
         if (allLogs.isEmpty()) {
             return false;
         }
-        boolean removed = false;
-        for (int i = 0; i < allLogs.size(); i++) {
-            MentionRecord record = allLogs.get(i);
-            if (!record.isTarget(target) || !record.historyId().equals(historyId)) {
-                continue;
-            }
-            MentionRecord updated = record.withoutTarget(target);
-            if (updated == null) {
-                allLogs.set(i, null);
-            } else {
-                allLogs.set(i, updated);
-            }
-            removed = true;
-            break;
-        }
+        boolean removed = allLogs.removeIf(record ->
+                record.isTarget(target) && record.historyId().equals(historyId));
         if (removed) {
-            allLogs.removeIf(Objects::isNull);
             prune();
             setDirty();
         }
@@ -241,45 +258,26 @@ public final class MentionSavedData extends SavedData {
         }
 
         if (maxHistory > 0 && !allLogs.isEmpty()) {
-            Map<UUID, List<Integer>> groupedIndices = new HashMap<>();
-            for (int i = 0; i < allLogs.size(); i++) {
-                MentionRecord record = allLogs.get(i);
-                for (UUID targetId : record.targetIds()) {
-                    groupedIndices.computeIfAbsent(targetId, id -> new ArrayList<>()).add(i);
-                }
+            Map<UUID, List<MentionRecord>> grouped = new HashMap<>();
+            for (MentionRecord record : allLogs) {
+                grouped.computeIfAbsent(record.targetId(), id -> new ArrayList<>()).add(record);
             }
 
-            List<MentionRecord> updatedLogs = new ArrayList<>(allLogs);
-
-            for (Map.Entry<UUID, List<Integer>> entry : groupedIndices.entrySet()) {
-                UUID targetId = entry.getKey();
-                List<Integer> indices = entry.getValue();
-                if (indices.size() <= maxHistory) {
+            Set<MentionRecord> toRemove = new HashSet<>();
+            for (List<MentionRecord> records : grouped.values()) {
+                if (records.size() <= maxHistory) {
                     continue;
                 }
-                indices.sort(Comparator.comparingLong(idx -> updatedLogs.get(idx).timestamp()));
-                int toRemove = indices.size() - maxHistory;
-                for (int i = 0; i < toRemove; i++) {
-                    int idx = indices.get(i);
-                    MentionRecord current = updatedLogs.get(idx);
-                    if (current == null) {
-                        continue;
-                    }
-                    MentionRecord updated = current.withoutTarget(targetId);
-                    if (updated == null) {
-                        updatedLogs.set(idx, null);
-                        changed = true;
-                    } else if (updated != current) {
-                        updatedLogs.set(idx, updated);
-                        changed = true;
-                    }
+                records.sort(Comparator.comparingLong(MentionRecord::timestamp));
+                int removeCount = records.size() - maxHistory;
+                for (int i = 0; i < removeCount; i++) {
+                    toRemove.add(records.get(i));
                 }
             }
 
-            if (changed) {
-                updatedLogs.removeIf(Objects::isNull);
-                allLogs.clear();
-                allLogs.addAll(updatedLogs);
+            if (!toRemove.isEmpty()) {
+                allLogs.removeIf(toRemove::contains);
+                changed = true;
             }
         }
 

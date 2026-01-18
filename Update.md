@@ -1,5 +1,40 @@
 # Update Log
 
+[dev] Version 2101.3.0-build.41
+refactor(core): 提及生命周期管线与包结构统一
+
+- 提及流程拆为解析/权限/限速/组装/派发/记录步骤，并集中到 mention.lifecycle 包
+- 单提及遇到无权限/空物品/超频时直接取消整条消息
+- 未注册且非真实玩家名的 @xxx 标记为 NOT_FOUND_IGNORED（忽略且不计入限速）
+
+refactor(api): 候选对象与事件/组件接口更新
+
+- 新增 MentionCandidate/ResolveStatus/DeliveryStatus，分离解析与发送状态
+- MentionEvent 现在携带 MentionCandidate，TargetProvider/TextFormatter/Notifier 签名调整
+- 移除 TargetCollection、MentionExecution 与 MentionCancelException
+
+refactor(storage): 历史记录与离线偏好持久化调整
+
+- MentionRecord 改为单目标记录并保存 status/originalKey/read
+- 新增 MentionPreferencesSavedData，离线玩家偏好同样生效并阻止写入历史
+
+refactor(core): Mention lifecycle pipeline and package consolidation
+
+- Split the flow into resolve/permission/rate-limit/compose/dispatch/record steps and group them under mention.lifecycle
+- Single-mention failures (no permission/empty item/rate limited) now cancel the whole message
+- Unregistered and non-player @xxx becomes NOT_FOUND_IGNORED (ignored and not rate-limited)
+
+refactor(api): Candidate model and event/component API updates
+
+- Add MentionCandidate/ResolveStatus/DeliveryStatus to separate resolve and delivery states
+- MentionEvent now carries MentionCandidate; TargetProvider/TextFormatter/Notifier signatures updated
+- Remove TargetCollection, MentionExecution, and MentionCancelException
+
+refactor(storage): History records and offline preference persistence
+
+- MentionRecord is now per-target and stores status/originalKey/read
+- Add MentionPreferencesSavedData so offline preferences also block history writes
+
 [dev] Version 2101.2.2-build.40
 refactor(api): 统一提及目标集合与事件接口
 

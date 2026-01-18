@@ -2,10 +2,10 @@ package cn.qihuang02.callyou.api.client;
 
 import cn.qihuang02.callyou.CallYouByYourName;
 import cn.qihuang02.callyou.api.MentionType;
-import cn.qihuang02.callyou.util.MentionKeyUtils;
 import cn.qihuang02.callyou.core.mention.components.formatter.PlayerNameTextFormatter;
 import cn.qihuang02.callyou.core.mention.components.formatter.SimpleTextFormatter;
 import cn.qihuang02.callyou.registry.CallYouMentionRegistries;
+import cn.qihuang02.callyou.util.MentionKeyUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.Registry;
@@ -15,15 +15,7 @@ import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 public record ClientMentionMetadata(
         @NotNull Set<String> mentionTypeKeys,

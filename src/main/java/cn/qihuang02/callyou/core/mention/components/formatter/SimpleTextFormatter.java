@@ -1,5 +1,6 @@
 package cn.qihuang02.callyou.core.mention.components.formatter;
 
+import cn.qihuang02.callyou.api.MentionCandidate;
 import cn.qihuang02.callyou.api.MentionContext;
 import cn.qihuang02.callyou.api.components.TextFormatter;
 import cn.qihuang02.callyou.registry.BuiltInCallYouRegistries;
@@ -32,7 +33,7 @@ public record SimpleTextFormatter(String formatter, ChatFormatting color) implem
 
     @Contract(pure = true)
     @Override
-    public @NotNull Component format(MentionContext context) {
+    public @NotNull Component format(@NotNull MentionContext context, @NotNull MentionCandidate candidate) {
         return Component.literal(this.formatter).withStyle(this.color);
     }
 }

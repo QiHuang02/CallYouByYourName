@@ -13,6 +13,7 @@ import cn.qihuang02.callyou.core.network.payload.c2s.MentionPrefsUpdatePayload;
 import cn.qihuang02.callyou.core.network.payload.s2c.MentionLogResponsePayload;
 import cn.qihuang02.callyou.core.network.payload.s2c.MentionPrefsSyncPayload;
 import cn.qihuang02.callyou.core.network.payload.s2c.MentionToastPayload;
+import cn.qihuang02.callyou.core.saveddata.MentionPreferencesSavedData;
 import cn.qihuang02.callyou.core.saveddata.MentionSavedData;
 import net.minecraft.advancements.AdvancementHolder;
 import net.minecraft.server.level.ServerPlayer;
@@ -35,6 +36,8 @@ public class NetworkHandler {
             }
             MentionPreferences attachment = player.getData(CallYouAttachments.MENTION_PREFERENCES.get());
             attachment.copyFrom(payload.preferences());
+            MentionPreferencesSavedData.get(player.serverLevel())
+                    .updatePreferences(player.getUUID(), attachment);
             syncPreferences(player);
         });
     }

@@ -2,8 +2,8 @@ package cn.qihuang02.callyou.core.client.screen.row;
 
 import cn.qihuang02.callyou.compat.ftb.FTBChunksAPIWrapper;
 import cn.qihuang02.callyou.core.client.screen.MentionPreferencesScreen;
-import cn.qihuang02.callyou.core.mention.ComponentTraversal;
 import cn.qihuang02.callyou.core.client.screen.MentionUIStyles;
+import cn.qihuang02.callyou.core.mention.ComponentTraversal;
 import cn.qihuang02.callyou.core.saveddata.MentionRecord;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Button;
@@ -11,7 +11,6 @@ import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.TextField;
 import com.lowdragmc.lowdraglib2.gui.ui.style.LayoutStyle;
 import com.lowdragmc.lowdraglib2.gui.ui.styletemplate.Sprites;
-import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.client.multiplayer.PlayerInfo;
@@ -46,8 +45,7 @@ public final class MentionHistoryRow {
             @NotNull Runnable onDelete,
             @NotNull Runnable onMarkRead
     ) {
-        UUID localPlayerId = resolveLocalPlayerId();
-        boolean isRead = record.isRead(localPlayerId);
+        boolean isRead = record.read();
 
         String headerText = "[" + DATE_FORMATTER.format(Instant.ofEpochMilli(record.timestamp())) + "] "
                 + resolveSenderName(record.senderId(), record.senderName());
@@ -213,14 +211,6 @@ public final class MentionHistoryRow {
                 component,
                 MentionHistoryRowUtils::getReplySuggestion
         );
-    }
-
-    private @NotNull UUID resolveLocalPlayerId() {
-        Minecraft minecraft = Minecraft.getInstance();
-        if (minecraft != null && minecraft.player != null) {
-            return minecraft.player.getUUID();
-        }
-        return Util.NIL_UUID;
     }
 
     private @NotNull String resolveSenderName(@NotNull UUID senderId, @Nullable String fallbackName) {
