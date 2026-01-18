@@ -171,10 +171,10 @@ public final class ClientMentionCompensator {
     private static @Nullable Component replacementForToken(@NotNull String key) {
         String normalized = MentionKeyUtils.normalize(key);
         if (ITEM_KEY.equals(normalized)) {
-            return Component.translatable("message.callyou.item.label");
+            return Component.translatableWithFallback("message.callyou.item.label", "@item");
         }
         if (SPOT_KEY.equals(normalized)) {
-            return Component.translatable("message.callyou.spot.label");
+            return Component.translatableWithFallback("message.callyou.spot.label", "@spot");
         }
         return null;
     }
