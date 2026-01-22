@@ -1,5 +1,40 @@
 # Update Log
 
+[dev] Version 2101.3.1-build.44
+feat(mention): 引入交互装饰器与模块化格式化器
+
+- 新增 InteractionDecorator/NoopInteractionDecorator 与多种内置装饰器（点击/悬浮/样式/回复/物品）
+- 新增 ModularTextFormatter，并将 TextFormatter 流程改为装饰器驱动，区分发送者/目标视图
+- 统一提及注册与格式化器默认装饰器，简化消息组装逻辑
+
+refactor(client/ui): 提及设置与历史行界面迁移到 LDLib2 XML
+
+- 新增/更新 mention_preferences/mention_history_row/mention_type_row/blocked_sender_row XML 模板
+- Tab 与历史操作按钮改为图标化并补充 hover 提示，补充“Save and exit”翻译
+- 添加提及界面图标资源（setting/history/ban/read/refresh/reply/send/save/map/delete）
+
+chore(build): 开发运行配置补充
+
+- 新增 client2 的独立 run2 目录与默认用户名参数
+- 将 run2 加入 .gitignore
+
+feat(mention): Introduce interaction decorators and modular formatting
+
+- Add InteractionDecorator/NoopInteractionDecorator with built-in click/hover/style/reply/item decorators
+- Add ModularTextFormatter and switch TextFormatter flow to decorator-driven rendering with sender/target views
+- Align registries and formatter defaults to streamline mention composition
+
+refactor(client/ui): Move mention settings and history rows to LDLib2 XML
+
+- Add/update XML templates for mention preferences, history rows, type rows, and blocked rows
+- Replace tab and history action buttons with icon controls and hover hints; add "Save and exit" translation
+- Add UI icon assets for setting/history/ban/read/refresh/reply/send/save/map/delete
+
+chore(build): Dev run configuration tweaks
+
+- Add a separate run2 directory and default username args for client2
+- Ignore run2 in .gitignore
+
 [dev] Version 2101.3.0-build.43
 refactor(core): 提及核心逻辑包结构重组与工具类迁移
 

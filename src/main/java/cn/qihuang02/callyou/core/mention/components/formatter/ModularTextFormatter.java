@@ -10,37 +10,49 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.network.chat.Component;
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
 
-public record SimpleTextFormatter(String formatter, InteractionDecorator decorator) implements TextFormatter {
-    public static final MapCodec<SimpleTextFormatter> MAP_CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
-            Codec.STRING.fieldOf("formatter").forGetter(SimpleTextFormatter::formatter),
+public record ModularTextFormatter(String template, InteractionDecorator decorator) implements TextFormatter {
+    public static final MapCodec<ModularTextFormatter> MAP_CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
+            Codec.STRING.fieldOf("template").forGetter(ModularTextFormatter::template),
             InteractionDecorator.CODEC.optionalFieldOf("decorator")
                     .forGetter(formatter -> Optional.ofNullable(formatter.decorator))
-    ).apply(instance, (formatter, decoratorOpt) -> new SimpleTextFormatter(formatter, decoratorOpt.orElse(null))));
+    ).apply(instance, (template, decoratorOpt) -> new ModularTextFormatter(template, decoratorOpt.orElse(null))));
 
-    public SimpleTextFormatter(String formatter, InteractionDecorator decorator) {
-        this.formatter = formatter;
+    public ModularTextFormatter(String template, InteractionDecorator decorator) {
+        this.template = template;
         this.decorator = decorator != null ? decorator : NoopInteractionDecorator.INSTANCE;
     }
 
-    @Contract(pure = true)
     @Override
     public @NotNull TextFormatterType type() {
-        return BuiltInCallYouRegistries.SIMPLE_FORMATTER_TYPE.get();
+        return BuiltInCallYouRegistries.MODULAR_FORMATTER_TYPE.get();
     }
 
-    @Contract(pure = true)
     @Override
     public @NotNull Component format(@NotNull MentionContext context, @NotNull MentionCandidate candidate) {
-        return Component.literal(this.formatter);
+        return Component.literal(resolveTemplate(context, candidate));
     }
 
     @Override
     public @NotNull InteractionDecorator decorator() {
         return this.decorator;
+    }
+
+    private @NotNull String resolveTemplate(@NotNull MentionContext context, @NotNull MentionCandidate candidate) {
+        String senderName = context.senderName();
+        if (senderName == null) {
+            senderName = "";
+        }
+        String key = candidate.key();
+        if (key == null) {
+            key = "";
+        }
+        return this.template
+                .replace("{token}", candidate.mentionToken())
+                .replace("{key}", key)
+                .replace("{sender}", senderName);
     }
 }

@@ -1,13 +1,9 @@
 package cn.qihuang02.callyou.registry;
 
 import cn.qihuang02.callyou.CallYouByYourName;
-import cn.qihuang02.callyou.api.components.Notifier;
-import cn.qihuang02.callyou.api.components.TargetProvider;
-import cn.qihuang02.callyou.api.components.TextFormatter;
-import cn.qihuang02.callyou.core.mention.components.formatter.ItemTextFormatter;
-import cn.qihuang02.callyou.core.mention.components.formatter.PlayerNameTextFormatter;
-import cn.qihuang02.callyou.core.mention.components.formatter.SimpleTextFormatter;
-import cn.qihuang02.callyou.core.mention.components.formatter.SpotTextFormatter;
+import cn.qihuang02.callyou.api.components.*;
+import cn.qihuang02.callyou.core.mention.components.decorator.*;
+import cn.qihuang02.callyou.core.mention.components.formatter.*;
 import cn.qihuang02.callyou.core.mention.components.notifier.ActionBarNotifier;
 import cn.qihuang02.callyou.core.mention.components.notifier.SoundNotifier;
 import cn.qihuang02.callyou.core.mention.components.notifier.ToastNotifier;
@@ -25,6 +21,9 @@ public final class BuiltInCallYouRegistries {
 
     public static final DeferredRegister<Notifier.NotifierType> NOTIFICATION_RULE_TYPES =
             DeferredRegister.create(CallYouRegistries.NOTIFICATION_RULE_TYPE_REGISTRY_KEY, CallYouByYourName.MODID);
+
+    public static final DeferredRegister<InteractionDecorator.InteractionDecoratorType> INTERACTION_DECORATOR_TYPES =
+            DeferredRegister.create(CallYouRegistries.INTERACTION_DECORATOR_TYPE_REGISTRY_KEY, CallYouByYourName.MODID);
 
     public static final DeferredHolder<TargetProvider.TargetProviderType, TargetProvider.TargetProviderType> RADIUS_TYPE =
             TARGET_PROVIDER_TYPES.register("radius", () -> new TargetProvider.TargetProviderType(RadiusTargetProvider.MAP_CODEC));
@@ -47,6 +46,9 @@ public final class BuiltInCallYouRegistries {
     public static final DeferredHolder<TextFormatter.TextFormatterType, TextFormatter.TextFormatterType> SIMPLE_FORMATTER_TYPE =
             TEXT_FORMATTER_TYPES.register("simple_formatter", () -> new TextFormatter.TextFormatterType(SimpleTextFormatter.MAP_CODEC));
 
+    public static final DeferredHolder<TextFormatter.TextFormatterType, TextFormatter.TextFormatterType> MODULAR_FORMATTER_TYPE =
+            TEXT_FORMATTER_TYPES.register("modular", () -> new TextFormatter.TextFormatterType(ModularTextFormatter.MAP_CODEC));
+
     public static final DeferredHolder<TextFormatter.TextFormatterType, TextFormatter.TextFormatterType> SPOT_FORMATTER_TYPE =
             TEXT_FORMATTER_TYPES.register("spot", () -> new TextFormatter.TextFormatterType(SpotTextFormatter.MAP_CODEC));
 
@@ -55,6 +57,48 @@ public final class BuiltInCallYouRegistries {
 
     public static final DeferredHolder<TextFormatter.TextFormatterType, TextFormatter.TextFormatterType> PLAYER_NAME_FORMATTER_TYPE =
             TEXT_FORMATTER_TYPES.register("player_name", () -> new TextFormatter.TextFormatterType(PlayerNameTextFormatter.MAP_CODEC));
+
+    public static final DeferredHolder<InteractionDecorator.InteractionDecoratorType, InteractionDecorator.InteractionDecoratorType> NOOP_DECORATOR_TYPE =
+            INTERACTION_DECORATOR_TYPES.register("none", () -> new InteractionDecorator.InteractionDecoratorType(NoopInteractionDecorator.MAP_CODEC));
+
+    public static final DeferredHolder<InteractionDecorator.InteractionDecoratorType, InteractionDecorator.InteractionDecoratorType> COMPOSITE_DECORATOR_TYPE =
+            INTERACTION_DECORATOR_TYPES.register("composite", () -> new InteractionDecorator.InteractionDecoratorType(CompositeInteractionDecorator.MAP_CODEC));
+
+    public static final DeferredHolder<InteractionDecorator.InteractionDecoratorType, InteractionDecorator.InteractionDecoratorType> TEXT_COLOR_DECORATOR_TYPE =
+            INTERACTION_DECORATOR_TYPES.register("text_color", () -> new InteractionDecorator.InteractionDecoratorType(TextColorDecorator.MAP_CODEC));
+
+    public static final DeferredHolder<InteractionDecorator.InteractionDecoratorType, InteractionDecorator.InteractionDecoratorType> TEXT_STYLE_DECORATOR_TYPE =
+            INTERACTION_DECORATOR_TYPES.register("text_style", () -> new InteractionDecorator.InteractionDecoratorType(TextStyleDecorator.MAP_CODEC));
+
+    public static final DeferredHolder<InteractionDecorator.InteractionDecoratorType, InteractionDecorator.InteractionDecoratorType> PREFIX_SUFFIX_DECORATOR_TYPE =
+            INTERACTION_DECORATOR_TYPES.register("prefix_suffix", () -> new InteractionDecorator.InteractionDecoratorType(PrefixSuffixDecorator.MAP_CODEC));
+
+    public static final DeferredHolder<InteractionDecorator.InteractionDecoratorType, InteractionDecorator.InteractionDecoratorType> SQUARE_BRACKETS_DECORATOR_TYPE =
+            INTERACTION_DECORATOR_TYPES.register("square_brackets", () -> new InteractionDecorator.InteractionDecoratorType(SquareBracketsDecorator.MAP_CODEC));
+
+    public static final DeferredHolder<InteractionDecorator.InteractionDecoratorType, InteractionDecorator.InteractionDecoratorType> HOVER_TEXT_DECORATOR_TYPE =
+            INTERACTION_DECORATOR_TYPES.register("hover_text", () -> new InteractionDecorator.InteractionDecoratorType(HoverTextDecorator.MAP_CODEC));
+
+    public static final DeferredHolder<InteractionDecorator.InteractionDecoratorType, InteractionDecorator.InteractionDecoratorType> HOVER_ENTITY_DECORATOR_TYPE =
+            INTERACTION_DECORATOR_TYPES.register("hover_entity", () -> new InteractionDecorator.InteractionDecoratorType(HoverEntityDecorator.MAP_CODEC));
+
+    public static final DeferredHolder<InteractionDecorator.InteractionDecoratorType, InteractionDecorator.InteractionDecoratorType> CLICK_RUN_DECORATOR_TYPE =
+            INTERACTION_DECORATOR_TYPES.register("click_run", () -> new InteractionDecorator.InteractionDecoratorType(ClickRunDecorator.MAP_CODEC));
+
+    public static final DeferredHolder<InteractionDecorator.InteractionDecoratorType, InteractionDecorator.InteractionDecoratorType> CLICK_SUGGEST_DECORATOR_TYPE =
+            INTERACTION_DECORATOR_TYPES.register("click_suggest", () -> new InteractionDecorator.InteractionDecoratorType(ClickSuggestDecorator.MAP_CODEC));
+
+    public static final DeferredHolder<InteractionDecorator.InteractionDecoratorType, InteractionDecorator.InteractionDecoratorType> OPEN_URL_DECORATOR_TYPE =
+            INTERACTION_DECORATOR_TYPES.register("open_url", () -> new InteractionDecorator.InteractionDecoratorType(OpenUrlDecorator.MAP_CODEC));
+
+    public static final DeferredHolder<InteractionDecorator.InteractionDecoratorType, InteractionDecorator.InteractionDecoratorType> ITEM_RENDER_DECORATOR_TYPE =
+            INTERACTION_DECORATOR_TYPES.register("item_render", () -> new InteractionDecorator.InteractionDecoratorType(ItemRenderDecorator.MAP_CODEC));
+
+    public static final DeferredHolder<InteractionDecorator.InteractionDecoratorType, InteractionDecorator.InteractionDecoratorType> RARITY_STYLE_DECORATOR_TYPE =
+            INTERACTION_DECORATOR_TYPES.register("rarity_style", () -> new InteractionDecorator.InteractionDecoratorType(RarityStyleDecorator.MAP_CODEC));
+
+    public static final DeferredHolder<InteractionDecorator.InteractionDecoratorType, InteractionDecorator.InteractionDecoratorType> REPLY_DECORATOR_TYPE =
+            INTERACTION_DECORATOR_TYPES.register("reply", () -> new InteractionDecorator.InteractionDecoratorType(ReplyDecorator.MAP_CODEC));
 
     public static final DeferredHolder<Notifier.NotifierType, Notifier.NotifierType> SOUND_TYPE =
             NOTIFICATION_RULE_TYPES.register("sound", () -> new Notifier.NotifierType(SoundNotifier.MAP_CODEC));
@@ -69,5 +113,6 @@ public final class BuiltInCallYouRegistries {
         TARGET_PROVIDER_TYPES.register(modEventBus);
         TEXT_FORMATTER_TYPES.register(modEventBus);
         NOTIFICATION_RULE_TYPES.register(modEventBus);
+        INTERACTION_DECORATOR_TYPES.register(modEventBus);
     }
 }

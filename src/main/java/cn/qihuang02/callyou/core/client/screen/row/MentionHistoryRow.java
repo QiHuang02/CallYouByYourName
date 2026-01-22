@@ -3,20 +3,22 @@ package cn.qihuang02.callyou.core.client.screen.row;
 import cn.qihuang02.callyou.compat.ftb.FTBChunksAPIWrapper;
 import cn.qihuang02.callyou.core.client.screen.MentionPreferencesScreen;
 import cn.qihuang02.callyou.core.client.screen.MentionUIStyles;
-import cn.qihuang02.callyou.util.ComponentTraversal;
 import cn.qihuang02.callyou.core.saveddata.MentionRecord;
+import cn.qihuang02.callyou.util.ComponentTraversal;
+import com.lowdragmc.lowdraglib2.gui.ui.UI;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.UITemplate;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Button;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.TextField;
 import com.lowdragmc.lowdraglib2.gui.ui.style.LayoutStyle;
 import com.lowdragmc.lowdraglib2.gui.ui.styletemplate.Sprites;
+import com.lowdragmc.lowdraglib2.utils.XmlUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.network.chat.Component;
-import org.appliedenergistics.yoga.YogaAlign;
-import org.appliedenergistics.yoga.YogaFlexDirection;
+import net.minecraft.resources.ResourceLocation;
 import org.appliedenergistics.yoga.YogaJustify;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -33,10 +35,8 @@ public final class MentionHistoryRow {
             DateTimeFormatter.ofPattern("MM-dd HH:mm").withZone(ZoneId.systemDefault());
     private static final Map<UUID, String> LAST_KNOWN_SENDER_NAMES = new ConcurrentHashMap<>();
     private static final Map<UUID, String> LAST_KNOWN_SENDER_PROFILES = new ConcurrentHashMap<>();
-    private static final Component DELETE_LABEL = Component.literal("X");
-    private static final Component READ_LABEL = Component.translatable("screen.callyou.history.mark_read");
-    private static final Component COORDS_LABEL = Component.translatable("screen.callyou.history.coords");
-    private static final Component REPLY_LABEL = Component.translatable("screen.callyou.history.reply");
+    private static final ResourceLocation UI_XML = ResourceLocation.parse("callyou:ui/mention_history_row.xml");
+    private static UITemplate template;
 
     private final UIElement element;
 
@@ -47,84 +47,68 @@ public final class MentionHistoryRow {
     ) {
         boolean isRead = record.read();
 
+        UI ui = template().createUI();
+        UIElement root = ui.getRootElement();
+        Label header = require(ui, "#history-header", Label.class);
+        Button deleteButton = require(ui, "#history-delete", Button.class);
+        UIElement bodySlot = require(ui, "#history-body-slot", UIElement.class);
+        UIElement actionRow = require(ui, "#history-action-row", UIElement.class);
+        Button coordsButton = require(ui, "#history-coords", Button.class);
+        Button replyButton = require(ui, "#history-reply", Button.class);
+        Button readButton = require(ui, "#history-read", Button.class);
+        UIElement replyGroup = require(ui, "#history-reply-group", UIElement.class);
+        TextField replyInput = require(ui, "#history-reply-input", TextField.class);
+        Button sendButton = require(ui, "#history-reply-send", Button.class);
+
         String headerText = "[" + DATE_FORMATTER.format(Instant.ofEpochMilli(record.timestamp())) + "] "
                 + resolveSenderName(record.senderId(), record.senderName());
 
-        Label header = new Label();
         header.setText(Component.literal(headerText));
-        header.layout(style -> style.flexGrow(1));
         header.textStyle(style -> style.textColor(isRead ? 0xDDDDDD : 0xFFE2A0));
 
-        Button deleteButton = new Button();
-        deleteButton.setText(DELETE_LABEL);
-        deleteButton.layout(style -> style.width(14).height(14));
         MentionUIStyles.applyButtonStyle(deleteButton);
+        deleteButton.setText(Component.empty());
         deleteButton.setOnClick(event -> onDelete.run());
-
-        UIElement headerRow = new UIElement()
-                .layout(style -> style.flexDirection(YogaFlexDirection.ROW)
-                        .gapColumn(4)
-                        .widthStretch()
-                        .alignItems(YogaAlign.CENTER))
-                .addChildren(header, deleteButton);
 
         Label body = new MentionHistoryBodyLabel();
         body.setText(record.message());
         body.layout(LayoutStyle::widthStretch);
         body.textStyle(style -> style.textColor(isRead ? 0xCCCCCC : 0xFFFFFF));
-
-        UIElement actionRow = new UIElement()
-                .layout(style -> style.flexDirection(YogaFlexDirection.ROW)
-                        .gapColumn(4)
-                        .widthStretch()
-                        .alignItems(YogaAlign.CENTER)
-                        .justifyItems(YogaJustify.FLEX_END));
+        bodySlot.addChild(body);
+        actionRow.layout(layout -> layout.justifyItems(YogaJustify.FLEX_END));
 
         String replyTrigger = findReplySuggestion(record.message());
         String replySuggestion = replyTrigger != null
                 ? buildSenderReplySuggestion(record.senderId(), record.senderName())
                 : null;
-        UIElement[] replyGroup = new UIElement[1];
         boolean[] replyVisible = new boolean[]{false};
 
         String waypointCommand = findTransientWaypointCommand(record.message());
         if (shouldShowCoordsButton(waypointCommand)) {
-            Button coordsButton = new Button();
-            coordsButton.setText(COORDS_LABEL);
-            coordsButton.layout(style -> style.width(70).height(14));
             MentionUIStyles.applyButtonStyle(coordsButton);
+            coordsButton.setText(Component.empty());
             coordsButton.setOnClick(event -> createTransientWaypoint(waypointCommand));
-            actionRow.addChildren(coordsButton);
+            coordsButton.setVisible(true);
+            coordsButton.setDisplay(true);
+        } else {
+            coordsButton.setVisible(false);
+            coordsButton.setDisplay(false);
         }
 
         if (replySuggestion != null) {
-            TextField replyInput = new TextField();
-            replyInput.layout(style -> style.flexGrow(1).height(16));
             MentionUIStyles.applyTextFieldStyle(replyInput);
 
-            Button sendButton = new Button();
-            sendButton.setText(Component.literal(">"));
-            sendButton.layout(style -> style.width(16).height(16));
             MentionUIStyles.applyButtonStyle(sendButton);
+            sendButton.setText(Component.empty());
 
-            replyGroup[0] = new UIElement()
-                    .layout(style -> style.flexDirection(YogaFlexDirection.ROW)
-                            .gapColumn(4)
-                            .widthStretch()
-                            .alignItems(YogaAlign.CENTER))
-                    .addChildren(replyInput, sendButton);
-            replyGroup[0].setVisible(false);
-            replyGroup[0].setDisplay(false);
-
-            Button replyButton = new Button();
-            replyButton.setText(REPLY_LABEL);
-            replyButton.layout(style -> style.width(70).height(14));
             MentionUIStyles.applyButtonStyle(replyButton);
+            replyButton.setText(Component.empty());
+            replyButton.style(style -> style.tooltips(Component.translatable("screen.callyou.history.reply")));
             replyButton.setOnClick(event -> {
                 boolean newState = !replyVisible[0];
                 replyVisible[0] = newState;
-                replyGroup[0].setVisible(newState);
-                replyGroup[0].setDisplay(newState);
+                replyGroup.setVisible(newState);
+                replyGroup.setDisplay(newState);
                 if (newState) {
                     String current = replyInput.getText();
                     if ((current == null || current.isBlank()) && !replySuggestion.isBlank()) {
@@ -132,7 +116,6 @@ public final class MentionHistoryRow {
                     }
                 }
             });
-            actionRow.addChildren(replyButton);
 
             sendButton.setOnClick(event -> {
                 String content = replyInput.getText();
@@ -145,35 +128,51 @@ public final class MentionHistoryRow {
                 }
                 minecraft.player.connection.sendChat(content);
                 replyInput.setText("");
-                replyGroup[0].setVisible(false);
-                replyGroup[0].setDisplay(false);
+                replyGroup.setVisible(false);
+                replyGroup.setDisplay(false);
                 replyVisible[0] = false;
             });
+            replyButton.setVisible(true);
+            replyButton.setDisplay(true);
+        } else {
+            replyButton.setVisible(false);
+            replyButton.setDisplay(false);
+            replyGroup.setVisible(false);
+            replyGroup.setDisplay(false);
         }
 
-        Button readButton = new Button();
-        readButton.setText(READ_LABEL);
-        readButton.layout(style -> style.width(70).height(14));
         MentionUIStyles.applyButtonStyle(readButton);
+        readButton.setText(Component.empty());
         readButton.setActive(!isRead);
         readButton.setOnClick(event -> onMarkRead.run());
-        actionRow.addChildren(readButton);
 
-        UIElement element = new UIElement()
-                .layout(style -> style.flexDirection(YogaFlexDirection.COLUMN)
-                        .gapRow(2)
-                        .widthStretch()
-                        .paddingAll(4))
-                .style(style -> style.background(isRead ? Sprites.RECT_RD : Sprites.RECT_RD_LIGHT))
-                .addChildren(headerRow, body, actionRow);
-        if (replyGroup[0] != null) {
-            element.addChild(replyGroup[0]);
-        }
-        this.element = element;
+        root.style(style -> style.background(isRead ? Sprites.RECT_RD : Sprites.RECT_RD_LIGHT));
+        this.element = root;
     }
 
     public UIElement getElement() {
         return element;
+    }
+
+    private static @NotNull UITemplate template() {
+        if (template == null) {
+            var xml = XmlUtils.loadXml(UI_XML);
+            if (xml == null) {
+                throw new IllegalStateException("UI xml not found: " + UI_XML);
+            }
+            template = UI.of(xml).toTemplate();
+        }
+        return template;
+    }
+
+    private static <T extends UIElement> @NotNull T require(
+            @NotNull UI ui,
+            @NotNull String selector,
+            @NotNull Class<T> type
+    ) {
+        return ui.select(selector, type)
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("Missing UI element: " + selector));
     }
 
     private void createTransientWaypoint(@NotNull String command) {

@@ -1,6 +1,7 @@
 package cn.qihuang02.callyou.registry;
 
 import cn.qihuang02.callyou.CallYouByYourName;
+import cn.qihuang02.callyou.api.components.InteractionDecorator;
 import cn.qihuang02.callyou.api.components.Notifier;
 import cn.qihuang02.callyou.api.components.TargetProvider;
 import cn.qihuang02.callyou.api.components.TextFormatter;
@@ -24,6 +25,9 @@ public final class CallYouRegistries {
     public static final ResourceKey<Registry<Notifier.NotifierType>> NOTIFICATION_RULE_TYPE_REGISTRY_KEY =
             ResourceKey.createRegistryKey(ResourceLocation.fromNamespaceAndPath(CallYouByYourName.MODID, "notifier_type"));
 
+    public static final ResourceKey<Registry<InteractionDecorator.InteractionDecoratorType>> INTERACTION_DECORATOR_TYPE_REGISTRY_KEY =
+            ResourceKey.createRegistryKey(ResourceLocation.fromNamespaceAndPath(CallYouByYourName.MODID, "interaction_decorator_type"));
+
     public static final Registry<TargetProvider.TargetProviderType> TARGET_PROVIDER_TYPES =
             new RegistryBuilder<>(TARGET_PROVIDER_TYPE_REGISTRY_KEY)
                     .sync(true)
@@ -39,6 +43,11 @@ public final class CallYouRegistries {
                     .sync(true)
                     .create();
 
+    public static final Registry<InteractionDecorator.InteractionDecoratorType> INTERACTION_DECORATOR_TYPES =
+            new RegistryBuilder<>(INTERACTION_DECORATOR_TYPE_REGISTRY_KEY)
+                    .sync(true)
+                    .create();
+
     /**
      * Register the custom registries themselves to the root registry.
      */
@@ -47,5 +56,6 @@ public final class CallYouRegistries {
         event.register(TARGET_PROVIDER_TYPES);
         event.register(TEXT_FORMATTER_TYPES);
         event.register(NOTIFICATION_RULE_TYPES);
+        event.register(INTERACTION_DECORATOR_TYPES);
     }
 }

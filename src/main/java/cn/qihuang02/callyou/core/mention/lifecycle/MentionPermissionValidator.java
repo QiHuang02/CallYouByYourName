@@ -1,9 +1,9 @@
 package cn.qihuang02.callyou.core.mention.lifecycle;
 
 import cn.qihuang02.callyou.api.*;
-import cn.qihuang02.callyou.core.mention.MentionGuard;
 import cn.qihuang02.callyou.core.attachment.CallYouAttachments;
 import cn.qihuang02.callyou.core.attachment.MentionPreferences;
+import cn.qihuang02.callyou.core.mention.MentionGuard;
 import cn.qihuang02.callyou.core.mention.components.formatter.ItemTextFormatter;
 import cn.qihuang02.callyou.core.saveddata.MentionPreferencesSavedData;
 import net.minecraft.network.chat.Component;

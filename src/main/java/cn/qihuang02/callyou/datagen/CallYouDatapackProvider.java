@@ -3,6 +3,7 @@ package cn.qihuang02.callyou.datagen;
 import cn.qihuang02.callyou.CallYouByYourName;
 import cn.qihuang02.callyou.api.MentionType;
 import cn.qihuang02.callyou.api.components.MentionRules;
+import cn.qihuang02.callyou.core.mention.components.decorator.*;
 import cn.qihuang02.callyou.core.mention.components.formatter.ItemTextFormatter;
 import cn.qihuang02.callyou.core.mention.components.formatter.PlayerNameTextFormatter;
 import cn.qihuang02.callyou.core.mention.components.formatter.SimpleTextFormatter;
@@ -24,6 +25,7 @@ import net.minecraft.world.item.Items;
 import net.neoforged.neoforge.common.data.DatapackBuiltinEntriesProvider;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
@@ -65,7 +67,10 @@ public final class CallYouDatapackProvider extends DatapackBuiltinEntriesProvide
     private static void bootstrapMentionTypes(@NotNull BootstrapContext<MentionType> context) {
         MentionType nearMention = new MentionType(
                 new RadiusTargetProvider(32.0D),
-                new SimpleTextFormatter("@near", ChatFormatting.AQUA),
+                new SimpleTextFormatter(
+                        "@near",
+                        new TextColorDecorator(ChatFormatting.AQUA)
+                ),
                 new SoundNotifier(
                         SoundEvents.EXPERIENCE_ORB_PICKUP,
                         1.0F,
@@ -81,7 +86,10 @@ public final class CallYouDatapackProvider extends DatapackBuiltinEntriesProvide
 
         MentionType playerMention = new MentionType(
                 new PlayerNameTargetProvider(),
-                new PlayerNameTextFormatter(ChatFormatting.YELLOW),
+                new PlayerNameTextFormatter(new CompositeInteractionDecorator(List.of(
+                        new TextColorDecorator(ChatFormatting.YELLOW),
+                        new ReplyDecorator(ReplyDecorator.ReplyScope.TARGET)
+                ))),
                 new SoundNotifier(
                         SoundEvents.EXPERIENCE_ORB_PICKUP,
                         1.0F,
@@ -94,7 +102,11 @@ public final class CallYouDatapackProvider extends DatapackBuiltinEntriesProvide
 
         MentionType itemMention = new MentionType(
                 NoneTargetProvider.INSTANCE,
-                ItemTextFormatter.INSTANCE,
+                new ItemTextFormatter(new CompositeInteractionDecorator(List.of(
+                        ItemRenderDecorator.INSTANCE,
+                        RarityStyleDecorator.INSTANCE,
+                        SquareBracketsDecorator.INSTANCE
+                ))),
                 new SoundNotifier(
                         SoundEvents.EXPERIENCE_ORB_PICKUP,
                         1.0F,
@@ -106,7 +118,10 @@ public final class CallYouDatapackProvider extends DatapackBuiltinEntriesProvide
 
         MentionType hereMention = new MentionType(
                 new SameDimensionTargetProvider(),
-                new SimpleTextFormatter("@here", ChatFormatting.AQUA),
+                new SimpleTextFormatter(
+                        "@here",
+                        new TextColorDecorator(ChatFormatting.AQUA)
+                ),
                 new SoundNotifier(
                         SoundEvents.EXPERIENCE_ORB_PICKUP,
                         1.0F,
@@ -121,7 +136,10 @@ public final class CallYouDatapackProvider extends DatapackBuiltinEntriesProvide
 
         MentionType spotMention = new MentionType(
                 NoneTargetProvider.INSTANCE,
-                SpotTextFormatter.INSTANCE,
+                new SpotTextFormatter(new CompositeInteractionDecorator(List.of(
+                        new TextColorDecorator(ChatFormatting.GREEN),
+                        SquareBracketsDecorator.INSTANCE
+                ))),
                 new SoundNotifier(
                         SoundEvents.EXPERIENCE_ORB_PICKUP,
                         1.0F,
@@ -133,7 +151,10 @@ public final class CallYouDatapackProvider extends DatapackBuiltinEntriesProvide
 
         MentionType ftbTeamMention = new MentionType(
                 new FTBTeamTargetProvider(),
-                new SimpleTextFormatter("@team", ChatFormatting.GOLD),
+                new SimpleTextFormatter(
+                        "@team",
+                        new TextColorDecorator(ChatFormatting.GOLD)
+                ),
                 new ToastNotifier(
                         "message.callyou.notify.toast.title",
                         "message.callyou.notify.toast.description",

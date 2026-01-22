@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ldlib2-ui xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/Low-Drag-MC/LDLib2/refs/heads/1.21/ldlib2-ui.xsd">
+    <stylesheet location="ldlib2:lss/mc.lss"/>
+    <root id="root" style="width: 280; height: 220; flex-direction: column; align-items: stretch; padding-all: 5; gap-all: 4;">
+        <element id="header" style="flex-direction: column; gap-vertical: 4; width: 100%;">
+            <label id="title" style="horizontal-align: center; flex-grow: 1;">
+                <lang key="screen.callyou.mention_preferences.title"/>
+            </label>
+            <element id="tab-bar" style="flex-direction: row; gap-horizontal: 4; width: 100%; align-items: center;">
+                <button id="tab-general" style="width: 17; height: 17; overlay: sprite(callyou:textures/gui/icon/setting.png);"/>
+                <button id="tab-blocked" style="width: 17; height: 17; overlay: sprite(callyou:textures/gui/icon/ban.png);"/>
+                <button id="tab-history" style="width: 17; height: 17; overlay: sprite(callyou:textures/gui/icon/history.png);"/>
+                <element style="flex-grow: 1;"></element>
+                <button id="done-button" style="width: 17; height: 17; overlay: sprite(callyou:textures/gui/icon/save.png);"/>
+            </element>
+        </element>
+        <element id="content" style="flex-grow: 1; width: 100%;">
+            <element id="tab-general-content" style="flex-direction: column; gap-vertical: 4; flex-grow: 1; width: 100%;">
+                <element id="allow-row" style="flex-direction: row; align-items: center; width: 100%;">
+                    <label id="allow-mentions-label" style="flex-grow: 1;">
+                        <lang key="screen.callyou.mention_preferences.allow_all"/>
+                    </label>
+                    <switch id="allow-mentions-switch" style="width: 34; height: 14;"/>
+                </element>
+                <element id="allow-mass-row" style="flex-direction: row; align-items: center; width: 100%;">
+                    <label id="allow-mass-label" style="flex-grow: 1;">
+                        <lang key="screen.callyou.mention_preferences.allow_mass"/>
+                    </label>
+                    <switch id="allow-mass-switch" style="width: 34; height: 14;"/>
+                </element>
+                <text-field id="type-search-input" style="width: 100%; height: 16;"/>
+                <scroller-view id="mention-type-list" style="flex-grow: 1; width: 100%;"/>
+            </element>
+            <element id="tab-blocked-content" style="flex-direction: column; gap-vertical: 4; flex-grow: 1; width: 100%;">
+                <label id="block-label">
+                    <lang key="screen.callyou.blocked_senders.block_label"/>
+                </label>
+                <element id="block-search-row" style="flex-direction: row; align-items: center; gap-horizontal: 4; width: 100%;">
+                    <text-field id="player-search-input" style="flex-grow: 1; height: 16;"/>
+                    <button id="block-button" text="screen.callyou.blocked_senders.block_action" style="width: 50; height: 16;"/>
+                </element>
+                <label id="block-status" style="width: 100%;"></label>
+                <scroller-view id="blocked-sender-list" style="flex-grow: 1; width: 100%;">
+                    <label id="blocked-empty-label" visible="false" style="width: 100%; height: 20; horizontal-align: center; text-color: #aaaaaa;">
+                        <lang key="screen.callyou.mention_preferences.blocked.none"/>
+                    </label>
+                </scroller-view>
+            </element>
+            <element id="tab-history-content" style="flex-direction: column; gap-vertical: 4; flex-grow: 1; width: 100%;">
+                <element id="history-actions-row" style="flex-direction: row; gap-horizontal: 4; width: 100%;">
+                    <button id="history-refresh-button" style="width: 16; height: 16; overlay: sprite(callyou:textures/gui/icon/refresh.png);"/>
+                    <button id="history-mark-all" style="width: 16; height: 16; overlay: sprite(callyou:textures/gui/icon/read.png);"/>
+                </element>
+                <label id="history-status" style="width: 100%;">
+                    <lang key="screen.callyou.history.empty"/>
+                </label>
+                <scroller-view id="history-list" style="flex-grow: 1; width: 100%;">
+                    <label id="history-empty-label" visible="false" style="width: 100%; height: 20; horizontal-align: center; text-color: #aaaaaa;">
+                        <lang key="screen.callyou.history.empty"/>
+                    </label>
+                </scroller-view>
+            </element>
+        </element>
+        <element id="toast-layer" visible="false" style="display: none; position: absolute; left: 0; top: 100; height: 20; align-items: stretch; justify-content: center; width: 280; padding-left: 6; padding-right: 6;">
+            <label id="toast-label" visible="false" style="display: none; width: 100%; height: 20; horizontal-align: center; vertical-align: center; text-color: #ffffff;"></label>
+        </element>
+    </root>
+</ldlib2-ui>

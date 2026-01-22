@@ -6,18 +6,22 @@ import cn.qihuang02.callyou.core.attachment.MentionPreferences;
 import cn.qihuang02.callyou.core.client.screen.MentionUIStyles;
 import cn.qihuang02.callyou.registry.CallYouMentionRegistries;
 import cn.qihuang02.callyou.registry.CallYouRegistries;
+import com.lowdragmc.lowdraglib2.gui.ui.UI;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.UITemplate;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Switch;
+import com.lowdragmc.lowdraglib2.utils.XmlUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.Registry;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import org.appliedenergistics.yoga.YogaAlign;
-import org.appliedenergistics.yoga.YogaFlexDirection;
 import org.jetbrains.annotations.NotNull;
 
 public class MentionTypeRow {
+    private static final ResourceLocation UI_XML = ResourceLocation.parse("callyou:ui/mention_type_row.xml");
+    private static UITemplate template;
+
     private final ResourceLocation id;
     private final Switch masterSwitch;
     private final Switch notifierSwitch;
@@ -34,13 +38,15 @@ public class MentionTypeRow {
     ) {
         this.id = id;
 
-        Label labelElement = new Label();
+        UI ui = template().createUI();
+        Label labelElement = require(ui, "#type-label", Label.class);
+        this.masterSwitch = require(ui, "#master-switch", Switch.class);
+        this.notifierSwitch = require(ui, "#notifier-switch", Switch.class);
+        this.element = ui.getRootElement();
+
         labelElement.setText(label);
-        labelElement.layout(style -> style.flexGrow(1));
 
         // Master Enable Switch
-        this.masterSwitch = new Switch();
-        this.masterSwitch.layout(style -> style.width(28).height(12));
         this.masterSwitch.style(style -> style.tooltips(Component.literal("Enable/Disable")));
         MentionUIStyles.applySwitchStyle(this.masterSwitch);
         this.masterSwitch.setOnSwitchChanged(value -> {
@@ -54,8 +60,6 @@ public class MentionTypeRow {
         });
 
         // Resolve Notifier
-        this.notifierSwitch = new Switch();
-        this.notifierSwitch.layout(style -> style.width(28).height(12));
         MentionUIStyles.applySwitchStyle(this.notifierSwitch);
         this.notifierSwitch.setVisible(false); // Hidden by default
         this.notifierSwitch.setDisplay(false);
@@ -86,13 +90,6 @@ public class MentionTypeRow {
             }
         }
 
-        this.element = new UIElement()
-                .layout(style -> style.flexDirection(YogaFlexDirection.ROW)
-                        .alignItems(YogaAlign.CENTER)
-                        .gapColumn(4)
-                        .widthStretch()
-                        .height(20))
-                .addChildren(labelElement, this.notifierSwitch, this.masterSwitch);
     }
 
     public UIElement getElement() {
@@ -132,5 +129,26 @@ public class MentionTypeRow {
             this.notifierSwitch.setOn(isMasterOn && isNotifierEnabled, false);
             this.notifierSwitch.setActive(isMasterOn);
         }
+    }
+
+    private static @NotNull UITemplate template() {
+        if (template == null) {
+            var xml = XmlUtils.loadXml(UI_XML);
+            if (xml == null) {
+                throw new IllegalStateException("UI xml not found: " + UI_XML);
+            }
+            template = UI.of(xml).toTemplate();
+        }
+        return template;
+    }
+
+    private static <T extends UIElement> @NotNull T require(
+            @NotNull UI ui,
+            @NotNull String selector,
+            @NotNull Class<T> type
+    ) {
+        return ui.select(selector, type)
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("Missing UI element: " + selector));
     }
 }

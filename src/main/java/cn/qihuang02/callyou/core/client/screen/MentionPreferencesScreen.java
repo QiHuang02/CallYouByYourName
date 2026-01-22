@@ -14,20 +14,15 @@ import com.lowdragmc.lowdraglib2.gui.holder.ModularUIScreen;
 import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
 import com.lowdragmc.lowdraglib2.gui.ui.UI;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
-import com.lowdragmc.lowdraglib2.gui.ui.data.Horizontal;
-import com.lowdragmc.lowdraglib2.gui.ui.data.Vertical;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.*;
-import com.lowdragmc.lowdraglib2.gui.ui.style.LayoutStyle;
-import com.lowdragmc.lowdraglib2.gui.ui.style.Stylesheet;
-import com.lowdragmc.lowdraglib2.gui.ui.style.StylesheetManager;
 import com.lowdragmc.lowdraglib2.gui.ui.styletemplate.Sprites;
+import com.lowdragmc.lowdraglib2.utils.XmlUtils;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.client.resources.language.I18n;
-import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import org.appliedenergistics.yoga.YogaAlign;
@@ -47,22 +42,15 @@ public class MentionPreferencesScreen extends ModularUIScreen {
     private static final int TOAST_PADDING = 6;
     private static final long TOAST_DURATION_MS = 2000L;
 
+    private static final ResourceLocation UI_XML = ResourceLocation.parse("callyou:ui/mention_preferences.xml");
+
     private static final Component TITLE = Component.translatable("screen.callyou.mention_preferences.title");
 
-    private static final Component ALLOW_MENTIONS = Component.translatable("screen.callyou.mention_preferences.allow_all");
-    private static final Component ALLOW_MASS = Component.translatable("screen.callyou.mention_preferences.allow_mass");
-
-    private static final Component EMPTY_BLOCKED = Component.translatable("screen.callyou.mention_preferences.blocked.none");
-    private static final Component BLOCK_LABEL = Component.translatable("screen.callyou.blocked_senders.block_label");
-    private static final Component BLOCK_ACTION = Component.translatable("screen.callyou.blocked_senders.block_action");
     private static final Component BLOCK_ACTION_TOOLTIP = Component.translatable("screen.callyou.blocked_senders.block_action.tooltip");
     private static final Component ERROR_NOT_FOUND = Component.translatable("screen.callyou.blocked_senders.error.not_found");
     private static final Component ERROR_ALREADY_BLOCKED = Component.translatable("screen.callyou.blocked_senders.error.already_blocked");
-    private static final Component TAB_HISTORY = Component.translatable("screen.callyou.history.title");
     private static final Component HISTORY_EMPTY = Component.translatable("screen.callyou.history.empty");
     private static final Component HISTORY_LOADING = Component.translatable("screen.callyou.history.loading");
-    private static final Component HISTORY_REFRESH = Component.translatable("screen.callyou.history.refresh");
-    private static final Component HISTORY_MARK_ALL = Component.translatable("screen.callyou.history.mark_all");
 
     private final Screen parent;
     // --- UI References ---
@@ -607,7 +595,6 @@ public class MentionPreferencesScreen extends ModularUIScreen {
 
     private static class UIBuilder {
         ModularUI modularUI;
-        Label titleLabel;
         Button tabGeneralButton;
         Button tabBlockedButton;
         Button tabHistoryButton;
@@ -645,225 +632,101 @@ public class MentionPreferencesScreen extends ModularUIScreen {
         }
 
         private void build() {
-            // --- Header & Tabs ---
-            titleLabel = new Label();
-            titleLabel.setText(TITLE);
-            titleLabel.textStyle(style -> style.textAlignHorizontal(Horizontal.CENTER));
-            titleLabel.layout(style -> style.flexGrow(1));
+            var xml = XmlUtils.loadXml(UI_XML);
+            if (xml == null) {
+                throw new IllegalStateException("UI xml not found: " + UI_XML);
+            }
 
-            tabGeneralButton = new Button();
-            tabGeneralButton.setText(Component.translatable("screen.callyou.mention_preferences.title"));
-            tabGeneralButton.layout(style -> style.flexGrow(1).height(20));
+            UI ui = UI.of(xml);
+            UIElement root = ui.getRootElement();
+            root.style(style -> style.background(Sprites.RECT_SOLID));
+
+            tabGeneralButton = require(ui, "#tab-general", Button.class);
+            tabBlockedButton = require(ui, "#tab-blocked", Button.class);
+            tabHistoryButton = require(ui, "#tab-history", Button.class);
+            generalTabContainer = require(ui, "#tab-general-content", UIElement.class);
+            blockedTabContainer = require(ui, "#tab-blocked-content", UIElement.class);
+            historyTabContainer = require(ui, "#tab-history-content", UIElement.class);
+
+            allowMentionsSwitch = require(ui, "#allow-mentions-switch", Switch.class);
+            allowMassMentionsSwitch = require(ui, "#allow-mass-switch", Switch.class);
+            typeSearchInput = require(ui, "#type-search-input", TextField.class);
+            mentionTypeList = require(ui, "#mention-type-list", ScrollerView.class);
+
+            playerSearchInput = require(ui, "#player-search-input", TextField.class);
+            blockButton = require(ui, "#block-button", Button.class);
+            blockStatusLabel = require(ui, "#block-status", Label.class);
+            blockedSenderList = require(ui, "#blocked-sender-list", ScrollerView.class);
+            blockedEmptyLabel = require(ui, "#blocked-empty-label", Label.class);
+
+            historyRefreshButton = require(ui, "#history-refresh-button", Button.class);
+            markAllReadButton = require(ui, "#history-mark-all", Button.class);
+            historyStatusLabel = require(ui, "#history-status", Label.class);
+            historyList = require(ui, "#history-list", ScrollerView.class);
+            historyEmptyLabel = require(ui, "#history-empty-label", Label.class);
+
+            doneButton = require(ui, "#done-button", Button.class);
+            toastLayer = require(ui, "#toast-layer", UIElement.class);
+            toastLabel = require(ui, "#toast-label", Label.class);
+
             MentionUIStyles.applyButtonStyle(tabGeneralButton);
-
-            tabBlockedButton = new Button();
-            tabBlockedButton.setText(Component.translatable("screen.callyou.blocked_senders.title"));
-            tabBlockedButton.layout(style -> style.flexGrow(1).height(20));
             MentionUIStyles.applyButtonStyle(tabBlockedButton);
-
-            tabHistoryButton = new Button();
-            tabHistoryButton.setText(TAB_HISTORY);
-            tabHistoryButton.layout(style -> style.flexGrow(1).height(20));
             MentionUIStyles.applyButtonStyle(tabHistoryButton);
-
-            UIElement tabBar = new UIElement()
-                    .layout(style -> style.flexDirection(YogaFlexDirection.ROW)
-                            .gapColumn(4)
-                            .widthStretch())
-                    .addChildren(tabGeneralButton, tabBlockedButton, tabHistoryButton);
-
-            UIElement header = new UIElement()
-                    .layout(style -> style.flexDirection(YogaFlexDirection.COLUMN)
-                            .gapRow(4)
-                            .widthStretch())
-                    .addChildren(titleLabel, tabBar);
-
-            // --- General Tab Content ---
-            generalTabContainer = buildGeneralTab();
-
-            // --- Blocked Tab Content ---
-            blockedTabContainer = buildBlockedTab();
-
-            // --- History Tab Content ---
-            historyTabContainer = buildHistoryTab();
-
-            // --- Content Wrapper ---
-            UIElement contentArea = new UIElement()
-                    .layout(style -> style.flexGrow(1).widthStretch())
-                    .addChildren(generalTabContainer, blockedTabContainer, historyTabContainer);
-
-            // --- Footer ---
-            doneButton = new Button();
-            doneButton.setText(CommonComponents.GUI_DONE);
-            doneButton.layout(style -> style.width(100).height(16));
+            MentionUIStyles.applyButtonStyle(blockButton);
+            MentionUIStyles.applyButtonStyle(historyRefreshButton);
+            MentionUIStyles.applyButtonStyle(markAllReadButton);
             MentionUIStyles.applyButtonStyle(doneButton);
+            tabGeneralButton.setText(Component.empty());
+            tabBlockedButton.setText(Component.empty());
+            tabHistoryButton.setText(Component.empty());
+            tabGeneralButton.style(style -> style.tooltips(
+                    Component.translatable("screen.callyou.mention_preferences.title")));
+            tabBlockedButton.style(style -> style.tooltips(
+                    Component.translatable("screen.callyou.blocked_senders.title")));
+            tabHistoryButton.style(style -> style.tooltips(
+                    Component.translatable("screen.callyou.history.title")));
+            historyRefreshButton.setText(Component.empty());
+            markAllReadButton.setText(Component.empty());
+            historyRefreshButton.style(style -> style.tooltips(
+                    Component.translatable("screen.callyou.history.refresh")));
+            markAllReadButton.style(style -> style.tooltips(
+                    Component.translatable("screen.callyou.history.mark_all")));
+            doneButton.setText(Component.empty());
+            doneButton.style(style -> style.tooltips(
+                    Component.translatable("screen.callyou.mention_preferences.done.tooltip")));
 
-            UIElement footer = new UIElement()
-                    .layout(style -> style.flexDirection(YogaFlexDirection.ROW)
-                            .alignItems(YogaAlign.CENTER)
-                            .justifyItems(YogaJustify.CENTER)
-                            .height(20)
-                            .widthStretch())
-                    .addChildren(doneButton);
-
-            // --- Toast ---
-            toastLabel = new Label();
-            toastLabel.setText(Component.empty());
-            toastLabel.layout(style -> style.widthStretch().height(TOAST_HEIGHT));
-            toastLabel.textStyle(style -> style.textAlignHorizontal(Horizontal.CENTER)
-                    .textAlignVertical(Vertical.CENTER)
-                    .textColor(0xFFFFFF));
-            toastLabel.setVisible(false);
-            toastLabel.setDisplay(false);
-
-            UIElement toastLayer = new UIElement()
-                    .layout(style -> style.positionType(YogaPositionType.ABSOLUTE)
-                            .left(0)
-                            .top((PANEL_HEIGHT - TOAST_HEIGHT) / 2)
-                            .height(TOAST_HEIGHT)
-                            .alignItems(YogaAlign.STRETCH)
-                            .justifyItems(YogaJustify.CENTER)
-                            .width(PANEL_WIDTH)
-                            .paddingLeft(TOAST_PADDING)
-                            .paddingRight(TOAST_PADDING))
-                    .style(style -> style.background(Sprites.RECT_RD_LIGHT))
-                    .addChildren(toastLabel);
-            toastLayer.setVisible(false);
-            toastLayer.setDisplay(false);
-            this.toastLayer = toastLayer;
-
-            // --- Root ---
-            UIElement root = new UIElement()
-                    .layout(style -> style.width(PANEL_WIDTH)
-                            .height(PANEL_HEIGHT)
-                            .flexDirection(YogaFlexDirection.COLUMN)
-                            .alignItems(YogaAlign.STRETCH)
-                            .paddingAll(5)
-                            .gapAll(4))
-                    .style(style -> style.background(Sprites.RECT_SOLID))
-                    .addChildren(header, contentArea, footer, toastLayer);
-
-            Stylesheet mcStyle = StylesheetManager.INSTANCE.getStylesheetSafe(StylesheetManager.MC);
-            modularUI = ModularUI.of(UI.of(root, mcStyle));
-        }
-
-        private @NotNull UIElement buildGeneralTab() {
-            allowMentionsSwitch = new Switch();
-            allowMentionsSwitch.layout(style -> style.width(34).height(14));
             MentionUIStyles.applySwitchStyle(allowMentionsSwitch);
-
-            Label allowLabel = new Label();
-            allowLabel.setText(ALLOW_MENTIONS);
-            allowLabel.layout(style -> style.flexGrow(1));
-
-            UIElement allowRow = new UIElement()
-                    .layout(style -> style.flexDirection(YogaFlexDirection.ROW).alignItems(YogaAlign.CENTER).widthStretch())
-                    .addChildren(allowLabel, allowMentionsSwitch);
-
-            allowMassMentionsSwitch = new Switch();
-            allowMassMentionsSwitch.layout(style -> style.width(34).height(14));
             MentionUIStyles.applySwitchStyle(allowMassMentionsSwitch);
 
-            Label allowMassLabel = new Label();
-            allowMassLabel.setText(ALLOW_MASS);
-            allowMassLabel.layout(style -> style.flexGrow(1));
-
-            UIElement allowMassRow = new UIElement()
-                    .layout(style -> style.flexDirection(YogaFlexDirection.ROW).alignItems(YogaAlign.CENTER).widthStretch())
-                    .addChildren(allowMassLabel, allowMassMentionsSwitch);
-
-            typeSearchInput = new TextField();
-            typeSearchInput.layout(style -> style.widthStretch().height(16));
             MentionUIStyles.applyTextFieldStyle(typeSearchInput);
+            MentionUIStyles.applyTextFieldStyle(playerSearchInput);
 
-            mentionTypeList = new ScrollerView();
-            mentionTypeList.layout(style -> style.flexGrow(1).widthStretch());
             mentionTypeList.viewContainer(container -> container.layout(layout -> layout.flexDirection(YogaFlexDirection.COLUMN)
                     .gapRow(2)
                     .widthStretch()));
             MentionUIStyles.applyScrollerStyle(mentionTypeList);
 
-            return new UIElement()
-                    .layout(style -> style.flexDirection(YogaFlexDirection.COLUMN).gapRow(4).flexGrow(1).widthStretch())
-                    .addChildren(allowRow, allowMassRow, typeSearchInput, mentionTypeList);
-        }
-
-        private @NotNull UIElement buildBlockedTab() {
-            Label blockLabel = new Label();
-            blockLabel.setText(BLOCK_LABEL);
-
-            playerSearchInput = new TextField();
-            playerSearchInput.layout(style -> style.flexGrow(1).height(16));
-            MentionUIStyles.applyTextFieldStyle(playerSearchInput);
-
-            blockButton = new Button();
-            blockButton.setText(BLOCK_ACTION);
-            blockButton.layout(style -> style.width(50).height(16));
-            MentionUIStyles.applyButtonStyle(blockButton);
-
-            UIElement searchRow = new UIElement()
-                    .layout(style -> style.flexDirection(YogaFlexDirection.ROW).alignItems(YogaAlign.CENTER).gapColumn(4).widthStretch())
-                    .addChildren(playerSearchInput, blockButton);
-
-            blockStatusLabel = new Label();
-            blockStatusLabel.setText(Component.empty());
-            blockStatusLabel.layout(LayoutStyle::widthStretch);
-
-            blockedSenderList = new ScrollerView();
-            blockedSenderList.layout(style -> style.flexGrow(1).widthStretch());
             blockedSenderList.viewContainer(container -> container.layout(layout -> layout.flexDirection(YogaFlexDirection.COLUMN)
                     .gapRow(2)
                     .widthStretch()));
             MentionUIStyles.applyScrollerStyle(blockedSenderList);
 
-            blockedEmptyLabel = new Label();
-            blockedEmptyLabel.setText(EMPTY_BLOCKED);
-            blockedEmptyLabel.textStyle(style -> style.textAlignHorizontal(Horizontal.CENTER).textColor(0xAAAAAA));
-            blockedEmptyLabel.layout(style -> style.widthStretch().height(20));
-            blockedEmptyLabel.setVisible(false);
-
-            return new UIElement()
-                    .layout(style -> style.flexDirection(YogaFlexDirection.COLUMN).gapRow(4).flexGrow(1).widthStretch())
-                    .addChildren(blockLabel, searchRow, blockStatusLabel, blockedSenderList);
-        }
-
-        private @NotNull UIElement buildHistoryTab() {
-            historyRefreshButton = new Button();
-            historyRefreshButton.setText(HISTORY_REFRESH);
-            historyRefreshButton.layout(style -> style.width(70).height(16));
-            MentionUIStyles.applyButtonStyle(historyRefreshButton);
-
-            markAllReadButton = new Button();
-            markAllReadButton.setText(HISTORY_MARK_ALL);
-            markAllReadButton.layout(style -> style.width(100).height(16));
-            MentionUIStyles.applyButtonStyle(markAllReadButton);
-
-            UIElement actionsRow = new UIElement()
-                    .layout(style -> style.flexDirection(YogaFlexDirection.ROW)
-                            .gapColumn(4)
-                            .widthStretch())
-                    .addChildren(historyRefreshButton, markAllReadButton);
-
-            historyStatusLabel = new Label();
-            historyStatusLabel.setText(HISTORY_EMPTY);
-            historyStatusLabel.layout(LayoutStyle::widthStretch);
-
-            historyList = new ScrollerView();
-            historyList.layout(style -> style.flexGrow(1).widthStretch());
             historyList.viewContainer(container -> container.layout(layout -> layout.flexDirection(YogaFlexDirection.COLUMN)
                     .gapRow(3)
                     .widthStretch()));
             MentionUIStyles.applyScrollerStyle(historyList);
 
-            historyEmptyLabel = new Label();
-            historyEmptyLabel.setText(HISTORY_EMPTY);
-            historyEmptyLabel.textStyle(style -> style.textAlignHorizontal(Horizontal.CENTER).textColor(0xAAAAAA));
-            historyEmptyLabel.layout(style -> style.widthStretch().height(20));
-            historyEmptyLabel.setVisible(false);
+            blockStatusLabel.setText(Component.empty());
+            toastLabel.setText(Component.empty());
+            toastLayer.style(style -> style.background(Sprites.RECT_RD_LIGHT));
 
-            return new UIElement()
-                    .layout(style -> style.flexDirection(YogaFlexDirection.COLUMN).gapRow(4).flexGrow(1).widthStretch())
-                    .addChildren(actionsRow, historyStatusLabel, historyList);
+            modularUI = ModularUI.of(ui);
+        }
+
+        private static <T extends UIElement> T require(@NotNull UI ui, @NotNull String selector, @NotNull Class<T> type) {
+            return ui.select(selector, type)
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalStateException("Missing UI element: " + selector));
         }
     }
 }

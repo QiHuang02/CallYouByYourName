@@ -8,7 +8,6 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import org.jetbrains.annotations.Nullable;
 
-@OnlyIn(Dist.CLIENT)
 public final class FTBChunksClickHandler {
     public static boolean handle(@Nullable ClickEvent clickEvent) {
         if (clickEvent == null || clickEvent.getAction() != ClickEvent.Action.RUN_COMMAND) {

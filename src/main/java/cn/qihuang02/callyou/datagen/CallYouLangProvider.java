@@ -52,6 +52,7 @@ public class CallYouLangProvider extends LanguageProvider {
             new TranslationEntry("screen.callyou.mention_preferences.allow_all.tooltip", "Whether other players may mention you.", "是否允许其他玩家提及你。"),
             new TranslationEntry("screen.callyou.mention_preferences.allow_mass", "Allow Mass Mentions", "允许群体提及"),
             new TranslationEntry("screen.callyou.mention_preferences.allow_mass.tooltip", "Whether mass mention types (e.g., @here) may ping you.", "是否允许群体提及类型（如 @here）提醒你。"),
+            new TranslationEntry("screen.callyou.mention_preferences.done.tooltip", "Save and exit", "保存并退出"),
             new TranslationEntry("screen.callyou.mention_preferences.blocked.none", "No blocked players yet.", "暂无被屏蔽的玩家。"),
 
             // Blocked players screen

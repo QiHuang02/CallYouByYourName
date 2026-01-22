@@ -2,7 +2,8 @@ package cn.qihuang02.callyou.core.mention.lifecycle;
 
 import cn.qihuang02.callyou.api.*;
 import cn.qihuang02.callyou.api.components.TextFormatter;
-import net.minecraft.network.chat.*;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import org.jetbrains.annotations.NotNull;
 
 public final class MentionMessageComposer implements MentionLifeCycle {
@@ -51,10 +52,11 @@ public final class MentionMessageComposer implements MentionLifeCycle {
 
             TextFormatter formatter = type.textFormatter();
             Component formattedMention = formatter.format(context, candidate);
-            Component mentionForTargets = applyReplyStyle(formatter, context, candidate, formattedMention);
+            Component mentionForTargets = applyDecorators(formatter, context, candidate, formattedMention, MentionView.TARGET);
+            Component mentionForSender = applyDecorators(formatter, context, candidate, formattedMention, MentionView.SENDER);
 
             rebuilt.append(mentionForTargets);
-            rebuiltForSender.append(applySenderStatusStyle(formattedMention, candidate));
+            rebuiltForSender.append(applySenderStatusStyle(mentionForSender, candidate));
             lastIndex = end;
         }
 
@@ -70,32 +72,14 @@ public final class MentionMessageComposer implements MentionLifeCycle {
         context.setSenderView(rebuiltForSender);
     }
 
-    private @NotNull Component applyReplyStyle(
+    private @NotNull Component applyDecorators(
             @NotNull TextFormatter formatter,
             @NotNull MentionContext context,
             @NotNull MentionCandidate candidate,
-            @NotNull Component formattedMention
+            @NotNull Component formattedMention,
+            @NotNull MentionView view
     ) {
-        if (!formatter.supportReply()) {
-            return formattedMention;
-        }
-        String suggestion = formatter.buildReplySuggestion(context, candidate, formattedMention);
-        if (suggestion.isBlank()) {
-            return formattedMention;
-        }
-        HoverEvent replyHover = new HoverEvent(
-                HoverEvent.Action.SHOW_TEXT,
-                Component.translatable("message.callyou.reply.hover")
-        );
-        return formattedMention.copy().withStyle(style -> {
-            Style updated = style.withClickEvent(
-                    new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, suggestion)
-            );
-            if (style.getHoverEvent() == null) {
-                updated = updated.withHoverEvent(replyHover);
-            }
-            return updated;
-        });
+        return formatter.decorator().decorate(formattedMention, context, candidate, view);
     }
 
     private @NotNull Component applySenderStatusStyle(

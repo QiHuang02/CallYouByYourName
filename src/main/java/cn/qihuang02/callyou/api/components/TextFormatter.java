@@ -15,16 +15,8 @@ public interface TextFormatter extends IDispatchedComponent<TextFormatter, TextF
 
     @NotNull Component format(@NotNull MentionContext context, @NotNull MentionCandidate candidate);
 
-    default boolean supportReply() {
-        return false;
-    }
-
-    default String buildReplySuggestion(
-            @NotNull MentionContext context,
-            @NotNull MentionCandidate candidate,
-            @NotNull Component formattedMention
-    ) {
-        return "";
+    default @NotNull InteractionDecorator decorator() {
+        return NoopInteractionDecorator.INSTANCE;
     }
 
     record TextFormatterType(

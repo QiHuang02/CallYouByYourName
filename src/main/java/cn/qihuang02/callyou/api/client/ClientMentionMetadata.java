@@ -2,11 +2,13 @@ package cn.qihuang02.callyou.api.client;
 
 import cn.qihuang02.callyou.CallYouByYourName;
 import cn.qihuang02.callyou.api.MentionType;
+import cn.qihuang02.callyou.api.components.InteractionDecorator;
+import cn.qihuang02.callyou.core.mention.components.decorator.CompositeInteractionDecorator;
+import cn.qihuang02.callyou.core.mention.components.decorator.TextColorDecorator;
 import cn.qihuang02.callyou.core.mention.components.formatter.PlayerNameTextFormatter;
 import cn.qihuang02.callyou.core.mention.components.formatter.SimpleTextFormatter;
 import cn.qihuang02.callyou.registry.CallYouMentionRegistries;
 import cn.qihuang02.callyou.util.MentionKeyUtils;
-import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.Registry;
 import net.minecraft.network.chat.Style;
@@ -59,10 +61,26 @@ public record ClientMentionMetadata(
 
     private static @NotNull Style resolveStyle(@NotNull MentionType mentionType) {
         if (mentionType.textFormatter() instanceof SimpleTextFormatter simple) {
-            return Style.EMPTY.withColor(simple.color());
+            return resolveStyleFromDecorator(simple.decorator());
         }
-        if (mentionType.textFormatter() instanceof PlayerNameTextFormatter(ChatFormatting color)) {
-            return Style.EMPTY.withColor(color);
+        if (mentionType.textFormatter() instanceof PlayerNameTextFormatter player) {
+            return resolveStyleFromDecorator(player.decorator());
+        }
+        return Style.EMPTY;
+    }
+
+    private static @NotNull Style resolveStyleFromDecorator(@NotNull InteractionDecorator decorator) {
+        if (decorator instanceof TextColorDecorator textColor) {
+            return Style.EMPTY.withColor(textColor.color());
+        }
+        if (decorator instanceof CompositeInteractionDecorator composite) {
+            Style resolved = Style.EMPTY;
+            for (InteractionDecorator entry : composite.decorators()) {
+                if (entry instanceof TextColorDecorator textColor) {
+                    resolved = resolved.withColor(textColor.color());
+                }
+            }
+            return resolved;
         }
         return Style.EMPTY;
     }

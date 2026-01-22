@@ -2,26 +2,34 @@ package cn.qihuang02.callyou.core.mention.components.formatter;
 
 import cn.qihuang02.callyou.api.MentionCandidate;
 import cn.qihuang02.callyou.api.MentionContext;
+import cn.qihuang02.callyou.api.components.InteractionDecorator;
 import cn.qihuang02.callyou.api.components.TextFormatter;
+import cn.qihuang02.callyou.core.mention.components.decorator.CompositeInteractionDecorator;
+import cn.qihuang02.callyou.core.mention.components.decorator.ReplyDecorator;
+import cn.qihuang02.callyou.core.mention.components.decorator.TextColorDecorator;
 import cn.qihuang02.callyou.registry.BuiltInCallYouRegistries;
-import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Locale;
+import java.util.List;
+import java.util.Optional;
 
-public record PlayerNameTextFormatter(ChatFormatting color) implements TextFormatter {
+public record PlayerNameTextFormatter(InteractionDecorator decorator) implements TextFormatter {
     public static final MapCodec<PlayerNameTextFormatter> MAP_CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
-            Codec.STRING.optionalFieldOf("color", "yellow")
-                    .xmap(
-                            s -> ChatFormatting.valueOf(s.toUpperCase(Locale.ROOT)),
-                            ChatFormatting::getName
-                    )
-                    .forGetter(PlayerNameTextFormatter::color)
-    ).apply(instance, PlayerNameTextFormatter::new));
+            InteractionDecorator.CODEC.optionalFieldOf("decorator")
+                    .forGetter(formatter -> Optional.ofNullable(formatter.decorator))
+    ).apply(instance, decoratorOpt -> new PlayerNameTextFormatter(decoratorOpt.orElse(null))));
+    private static final InteractionDecorator DEFAULT_DECORATOR = new CompositeInteractionDecorator(List.of(
+            new TextColorDecorator(ChatFormatting.YELLOW),
+            new ReplyDecorator(ReplyDecorator.ReplyScope.TARGET)
+    ));
+
+    public PlayerNameTextFormatter(InteractionDecorator decorator) {
+        this.decorator = decorator != null ? decorator : DEFAULT_DECORATOR;
+    }
 
     @Override
     public @NotNull TextFormatterType type() {
@@ -34,24 +42,11 @@ public record PlayerNameTextFormatter(ChatFormatting color) implements TextForma
         if ("@".equals(token)) {
             token = "@player";
         }
-        return Component.literal(token).withStyle(this.color);
+        return Component.literal(token);
     }
 
     @Override
-    public boolean supportReply() {
-        return true;
-    }
-
-    @Override
-    public @NotNull String buildReplySuggestion(
-            @NotNull MentionContext context,
-            @NotNull MentionCandidate candidate,
-            @NotNull Component formattedMention
-    ) {
-        String senderName = context.senderName();
-        if (senderName == null || senderName.isBlank()) {
-            return "";
-        }
-        return "@" + senderName + " ";
+    public @NotNull InteractionDecorator decorator() {
+        return this.decorator;
     }
 }

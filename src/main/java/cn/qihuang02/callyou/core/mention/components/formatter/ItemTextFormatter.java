@@ -2,22 +2,38 @@ package cn.qihuang02.callyou.core.mention.components.formatter;
 
 import cn.qihuang02.callyou.api.MentionCandidate;
 import cn.qihuang02.callyou.api.MentionContext;
+import cn.qihuang02.callyou.api.components.InteractionDecorator;
 import cn.qihuang02.callyou.api.components.TextFormatter;
+import cn.qihuang02.callyou.core.mention.components.decorator.CompositeInteractionDecorator;
+import cn.qihuang02.callyou.core.mention.components.decorator.ItemRenderDecorator;
+import cn.qihuang02.callyou.core.mention.components.decorator.RarityStyleDecorator;
+import cn.qihuang02.callyou.core.mention.components.decorator.SquareBracketsDecorator;
 import cn.qihuang02.callyou.registry.BuiltInCallYouRegistries;
 import com.mojang.serialization.MapCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.ComponentUtils;
-import net.minecraft.network.chat.HoverEvent;
-import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Rarity;
 import org.jetbrains.annotations.NotNull;
 
-public enum ItemTextFormatter implements TextFormatter {
-    INSTANCE;
+import java.util.List;
+import java.util.Optional;
 
-    public static final MapCodec<ItemTextFormatter> MAP_CODEC = MapCodec.unit(INSTANCE);
+public record ItemTextFormatter(InteractionDecorator decorator) implements TextFormatter {
+    public static final InteractionDecorator DEFAULT_DECORATOR = new CompositeInteractionDecorator(List.of(
+            ItemRenderDecorator.INSTANCE,
+            RarityStyleDecorator.INSTANCE,
+            SquareBracketsDecorator.INSTANCE
+    ));
+
+    public static final MapCodec<ItemTextFormatter> MAP_CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
+            InteractionDecorator.CODEC.optionalFieldOf("decorator")
+                    .forGetter(formatter -> Optional.ofNullable(formatter.decorator))
+    ).apply(instance, decoratorOpt -> new ItemTextFormatter(decoratorOpt.orElse(null))));
+
+    public ItemTextFormatter(InteractionDecorator decorator) {
+        this.decorator = decorator != null ? decorator : DEFAULT_DECORATOR;
+    }
 
     @Override
     public @NotNull TextFormatterType type() {
@@ -36,32 +52,11 @@ public enum ItemTextFormatter implements TextFormatter {
             return Component.literal(candidate.mentionToken());
         }
 
-        ItemStack copy = stack.copy();
-        Rarity rarity = copy.getRarity();
+        return stack.getHoverName().copy();
+    }
 
-        HoverEvent hover = new HoverEvent(
-                HoverEvent.Action.SHOW_ITEM,
-                new HoverEvent.ItemStackInfo(copy)
-        );
-
-        MutableComponent nameComponent = copy.getHoverName().copy();
-
-        MutableComponent styledName = nameComponent.withStyle(existing -> {
-            var base = rarity.getStyleModifier().apply(existing);
-            return base
-                    .withHoverEvent(hover)
-                    .withInsertion(copy.getDescriptionId());
-        });
-
-        MutableComponent bracketed = ComponentUtils
-                .wrapInSquareBrackets(styledName)
-                .withStyle(existing -> {
-                    var base = rarity.getStyleModifier().apply(existing);
-                    return base
-                            .withHoverEvent(hover)
-                            .withInsertion(copy.getDescriptionId());
-                });
-
-        return bracketed;
+    @Override
+    public @NotNull InteractionDecorator decorator() {
+        return this.decorator;
     }
 }
