@@ -7,7 +7,7 @@ feat(mention): 引入交互装饰器与模块化格式化器
 - 新增 ModularTextFormatter，并将 TextFormatter 流程改为装饰器驱动，区分发送者/目标视图
 - 统一提及注册与格式化器默认装饰器，简化消息组装逻辑
 
-refactor(client/ui): 提及设置与历史行界面迁移到 LDLib2 XML
+refactor(client/ui): 提及设置与历史行界面迁移到 XML 模板
 
 - 新增/更新 mention_preferences/mention_history_row/mention_type_row/blocked_sender_row XML 模板
 - Tab 与历史操作按钮改为图标化并补充 hover 提示，补充“Save and exit”翻译
@@ -24,7 +24,7 @@ feat(mention): Introduce interaction decorators and modular formatting
 - Add ModularTextFormatter and switch TextFormatter flow to decorator-driven rendering with sender/target views
 - Align registries and formatter defaults to streamline mention composition
 
-refactor(client/ui): Move mention settings and history rows to LDLib2 XML
+refactor(client/ui): Move mention settings and history rows to XML templates
 
 - Add/update XML templates for mention preferences, history rows, type rows, and blocked rows
 - Replace tab and history action buttons with icon controls and hover hints; add "Save and exit" translation
@@ -101,7 +101,7 @@ refactor(client): 客户端提及元数据与 key 规范化
 
 refactor(storage): 提及偏好序列化改用原生 Codec
 
-- MentionPreferences/TypePreference 移除 LowDragLib2 Persisted 依赖
+- MentionPreferences/TypePreference 移除旧 Persisted 依赖
 - 使用 RecordCodecBuilder 定义字段与默认值
 
 refactor(api): Unify target collection and event API
@@ -121,7 +121,7 @@ refactor(client): Client mention metadata and key normalization
 
 refactor(storage): Mention preferences now use native Codec
 
-- MentionPreferences/TypePreference drop LowDragLib2 Persisted usage
+- MentionPreferences/TypePreference drop the old Persisted dependency
 - Define fields/defaults via RecordCodecBuilder
 
 [dev] Version 2101.2.2-build.39
@@ -284,12 +284,11 @@ chore(build): 更新依赖版本并添加忽略文件
 - 更新 neo_version 从 21.1.216 到 21.1.218
 - 更新 ftb_teams_version 从 2101.1.7 到 2101.1.9
 - 更新 ftb_library_version 从 2101.1.28 到 2101.1.30
-- 更新 ldlib2_version 从 2.1.5.b 到 2.1.7
 
 [release] Version 2101.2.0-build.35 -- fix
 refactor(network): 迁移网络通信至 NeoForge Payload 系统
 
-- 移除基于 LowDragLib2 的 RPC 网络实现 (CYRPCPacket)
+- 移除旧 RPC 网络实现 (CYRPCPacket)
 - 引入标准的 NeoForge Payload 数据包系统
 - 重构网络处理逻辑，新增 NetworkHandler 统一处理数据包
 - 实现了一系列 Payload 类用于处理配置同步、日志请求和 Toast 通知

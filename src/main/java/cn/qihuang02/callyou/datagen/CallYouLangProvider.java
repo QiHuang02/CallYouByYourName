@@ -40,30 +40,8 @@ public class CallYouLangProvider extends LanguageProvider {
             new TranslationEntry("message.callyou.notify.toast.title", "You were mentioned by %s", "你被 %s 提及"),
             new TranslationEntry("message.callyou.notify.toast.description", "Mentioned by %s in chat.", "%s 在聊天中提及了你。"),
             new TranslationEntry("message.callyou.notify.default", "You were mentioned by %s", "你被 %s 提及了"),
-            new TranslationEntry("message.callyou.unread_mentions", "Welcome back! You have %s unread mentions, press %s to view.", "欢迎回来，你有 %s 条未读提及消息，按 %s 查看。"),
+            new TranslationEntry("message.callyou.unread_mentions", "Welcome back! You have %s unread mentions waiting.", "欢迎回来，你有 %s 条未读提及消息待处理。"),
             new TranslationEntry("message.callyou.reply.hover", "Click to reply", "点击回复"),
-
-            // Keybinds
-            new TranslationEntry("key.callyou.mention_preferences", "Mention Preferences", "提及偏好"),
-
-            // Mention preference screen
-            new TranslationEntry("screen.callyou.mention_preferences.title", "Mention Preferences", "提及偏好设置"),
-            new TranslationEntry("screen.callyou.mention_preferences.allow_all", "Allow Mentions", "允许提及"),
-            new TranslationEntry("screen.callyou.mention_preferences.allow_all.tooltip", "Whether other players may mention you.", "是否允许其他玩家提及你。"),
-            new TranslationEntry("screen.callyou.mention_preferences.allow_mass", "Allow Mass Mentions", "允许群体提及"),
-            new TranslationEntry("screen.callyou.mention_preferences.allow_mass.tooltip", "Whether mass mention types (e.g., @here) may ping you.", "是否允许群体提及类型（如 @here）提醒你。"),
-            new TranslationEntry("screen.callyou.mention_preferences.done.tooltip", "Save and exit", "保存并退出"),
-            new TranslationEntry("screen.callyou.mention_preferences.blocked.none", "No blocked players yet.", "暂无被屏蔽的玩家。"),
-
-            // Blocked players screen
-            new TranslationEntry("screen.callyou.blocked_senders.title", "Blocked Players", "已屏蔽的玩家"),
-            new TranslationEntry("screen.callyou.blocked_senders.unblock", "Unblock", "取消屏蔽"),
-            new TranslationEntry("screen.callyou.blocked_senders.block_label", "Block Player", "屏蔽玩家"),
-            new TranslationEntry("screen.callyou.blocked_senders.block_input.tooltip", "Enter the name of an online player to block mentions from them.", "输入一名在线玩家的名字以屏蔽其提及。"),
-            new TranslationEntry("screen.callyou.blocked_senders.block_action", "Block", "屏蔽"),
-            new TranslationEntry("screen.callyou.blocked_senders.block_action.tooltip", "Block the specified player.", "屏蔽指定的玩家。"),
-            new TranslationEntry("screen.callyou.blocked_senders.error.not_found", "Player not found online.", "未找到该在线玩家。"),
-            new TranslationEntry("screen.callyou.blocked_senders.error.already_blocked", "Player is already blocked.", "该玩家已被屏蔽。"),
 
             // Mention type labels
             new TranslationEntry("mention_type.callyou.near", "Nearby Players (@near)", "附近玩家 (@near)"),
@@ -71,20 +49,7 @@ public class CallYouLangProvider extends LanguageProvider {
             new TranslationEntry("mention_type.callyou.item", "Item (@item)", "物品 (@item)"),
             new TranslationEntry("mention_type.callyou.here", "Here (@here)", "这里 (@here)"),
             new TranslationEntry("mention_type.callyou.spot", "Location (@spot)", "位置 (@spot)"),
-            new TranslationEntry("mention_type.callyou.ftb_team", "FTB Team (@team)", "FTB 队伍 (@team)"),
-
-            // Mention history screen
-            new TranslationEntry("screen.callyou.history.title", "History", "历史记录"),
-            new TranslationEntry("screen.callyou.history.empty", "No history yet", "暂无历史记录"),
-            new TranslationEntry("screen.callyou.history.loading", "Loading...", "正在加载..."),
-            new TranslationEntry("screen.callyou.history.refresh", "Refresh", "刷新"),
-            new TranslationEntry("screen.callyou.history.mark_all", "Mark All Read", "全部标记为已读"),
-            new TranslationEntry("screen.callyou.history.mark_read", "Mark Read", "已读"),
-            new TranslationEntry("screen.callyou.history.reply", "Reply", "回复"),
-            new TranslationEntry("screen.callyou.history.count", "Total %s records", "共 %s 条记录"),
-            new TranslationEntry("screen.callyou.history.delete", "Delete", "删除"),
-            new TranslationEntry("screen.callyou.history.coords", "Create Waypoint", "创建传送点"),
-            new TranslationEntry("screen.callyou.history.coords_copied", "Copied coords: %s", "已复制坐标：%s")
+            new TranslationEntry("mention_type.callyou.ftb_team", "FTB Team (@team)", "FTB 队伍 (@team)")
     );
 
     private final Function<TranslationEntry, String> translationSelector;

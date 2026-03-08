@@ -44,10 +44,3 @@ type = "optional"
 versionRange = "[${ftb_chunks_version},)"
 ordering = "NONE"
 side = "BOTH"
-
-[[dependencies.${ mod_id }]]
-modId = "ldlib2"
-type = "required"
-versionRange = "[${ldlib2_version},)"
-ordering = "NONE"
-side = "BOTH"

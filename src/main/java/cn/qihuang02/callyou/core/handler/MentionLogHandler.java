@@ -25,8 +25,7 @@ public final class MentionLogHandler {
                 player.sendSystemMessage(
                         Component.translatable(
                                 "message.callyou.unread_mentions",
-                                unread,
-                                Component.keybind("key.callyou.mention_preferences")
+                                unread
                         )
                 );
             }
