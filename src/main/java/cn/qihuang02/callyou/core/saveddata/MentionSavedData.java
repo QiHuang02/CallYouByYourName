@@ -1,0 +1,281 @@
+package cn.qihuang02.callyou.core.saveddata;
+
+import cn.qihuang02.callyou.CallYouByYourName;
+import cn.qihuang02.callyou.config.CallYouConfig;
+import net.minecraft.Util;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NbtOps;
+import net.minecraft.nbt.Tag;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.saveddata.SavedData;
+import org.jetbrains.annotations.NotNull;
+
+import java.time.Duration;
+import java.util.*;
+
+public final class MentionSavedData extends SavedData {
+    private static final String TAG_LOGS = "logs";
+
+    private final List<MentionRecord> allLogs = new ArrayList<>();
+
+    public MentionSavedData() {
+    }
+
+    public static @NotNull MentionSavedData get(@NotNull ServerLevel level) {
+        ServerLevel overworld = level.getServer().overworld();
+        if (overworld == null) {
+            throw new IllegalStateException("Overworld level is not available for mention storage");
+        }
+        return overworld.getDataStorage().computeIfAbsent(
+                MentionSavedData::load,
+                MentionSavedData::new,
+                CallYouByYourName.MODID + "_mention_logs"
+        );
+    }
+
+    private static @NotNull MentionSavedData load(@NotNull CompoundTag tag) {
+        MentionSavedData data = new MentionSavedData();
+        if (tag.contains(TAG_LOGS, Tag.TAG_LIST)) {
+            ListTag list = tag.getList(TAG_LOGS, Tag.TAG_COMPOUND);
+            for (int i = 0; i < list.size(); i++) {
+                CompoundTag recordTag = list.getCompound(i);
+                if (MentionRecord.isLegacyTag(recordTag)) {
+                    data.allLogs.addAll(MentionRecord.fromLegacyTag(recordTag));
+                    continue;
+                }
+                MentionRecord.CODEC.parse(NbtOps.INSTANCE, recordTag)
+                        .resultOrPartial(CallYouByYourName.LOGGER::error)
+                        .ifPresent(data.allLogs::add);
+            }
+        } else if (tag.contains(TAG_LOGS, Tag.TAG_COMPOUND)) {
+            data.importLegacyLogs(tag);
+        }
+        return data;
+    }
+
+    @Override
+    public @NotNull CompoundTag save(@NotNull CompoundTag tag) {
+        if (allLogs.isEmpty()) {
+            return tag;
+        }
+        ListTag list = new ListTag();
+        for (MentionRecord record : allLogs) {
+            MentionRecord.CODEC.encodeStart(NbtOps.INSTANCE, record)
+                    .resultOrPartial(CallYouByYourName.LOGGER::error)
+                    .ifPresent(encoded -> {
+                        if (encoded instanceof CompoundTag compound) {
+                            list.add(compound);
+                        }
+                    });
+        }
+        if (!list.isEmpty()) {
+            tag.put(TAG_LOGS, list);
+        }
+        return tag;
+    }
+
+    private void importLegacyLogs(@NotNull CompoundTag tag) {
+        boolean changed = false;
+        int originalSize = allLogs.size();
+        CompoundTag legacyLogs = tag.getCompound(TAG_LOGS);
+        if (!legacyLogs.isEmpty()) {
+            for (String key : legacyLogs.getAllKeys()) {
+                UUID targetId;
+                try {
+                    targetId = UUID.fromString(key);
+                } catch (IllegalArgumentException ex) {
+                    continue;
+                }
+                ListTag records = legacyLogs.getList(key, Tag.TAG_COMPOUND);
+                if (records.isEmpty()) {
+                    continue;
+                }
+                for (int i = 0; i < records.size(); i++) {
+                    CompoundTag recordTag = records.getCompound(i);
+                    if (MentionRecord.isLegacyTag(recordTag)) {
+                        for (MentionRecord record : MentionRecord.fromLegacyTag(recordTag)) {
+                            allLogs.add(new MentionRecord(
+                                    record.historyId(),
+                                    record.senderId(),
+                                    record.senderName(),
+                                    record.message(),
+                                    record.timestamp(),
+                                    targetId,
+                                    record.read(),
+                                    record.status(),
+                                    record.originalKey()
+                            ));
+                        }
+                        continue;
+                    }
+                    MentionRecord.CODEC.parse(NbtOps.INSTANCE, recordTag)
+                            .resultOrPartial(CallYouByYourName.LOGGER::error)
+                            .ifPresent(record -> allLogs.add(new MentionRecord(
+                                    record.historyId(),
+                                    record.senderId(),
+                                    record.senderName(),
+                                    record.message(),
+                                    record.timestamp(),
+                                    targetId,
+                                    record.read(),
+                                    record.status(),
+                                    record.originalKey()
+                            )));
+                }
+            }
+        }
+        if (allLogs.size() != originalSize) {
+            changed = true;
+        }
+
+        if (prune()) {
+            changed = true;
+        }
+
+        if (changed) {
+            setDirty();
+        }
+    }
+
+    public void addLog(@NotNull MentionRecord record) {
+        if (record.targetId() == null || Util.NIL_UUID.equals(record.targetId())) {
+            return;
+        }
+        allLogs.add(record);
+        prune();
+        setDirty();
+    }
+
+    public @NotNull List<MentionRecord> getLogs(@NotNull UUID target) {
+        if (allLogs.isEmpty()) {
+            return List.of();
+        }
+        List<MentionRecord> filtered = new ArrayList<>();
+        for (MentionRecord record : allLogs) {
+            if (record.isTarget(target)) {
+                filtered.add(record);
+            }
+        }
+        return List.copyOf(filtered);
+    }
+
+    public int countUnread(@NotNull UUID target) {
+        if (allLogs.isEmpty()) {
+            return 0;
+        }
+        int unread = 0;
+        for (MentionRecord record : allLogs) {
+            if (record.isTarget(target) && !record.read()) {
+                unread++;
+            }
+        }
+        return unread;
+    }
+
+    public boolean markAsRead(@NotNull UUID target) {
+        if (allLogs.isEmpty()) {
+            return false;
+        }
+        boolean changed = false;
+        for (int i = 0; i < allLogs.size(); i++) {
+            MentionRecord record = allLogs.get(i);
+            if (!record.isTarget(target)) {
+                continue;
+            }
+            MentionRecord marked = record.markRead();
+            if (marked != record) {
+                allLogs.set(i, marked);
+                changed = true;
+            }
+        }
+        if (changed) {
+            setDirty();
+        }
+        return changed;
+    }
+
+    public boolean markAsRead(@NotNull UUID target, @NotNull UUID historyId) {
+        if (allLogs.isEmpty()) {
+            return false;
+        }
+        boolean changed = false;
+        for (int i = 0; i < allLogs.size(); i++) {
+            MentionRecord record = allLogs.get(i);
+            if (!record.isTarget(target) || !record.historyId().equals(historyId)) {
+                continue;
+            }
+            MentionRecord marked = record.markRead();
+            if (marked != record) {
+                allLogs.set(i, marked);
+                changed = true;
+            }
+            break;
+        }
+        if (changed) {
+            setDirty();
+        }
+        return changed;
+    }
+
+    public boolean removeRecord(@NotNull UUID target, @NotNull UUID historyId) {
+        if (allLogs.isEmpty()) {
+            return false;
+        }
+        boolean removed = allLogs.removeIf(record ->
+                record.isTarget(target) && record.historyId().equals(historyId));
+        if (removed) {
+            prune();
+            setDirty();
+        }
+        return removed;
+    }
+
+    public void pruneOldLogs() {
+        if (prune()) {
+            setDirty();
+        }
+    }
+
+    private boolean prune() {
+        int retentionDays = Math.max(0, CallYouConfig.COMMON.historyRetentionDays.get());
+        int maxHistory = Math.max(0, CallYouConfig.COMMON.maxHistoryPerPlayer.get());
+        long cutoff = retentionDays > 0
+                ? System.currentTimeMillis() - Duration.ofDays(retentionDays).toMillis()
+                : Long.MIN_VALUE;
+
+        boolean changed = false;
+
+        if (retentionDays > 0 && !allLogs.isEmpty()) {
+            if (allLogs.removeIf(record -> record.timestamp() < cutoff)) {
+                changed = true;
+            }
+        }
+
+        if (maxHistory > 0 && !allLogs.isEmpty()) {
+            Map<UUID, List<MentionRecord>> grouped = new HashMap<>();
+            for (MentionRecord record : allLogs) {
+                grouped.computeIfAbsent(record.targetId(), id -> new ArrayList<>()).add(record);
+            }
+
+            Set<MentionRecord> toRemove = new HashSet<>();
+            for (List<MentionRecord> records : grouped.values()) {
+                if (records.size() <= maxHistory) {
+                    continue;
+                }
+                records.sort(Comparator.comparingLong(MentionRecord::timestamp));
+                int removeCount = records.size() - maxHistory;
+                for (int i = 0; i < removeCount; i++) {
+                    toRemove.add(records.get(i));
+                }
+            }
+
+            if (!toRemove.isEmpty()) {
+                allLogs.removeIf(toRemove::contains);
+                changed = true;
+            }
+        }
+
+        return changed;
+    }
+}

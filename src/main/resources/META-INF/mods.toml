@@ -6,15 +6,7 @@ license = "${mod_license}"
 modId = "${mod_id}"
 version = "${mod_version}"
 displayName = "${mod_name}"
-# A URL to query for updates for this mod. See the JSON update specification https://docs.minecraftforge.net/en/latest/misc/updatechecker/
-#updateJSONURL="https://change.me.example.invalid/updates.json" #optional
-# A URL for the "homepage" for this mod, displayed in the mod UI
-#displayURL="https://change.me.to.your.mods.homepage.example.invalid/" #optional
-# A file name (in the root of the mod JAR) containing a logo for display
-logoFile="callyou_icon.png" #optional
-# A text field displayed in the mod UI
-#credits="Thanks for this example mod goes to Java" #optional
-# A text field displayed in the mod UI
+logoFile="callyou_icon.png"
 authors = "${mod_authors}"
 description = '''${mod_description}'''
 
@@ -29,5 +21,19 @@ side = "BOTH"
 modId = "minecraft"
 mandatory = true
 versionRange = "${minecraft_version_range}"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies."${mod_id}"]]
+modId = "ftbteams"
+mandatory = false
+versionRange = "[2001.3.3,)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies."${mod_id}"]]
+modId = "ftbchunks"
+mandatory = false
+versionRange = "[2001.4.2,)"
 ordering = "NONE"
 side = "BOTH"

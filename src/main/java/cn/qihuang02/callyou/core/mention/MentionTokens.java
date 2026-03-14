@@ -1,0 +1,57 @@
+package cn.qihuang02.callyou.core.mention;
+
+import org.jetbrains.annotations.NotNull;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+public final class MentionTokens {
+    private static final Pattern PATTERN = Pattern.compile("@([A-Za-z0-9_]+)");
+
+    public static @NotNull List<Token> scan(@NotNull String text) {
+        if (text.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        if (text.indexOf('@') < 0) {
+            return Collections.emptyList();
+        }
+
+        List<Token> tokens = new ArrayList<>();
+        Matcher matcher = PATTERN.matcher(text);
+        while (matcher.find()) {
+            int start = matcher.start();
+            int end = matcher.end();
+            String key = matcher.group(1);
+            tokens.add(new Token(start, end, key));
+        }
+        return tokens;
+    }
+
+    public static final class Token {
+        private final int startIndex;
+        private final int endIndex;
+        private final String key;
+
+        public Token(int startIndex, int endIndex, @NotNull String key) {
+            this.startIndex = startIndex;
+            this.endIndex = endIndex;
+            this.key = key;
+        }
+
+        public int startIndex() {
+            return startIndex;
+        }
+
+        public int endIndex() {
+            return endIndex;
+        }
+
+        public @NotNull String key() {
+            return key;
+        }
+    }
+}
